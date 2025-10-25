@@ -59,9 +59,8 @@ data class UnassignedTask(
             priority: TaskPriority = TaskPriority.MINOR,
             skills: Map<String, SkillPoint> = emptyMap(),
             dependsOn: Task? = null
-        ): Result<UnassignedTask> = runCatching {
-            return valueOf(description, priority, skills, dependsOn).map { it.copy(id = TaskId(id)) }
-        }
+        ): Result<UnassignedTask> =
+            valueOf(description, priority, skills, dependsOn).map { it.copy(id = TaskId(id)) }
 
         fun valueOf(
             description: String,

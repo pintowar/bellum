@@ -19,9 +19,8 @@ data class Employee(val id: EmployeeId, val name: String, val skills: Map<String
             }
         }
 
-        fun valueOf(id: UUID, name: String, skills: Map<String, SkillPoint> = emptyMap()): Result<Employee> = runCatching {
-            return valueOf(name, skills).map { it.copy(id = EmployeeId(id)) }
-        }
+        fun valueOf(id: UUID, name: String, skills: Map<String, SkillPoint> = emptyMap()): Result<Employee> =
+            valueOf(name, skills).map { it.copy(id = EmployeeId(id)) }
 
         fun valueOf(name: String, skills: Map<String, SkillPoint> = emptyMap()): Result<Employee> = runCatching {
             Employee(EmployeeId(), name, skills).also {

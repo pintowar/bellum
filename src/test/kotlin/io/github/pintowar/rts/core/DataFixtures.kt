@@ -19,10 +19,10 @@ object DataFixtures {
     val employee2 = Employee.valueOf( "Employee 2").getOrNull()!!
     val employee3 = Employee.valueOf( "Employee 3").getOrNull()!!
 
-    val sampleProjectSmall = Project(
+    val sampleProjectSmall = Project.valueOf(
         employees = setOf(employee1, employee2, employee3),
         tasks = setOf(task1, task2, task3, task4, task5)
-    )
+    ).getOrThrow()
 
     fun generateEstimator(project: Project, mtx: List<List<Long>>): Map<Employee, Map<Task, Duration>> {
         return project.allEmployees().zip(mtx).associate { (employee, row) ->

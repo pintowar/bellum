@@ -2,6 +2,7 @@ package io.github.pintowar.rts.core.domain
 
 import io.github.pintowar.rts.core.util.Helper
 import io.konform.validation.Validation
+import io.konform.validation.andThen
 import org.jgrapht.alg.cycle.CycleDetector
 import org.jgrapht.graph.DefaultDirectedGraph
 import org.jgrapht.graph.DefaultEdge
@@ -23,7 +24,13 @@ data class Project(
 ) {
 
     companion object {
-        val validator = Validation<Project> {
+        private val initValidator = Validation<Project> {
+            Project::hasCircularTaskDependency {
+                constrain("Circular task dependency found {value}.") { it.isEmpty() }
+            }
+        }
+
+        private val validator = initValidator andThen Validation<Project> {
             Project::employeesWithOverlap {
                 constrain("Overlapped tasks for employee: {value}.") { it.isEmpty() }
             }
@@ -31,17 +38,17 @@ data class Project(
             Project::precedenceBroken {
                 constrain("Precedences broken: {value}.") { it.isEmpty() }
             }
-
-            Project::hasCircularTaskDependency {
-                constrain("Circular task dependency found {value}.") { it.isEmpty() }
-            }
         }
 
-        operator fun invoke(id: UUID, employees: Set<Employee>, tasks: Set<Task>): Project =
-            invoke(employees, tasks).copy(id = ProjectId(id))
+        fun valueOf(id: UUID, employees: Set<Employee>, tasks: Set<Task>): Result<Project> =
+            valueOf(employees, tasks).map { it.copy(id = ProjectId(id)) }
 
-        operator fun invoke(employees: Set<Employee>, tasks: Set<Task>): Project =
-            Project(ProjectId(), employees, tasks)
+        fun valueOf(employees: Set<Employee>, tasks: Set<Task>): Result<Project> = runCatching {
+            Project(ProjectId(), employees, tasks).also {
+                val res = initValidator.validate(it)
+                if (!res.isValid) throw ValidationException(res.errors)
+            }
+        }
     }
 
     fun allEmployees() = employees.toList()

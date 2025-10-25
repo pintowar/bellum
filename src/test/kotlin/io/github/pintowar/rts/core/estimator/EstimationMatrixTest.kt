@@ -19,7 +19,7 @@ class EstimationMatrixTest : FunSpec({
         // Setup
         val employee = Employee.valueOf( "Alice").getOrNull()!!
         val task = UnassignedTask.valueOf( "Task 1").getOrNull()!!
-        val project = Project(employees = setOf(employee), tasks = setOf(task))
+        val project = Project.valueOf(employees = setOf(employee), tasks = setOf(task)).getOrThrow()
         val estimator = mockk<TimeEstimator>()
         every { estimator.estimate(any<Employee>(), any<Task>()) } returns Duration.ofHours(1)
 
@@ -34,7 +34,7 @@ class EstimationMatrixTest : FunSpec({
         // Setup
         val employee = Employee.valueOf( "Alice").getOrNull()!!
         val task = UnassignedTask.valueOf( "Task 1").getOrNull()!!
-        val project = Project(employees = setOf(employee), tasks = setOf(task))
+        val project = Project.valueOf(employees = setOf(employee), tasks = setOf(task)).getOrThrow()
         val estimator = mockk<TimeEstimator>()
         every { estimator.estimate(any<Employee>(), any<Task>()) } returns Duration.ofHours(1)
         val matrix = EstimationMatrix.valueOf(project, estimator)
@@ -54,7 +54,7 @@ class EstimationMatrixTest : FunSpec({
         // Setup
         val employee = Employee.valueOf( "Alice").getOrNull()!!
         val task = UnassignedTask.valueOf( "Task 1").getOrNull()!!
-        val project = Project(employees = setOf(employee), tasks = setOf(task))
+        val project = Project.valueOf(employees = setOf(employee), tasks = setOf(task)).getOrThrow()
         val estimator = mockk<TimeEstimator>()
         every { estimator.estimate(any<Employee>(), any<Task>()) } returns Duration.ofHours(1)
 
@@ -70,7 +70,7 @@ class EstimationMatrixTest : FunSpec({
         // Setup
         val employee = Employee.valueOf( "Alice").getOrNull()!!
         val task = UnassignedTask.valueOf( "Task 1").getOrNull()!!
-        val project = Project(employees = setOf(employee), tasks = setOf(task))
+        val project = Project.valueOf(employees = setOf(employee), tasks = setOf(task)).getOrThrow()
         val estimator = mockk<TimeEstimator>()
         every { estimator.estimate(any<Employee>(), any<Task>()) } returns Duration.ofHours(1)
 
