@@ -1,12 +1,9 @@
 package io.github.pintowar.rts.core.domain
 
-import arrow.core.Either
-import arrow.core.raise.either
 import io.github.pintowar.rts.core.util.Helper
+import io.konform.validation.Validation
+import io.konform.validation.constraints.notBlank
 import java.util.UUID
-
-interface InvalidEmployee
-object InvalidEmployeeName: InvalidEmployee
 
 @JvmInline value class EmployeeId(private val id: UUID) {
     constructor(): this(Helper.uuidV7())
@@ -14,26 +11,23 @@ object InvalidEmployeeName: InvalidEmployee
     operator fun invoke() = id
 }
 
-@JvmInline value class EmployeeName private constructor(private val name: String) {
+data class Employee(val id: EmployeeId, val name: String, val skills: Map<String, SkillPoint>) {
     companion object {
-        fun valueOf(name: String): Either<InvalidEmployeeName, EmployeeName> = either {
-            if (name.isBlank()) raise(InvalidEmployeeName)
-            EmployeeName(name)
-        }
-    }
-
-    operator fun invoke() = name
-}
-
-data class Employee(val id: EmployeeId, val name: EmployeeName, val skills: Map<String, SkillPoint>) {
-    companion object {
-        fun valueOf(id: UUID, name: String, skills: Map<String, SkillPoint> = emptyMap()): Either<InvalidEmployee, Employee> = either {
-            valueOf(name, skills).bind().copy(id = EmployeeId(id))
+        private val validator = Validation<Employee> {
+            Employee::name {
+                notBlank()
+            }
         }
 
-        fun valueOf(name: String, skills: Map<String, SkillPoint> = emptyMap()): Either<InvalidEmployee, Employee> = either {
-            val employeeName = EmployeeName.valueOf(name).bind()
-            Employee(EmployeeId(), employeeName, skills)
+        fun valueOf(id: UUID, name: String, skills: Map<String, SkillPoint> = emptyMap()): Result<Employee> = runCatching {
+            return valueOf(name, skills).map { it.copy(id = EmployeeId(id)) }
+        }
+
+        fun valueOf(name: String, skills: Map<String, SkillPoint> = emptyMap()): Result<Employee> = runCatching {
+            Employee(EmployeeId(), name, skills).also {
+                val res = validator.validate(it)
+                if (!res.isValid) throw ValidationException(res.errors)
+            }
         }
     }
 }

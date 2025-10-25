@@ -5,7 +5,6 @@ import io.github.pintowar.rts.core.domain.Project
 import io.github.pintowar.rts.core.domain.Task
 import io.github.pintowar.rts.core.estimator.TimeEstimator
 import org.chocosolver.solver.Model
-import org.chocosolver.solver.Solution
 import org.chocosolver.solver.search.limits.TimeCounter
 import org.chocosolver.solver.variables.IntVar
 import java.time.Duration
@@ -17,8 +16,8 @@ class ChocoScheduler(
 ) : Scheduler {
 
     override fun solve(project: Project, start: Instant): SchedulerSolution {
-        val employees = project.employees()
-        val tasks = project.tasks()
+        val employees = project.allEmployees()
+        val tasks = project.allTasks()
 
         val numEmployees = employees.size
         val numTasks = tasks.size

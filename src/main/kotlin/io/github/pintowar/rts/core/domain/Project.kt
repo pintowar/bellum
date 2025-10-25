@@ -1,15 +1,12 @@
 package io.github.pintowar.rts.core.domain
 
-import arrow.core.Either
-import arrow.core.left
-import arrow.core.mapOrAccumulate
-import arrow.core.raise.either
-import arrow.core.raise.mapOrAccumulate
 import io.github.pintowar.rts.core.util.Helper
+import io.konform.validation.Validation
+import org.jgrapht.alg.cycle.CycleDetector
+import org.jgrapht.graph.DefaultDirectedGraph
+import org.jgrapht.graph.DefaultEdge
+import java.time.Instant
 import java.util.UUID
-
-interface InvalidProject
-class OverlapingTasks(val employee: Employee): InvalidProject
 
 enum class ProjectScheduled { NONE, PARTIAL, SCHEDULED }
 
@@ -26,6 +23,20 @@ data class Project(
 ) {
 
     companion object {
+        val validator = Validation<Project> {
+            Project::employeesWithOverlap {
+                constrain("Overlapped tasks for employee: {value}.") { it.isEmpty() }
+            }
+
+            Project::precedenceBroken {
+                constrain("Precedences broken: {value}.") { it.isEmpty() }
+            }
+
+            Project::hasCircularTaskDependency {
+                constrain("Circular task dependency found {value}.") { it.isEmpty() }
+            }
+        }
+
         operator fun invoke(id: UUID, employees: Set<Employee>, tasks: Set<Task>): Project =
             invoke(employees, tasks).copy(id = ProjectId(id))
 
@@ -33,9 +44,9 @@ data class Project(
             Project(ProjectId(), employees, tasks)
     }
 
-    fun employees() = employees.toList()
+    fun allEmployees() = employees.toList()
 
-    fun tasks() = tasks.toList()
+    fun allTasks() = tasks.toList()
 
     fun scheduledStatus(): ProjectScheduled {
         val numAssignedTask = tasks.count { it.isAssigned() }
@@ -46,21 +57,44 @@ data class Project(
         }
     }
 
-    fun validateOverlapingTasks(): Either<OverlapingTasks, Unit> = either {
-        val res = tasks.asSequence()
+    fun endsAt(): Instant? = allTasks().mapNotNull { it.endsAt() }.maxOrNull()
+
+    fun validate() = validator.validate(this)
+
+    fun isValid() = validate().isValid
+
+    fun employeesWithOverlap(): List<String>  {
+        return tasks.asSequence()
             .filter { it.isAssigned() }
             .map { it as AssignedTask }
             .groupBy({ it.employee })
-            .mapValues { (_, tasks) -> tasks.hasOverlappingIntervals() }
-
-        val errors = res.mapNotNull { (emp, hasOverlap) ->  OverlapingTasks(emp).takeIf { hasOverlap }}
-
+            .map { (emp, tasks) -> emp.name to tasks.hasOverlappingIntervals() }
+            .filter { (_, overs) -> overs }
+            .map { (emp, _) -> emp }
     }
 
-//    fun precedencesTable() {
-//        val zaz = tasks
-//            .filter { it.dependsOn != null }
-//            .map { it.dependsOn?.id!! to it.id }
-//    }
+    fun precedenceBroken(): List<String>  {
+        return tasks.asSequence()
+            .filter { it.isAssigned() && (it.dependsOn?.isAssigned() ?: false)}
+            .map { it as AssignedTask to it.dependsOn as AssignedTask }
+            .filter { (a, b) -> a.startAt < b.endsAt }
+            .map { (a, b) -> "${a.employee.name} (start: ${a.startAt}) < ${b.employee.name} (end: ${b.startAt})" }
+            .toList()
+    }
+
+    fun hasCircularTaskDependency(): String {
+        val graph = DefaultDirectedGraph<TaskId, DefaultEdge>(DefaultEdge::class.java)
+        val byIds = tasks.associateBy { it.id }
+
+        val precedence = tasks.asSequence()
+            .filter { it.dependsOn != null }
+            .map { it.id to it.dependsOn!!.id }
+
+        precedence.flatMap { it.toList() }.toSet().forEach { graph.addVertex(it) }
+        precedence.forEach { (a, b) -> graph.addEdge(a, b) }
+
+        val cycle = CycleDetector(graph).findCycles().map { byIds.getValue(it).description }.sorted()
+        return (cycle + cycle.take(1)).joinToString(" - ")
+    }
 
 }

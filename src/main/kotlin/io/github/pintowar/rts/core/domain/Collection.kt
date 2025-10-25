@@ -1,5 +1,9 @@
 package io.github.pintowar.rts.core.domain
 
+import io.konform.validation.ValidationError
+
+class ValidationException(errors: List<ValidationError>) : Throwable()
+
 fun List<AssignedTask>.hasOverlappingIntervals(): Boolean {
     // An empty list or a list with a single interval cannot have overlaps.
     if (this.size <= 1) {

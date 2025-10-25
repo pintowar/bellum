@@ -1,7 +1,5 @@
 package io.github.pintowar.rts.core.domain
 
-import arrow.core.Either
-import arrow.core.raise.either
 import io.github.pintowar.rts.core.util.Helper
 import org.threeten.extra.Interval
 import java.time.Duration
@@ -19,20 +17,9 @@ enum class TaskPriority { CRITICAL, MAJOR, MINOR }
     operator fun invoke() = id
 }
 
-@JvmInline value class TaskDescription(private val description: String)  {
-    companion object {
-        fun valueOf(description: String): Either<InvalidTaskName, TaskDescription> = either {
-            if (description.isBlank()) raise(InvalidTaskName)
-            TaskDescription(description)
-        }
-    }
-
-    operator fun invoke() = description
-}
-
 sealed interface Task {
     val id: TaskId
-    val description: TaskDescription
+    val description: String
     val priority: TaskPriority
     val requiredSkills: Map<String, SkillPoint>
     val dependsOn: Task?
@@ -44,6 +31,11 @@ sealed interface Task {
 
     fun unassign(): Task = UnassignedTask(id, description, priority, requiredSkills, dependsOn)
 
+    fun endsAt(): Instant? {
+        if (this is AssignedTask) return endsAt
+        return null
+    }
+
     fun overlaps(other: Task): Boolean {
         if (this is AssignedTask && other is AssignedTask) {
             return this.interval.overlaps(other.interval)
@@ -54,7 +46,7 @@ sealed interface Task {
 
 data class UnassignedTask(
     override val id: TaskId,
-    override val description: TaskDescription,
+    override val description: String,
     override val priority: TaskPriority,
     override val requiredSkills: Map<String, SkillPoint>,
     override val dependsOn: Task? = null,
@@ -67,8 +59,8 @@ data class UnassignedTask(
             priority: TaskPriority = TaskPriority.MINOR,
             skills: Map<String, SkillPoint> = emptyMap(),
             dependsOn: Task? = null
-        ): Either<InvalidTask, UnassignedTask> = either {
-            valueOf(description, priority, skills, dependsOn).bind().copy(id = TaskId(id))
+        ): Result<UnassignedTask> = runCatching {
+            return valueOf(description, priority, skills, dependsOn).map { it.copy(id = TaskId(id)) }
         }
 
         fun valueOf(
@@ -76,16 +68,15 @@ data class UnassignedTask(
             priority: TaskPriority = TaskPriority.MINOR,
             skills: Map<String, SkillPoint> = emptyMap(),
             dependsOn: Task? = null
-        ): Either<InvalidTask, UnassignedTask> = either {
-            val employeeName = TaskDescription.valueOf(description).bind()
-            UnassignedTask(TaskId(), employeeName, priority, skills, dependsOn)
+        ): Result<UnassignedTask> = runCatching {
+            UnassignedTask(TaskId(), description, priority, skills, dependsOn)
         }
     }
 }
 
 data class AssignedTask(
     override val id: TaskId,
-    override val description: TaskDescription,
+    override val description: String,
     override val priority: TaskPriority,
     override val requiredSkills: Map<String, SkillPoint>,
     override val dependsOn: Task? = null,
