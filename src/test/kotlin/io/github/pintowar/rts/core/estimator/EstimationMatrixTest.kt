@@ -18,9 +18,9 @@ class EstimationMatrixTest :
     FunSpec({
         test("create matrix from project") {
             // Setup
-            val employee = Employee.valueOf("Alice").getOrNull()!!
-            val task = UnassignedTask.valueOf("Task 1").getOrNull()!!
-            val project = Project.valueOf(employees = setOf(employee), tasks = setOf(task)).getOrThrow()
+            val employee = Employee("Alice").getOrNull()!!
+            val task = UnassignedTask("Task 1").getOrNull()!!
+            val project = Project(employees = setOf(employee), tasks = setOf(task)).getOrThrow()
             val estimator = mockk<TimeEstimator>()
             every { estimator.estimate(any<Employee>(), any<Task>()) } returns Duration.ofHours(1)
 
@@ -33,9 +33,9 @@ class EstimationMatrixTest :
 
         test("cache duration after first estimation") {
             // Setup
-            val employee = Employee.valueOf("Alice").getOrNull()!!
-            val task = UnassignedTask.valueOf("Task 1").getOrNull()!!
-            val project = Project.valueOf(employees = setOf(employee), tasks = setOf(task)).getOrThrow()
+            val employee = Employee("Alice").getOrNull()!!
+            val task = UnassignedTask("Task 1").getOrNull()!!
+            val project = Project(employees = setOf(employee), tasks = setOf(task)).getOrThrow()
             val estimator = mockk<TimeEstimator>()
             every { estimator.estimate(any<Employee>(), any<Task>()) } returns Duration.ofHours(1)
             val matrix = EstimationMatrix.valueOf(project, estimator)
@@ -53,9 +53,9 @@ class EstimationMatrixTest :
 
         test("return InvalidEmployeeId when employee not found") {
             // Setup
-            val employee = Employee.valueOf("Alice").getOrNull()!!
-            val task = UnassignedTask.valueOf("Task 1").getOrNull()!!
-            val project = Project.valueOf(employees = setOf(employee), tasks = setOf(task)).getOrThrow()
+            val employee = Employee("Alice").getOrNull()!!
+            val task = UnassignedTask("Task 1").getOrNull()!!
+            val project = Project(employees = setOf(employee), tasks = setOf(task)).getOrThrow()
             val estimator = mockk<TimeEstimator>()
             every { estimator.estimate(any<Employee>(), any<Task>()) } returns Duration.ofHours(1)
 
@@ -69,9 +69,9 @@ class EstimationMatrixTest :
 
         test("return InvalidTaskId when task not found") {
             // Setup
-            val employee = Employee.valueOf("Alice").getOrNull()!!
-            val task = UnassignedTask.valueOf("Task 1").getOrNull()!!
-            val project = Project.valueOf(employees = setOf(employee), tasks = setOf(task)).getOrThrow()
+            val employee = Employee("Alice").getOrNull()!!
+            val task = UnassignedTask("Task 1").getOrNull()!!
+            val project = Project(employees = setOf(employee), tasks = setOf(task)).getOrThrow()
             val estimator = mockk<TimeEstimator>()
             every { estimator.estimate(any<Employee>(), any<Task>()) } returns Duration.ofHours(1)
 

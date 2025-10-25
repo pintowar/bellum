@@ -26,7 +26,7 @@ class Employee private constructor(
                 }
             }
 
-        fun valueOf(
+        operator fun invoke(
             id: UUID,
             name: String,
             skills: Map<String, SkillPoint> = emptyMap(),
@@ -38,9 +38,9 @@ class Employee private constructor(
                 }
             }
 
-        fun valueOf(
+        operator fun invoke(
             name: String,
             skills: Map<String, SkillPoint> = emptyMap(),
-        ): Result<Employee> = valueOf(EmployeeId()(), name, skills)
+        ): Result<Employee> = invoke(EmployeeId()(), name, skills)
     }
 }

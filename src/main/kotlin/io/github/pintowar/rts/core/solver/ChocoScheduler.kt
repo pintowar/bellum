@@ -41,7 +41,7 @@ class ChocoScheduler(
         val durs = modelVars.taskDuration.map { unitDuration(solution.getIntVal(it)) }
         val assigneds = tasks.mapIndexed { idx, tsk -> tsk.assign(emps[idx], inits[idx], durs[idx]) }
 
-        return Project.valueOf(employees.toSet(), assigneds.toSet()).map { newProject ->
+        return Project(employees.toSet(), assigneds.toSet()).map { newProject ->
             SchedulerSolution(
                 newProject,
                 true,

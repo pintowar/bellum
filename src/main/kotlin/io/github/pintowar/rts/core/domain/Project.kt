@@ -48,7 +48,7 @@ class Project private constructor(
                     }
                 }
 
-        fun valueOf(
+        operator fun invoke(
             id: UUID,
             employees: Set<Employee>,
             tasks: Set<Task>,
@@ -60,10 +60,10 @@ class Project private constructor(
                 }
             }
 
-        fun valueOf(
+        operator fun invoke(
             employees: Set<Employee>,
             tasks: Set<Task>,
-        ): Result<Project> = valueOf(ProjectId()(), employees, tasks)
+        ): Result<Project> = invoke(ProjectId()(), employees, tasks)
     }
 
     fun allEmployees() = employees.toList()

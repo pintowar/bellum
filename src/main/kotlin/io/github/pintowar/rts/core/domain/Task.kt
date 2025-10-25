@@ -35,9 +35,9 @@ sealed interface Task {
         employee: Employee,
         startAt: Instant,
         duration: Duration,
-    ): Task = AssignedTask.valueOf(id(), description, priority, requiredSkills, dependsOn, employee, startAt, duration).getOrThrow()
+    ): Task = AssignedTask(id(), description, priority, requiredSkills, dependsOn, employee, startAt, duration).getOrThrow()
 
-    fun unassign(): Task = UnassignedTask.valueOf(id(), description, priority, requiredSkills, dependsOn).getOrThrow()
+    fun unassign(): Task = UnassignedTask(id(), description, priority, requiredSkills, dependsOn).getOrThrow()
 
     fun endsAt(): Instant? {
         if (this is AssignedTask) return endsAt
@@ -60,7 +60,7 @@ class UnassignedTask private constructor(
     override val dependsOn: Task? = null,
 ) : Task {
     companion object {
-        fun valueOf(
+        operator fun invoke(
             id: UUID,
             description: String,
             priority: TaskPriority = TaskPriority.MINOR,
@@ -71,16 +71,16 @@ class UnassignedTask private constructor(
                 UnassignedTask(TaskId(id), description, priority, skills, dependsOn)
             }
 
-        fun valueOf(
+        operator fun invoke(
             description: String,
             priority: TaskPriority = TaskPriority.MINOR,
             skills: Map<String, SkillPoint> = emptyMap(),
             dependsOn: Task? = null,
-        ): Result<UnassignedTask> = valueOf(TaskId()(), description, priority, skills, dependsOn)
+        ): Result<UnassignedTask> = invoke(TaskId()(), description, priority, skills, dependsOn)
     }
 
     override fun changeDependency(dependsOn: Task): UnassignedTask =
-        valueOf(id(), description, priority, requiredSkills, dependsOn).getOrThrow()
+        invoke(id(), description, priority, requiredSkills, dependsOn).getOrThrow()
 }
 
 class AssignedTask private constructor(
@@ -94,7 +94,7 @@ class AssignedTask private constructor(
     val duration: Duration,
 ) : Task {
     companion object {
-        fun valueOf(
+        operator fun invoke(
             id: UUID,
             description: String,
             priority: TaskPriority = TaskPriority.MINOR,
@@ -108,7 +108,7 @@ class AssignedTask private constructor(
                 AssignedTask(TaskId(id), description, priority, skills, dependsOn, employee, startAt, duration)
             }
 
-        fun valueOf(
+        operator fun invoke(
             description: String,
             priority: TaskPriority = TaskPriority.MINOR,
             skills: Map<String, SkillPoint> = emptyMap(),
@@ -116,12 +116,12 @@ class AssignedTask private constructor(
             employee: Employee,
             startAt: Instant,
             duration: Duration,
-        ): Result<AssignedTask> = valueOf(TaskId()(), description, priority, skills, dependsOn, employee, startAt, duration)
+        ): Result<AssignedTask> = invoke(TaskId()(), description, priority, skills, dependsOn, employee, startAt, duration)
     }
 
     val endsAt: Instant = startAt + duration
     val interval = Interval.of(startAt, duration)
 
     override fun changeDependency(dependsOn: Task): AssignedTask =
-        valueOf(id(), description, priority, requiredSkills, dependsOn, employee, startAt, duration).getOrThrow()
+        invoke(id(), description, priority, requiredSkills, dependsOn, employee, startAt, duration).getOrThrow()
 }

@@ -11,7 +11,7 @@ class SkillPointTest :
     FunSpec({
         context("create valid point") {
             withData(0, 1, 3, 4, 8, 9) {
-                SkillPoint.valueOf(it) shouldBeSuccess { res ->
+                SkillPoint(it) shouldBeSuccess { res ->
                     res() shouldBe it
                 }
             }
@@ -19,7 +19,7 @@ class SkillPointTest :
 
         context("create invalid point") {
             withData(-3, -2, -1, 10, 15) {
-                SkillPoint.valueOf(it) shouldBeFailure { ex ->
+                SkillPoint(it) shouldBeFailure { ex ->
                     ex.shouldBeTypeOf<ValidationException>()
                 }
             }

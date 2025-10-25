@@ -9,22 +9,21 @@ import java.time.Duration
 import kotlin.getOrThrow
 
 object DataFixtures {
-    val task1 = UnassignedTask.valueOf("Task 1").getOrThrow()
-    val task2 = UnassignedTask.valueOf("Task 2").getOrThrow()
-    val task3 = UnassignedTask.valueOf("Task 3", dependsOn = task1).getOrThrow()
-    val task4 = UnassignedTask.valueOf("Task 4", dependsOn = task2).getOrThrow()
-    val task5 = UnassignedTask.valueOf("Task 5").getOrThrow()
+    val task1 = UnassignedTask("Task 1").getOrThrow()
+    val task2 = UnassignedTask("Task 2").getOrThrow()
+    val task3 = UnassignedTask("Task 3", dependsOn = task1).getOrThrow()
+    val task4 = UnassignedTask("Task 4", dependsOn = task2).getOrThrow()
+    val task5 = UnassignedTask("Task 5").getOrThrow()
 
-    val employee1 = Employee.valueOf("Employee 1").getOrThrow()
-    val employee2 = Employee.valueOf("Employee 2").getOrThrow()
-    val employee3 = Employee.valueOf("Employee 3").getOrThrow()
+    val employee1 = Employee("Employee 1").getOrThrow()
+    val employee2 = Employee("Employee 2").getOrThrow()
+    val employee3 = Employee("Employee 3").getOrThrow()
 
     val sampleProjectSmall =
-        Project
-            .valueOf(
-                employees = setOf(employee1, employee2, employee3),
-                tasks = setOf(task1, task2, task3, task4, task5),
-            ).getOrThrow()
+        Project(
+            employees = setOf(employee1, employee2, employee3),
+            tasks = setOf(task1, task2, task3, task4, task5),
+        ).getOrThrow()
 
     fun generateEstimator(
         project: Project,
