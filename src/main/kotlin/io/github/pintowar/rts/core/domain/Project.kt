@@ -30,6 +30,10 @@ class Project private constructor(
                 Project::hasCircularTaskDependency {
                     constrain("Circular task dependency found {value}.") { it.isEmpty() }
                 }
+
+                Project::hasUnkonwnEmployees {
+                    constrain("Some tasks are assigned to employees out of the project: {value}.") { it.isEmpty() }
+                }
             }
 
         private val validator =
@@ -81,6 +85,7 @@ class Project private constructor(
 
     fun isValid() = validate().isValid
 
+    // validations
     fun employeesWithOverlap(): List<String> =
         tasks
             .asSequence()
@@ -115,5 +120,11 @@ class Project private constructor(
 
         val cycle = CycleDetector(graph).findCycles().map { byIds.getValue(it).description }.sorted()
         return (cycle + cycle.take(1)).joinToString(" - ")
+    }
+
+    fun hasUnkonwnEmployees(): List<String> {
+        val projectEmployees = employees.map { it.id }.toSet()
+        val assignedEmployees = tasks.filter { it.isAssigned() }.map { it as AssignedTask }.map { it.employee }
+        return assignedEmployees.filter { it.id !in projectEmployees }.map { it.name }
     }
 }

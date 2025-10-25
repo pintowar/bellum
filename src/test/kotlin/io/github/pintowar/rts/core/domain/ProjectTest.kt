@@ -25,7 +25,7 @@ class ProjectTest :
             test("scheduledStatus returns SCHEDULED when all tasks are assigned") {
                 val task1 = DataFixtures.task1.assign(DataFixtures.employee1, start, dur1)
                 val task2 = DataFixtures.task2.assign(DataFixtures.employee2, start, dur1)
-                val project = Project.valueOf(emptySet(), setOf(task1, task2))
+                val project = Project.valueOf(setOf(DataFixtures.employee1, DataFixtures.employee2), setOf(task1, task2))
                 project shouldBeSuccess {
                     it.scheduledStatus() shouldBe ProjectScheduled.SCHEDULED
                 }
@@ -34,7 +34,7 @@ class ProjectTest :
             test("scheduledStatus returns PARTIAL when some tasks are assigned") {
                 val task1 = DataFixtures.task1.assign(DataFixtures.employee1, start, dur1)
                 val task2 = DataFixtures.task2
-                val project = Project.valueOf(emptySet(), setOf(task1, task2))
+                val project = Project.valueOf(setOf(DataFixtures.employee1), setOf(task1, task2))
                 project shouldBeSuccess {
                     it.scheduledStatus() shouldBe ProjectScheduled.PARTIAL
                 }
@@ -156,6 +156,33 @@ class ProjectTest :
                 }
             }
 
-            // add allocated tasks must contains only project employees
+            context("tasks with invalid employee") {
+                val start = Instant.parse("2022-01-01T00:00:00Z")
+                val dur = Duration.ofMinutes(5)
+
+                test("must fail while initializing in case a invalid employee is found") {
+                    val task1 = DataFixtures.task1.assign(DataFixtures.employee1, start, dur)
+                    val tasks = setOf(task1, DataFixtures.task2, DataFixtures.task3)
+                    val project = Project.valueOf(setOf(DataFixtures.employee2), tasks)
+
+                    project.shouldBeFailure<ValidationException>()
+                    if (project.isFailure) {
+                        val ex = project.exceptionOrNull() as ValidationException
+                        val msg = "Some tasks are assigned to employees out of the project: [Employee 1]."
+                        ex.errors.size shouldBe 1
+                        ex.errors.messagesAtPath(Project::hasUnkonwnEmployees) shouldBe listOf(msg)
+                    }
+                }
+
+                test("must pass while initializing in case a invalid employee is not found") {
+                    val task1 = DataFixtures.task1.assign(DataFixtures.employee1, start, dur)
+                    val tasks = setOf(task1, DataFixtures.task2, DataFixtures.task3)
+                    val project = Project.valueOf(setOf(DataFixtures.employee1, DataFixtures.employee2), tasks).getOrThrow()
+
+                    project.isValid() shouldBe true
+                    val vals = project.validate()
+                    vals.errors.size shouldBe 0
+                }
+            }
         }
     })
