@@ -7,10 +7,10 @@ import java.time.Instant
 interface Scheduler {
     val estimator: TimeEstimator
 
-    fun solve(project: Project): SchedulerSolution = solve(project, Instant.now())
+    fun solve(project: Project): Result<SchedulerSolution> = solve(project, Instant.now())
 
     fun solve(
         project: Project,
         start: Instant,
-    ): SchedulerSolution
+    ): Result<SchedulerSolution>
 }

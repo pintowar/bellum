@@ -19,7 +19,7 @@ enum class ProjectScheduled { NONE, PARTIAL, SCHEDULED }
     operator fun invoke() = id
 }
 
-data class Project(
+class Project private constructor(
     val id: ProjectId,
     private val employees: Set<Employee>,
     private val tasks: Set<Task>,
@@ -48,18 +48,18 @@ data class Project(
             id: UUID,
             employees: Set<Employee>,
             tasks: Set<Task>,
-        ): Result<Project> = valueOf(employees, tasks).map { it.copy(id = ProjectId(id)) }
-
-        fun valueOf(
-            employees: Set<Employee>,
-            tasks: Set<Task>,
         ): Result<Project> =
             runCatching {
-                Project(ProjectId(), employees, tasks).also {
+                Project(ProjectId(id), employees, tasks).also {
                     val res = initValidator.validate(it)
                     if (!res.isValid) throw ValidationException(res.errors)
                 }
             }
+
+        fun valueOf(
+            employees: Set<Employee>,
+            tasks: Set<Task>,
+        ): Result<Project> = valueOf(ProjectId()(), employees, tasks)
     }
 
     fun allEmployees() = employees.toList()

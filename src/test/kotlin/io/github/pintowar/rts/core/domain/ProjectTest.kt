@@ -101,7 +101,7 @@ class ProjectTest :
                         setOf(
                             task1,
                             DataFixtures.task3
-                                .copy(dependsOn = task1)
+                                .changeDependency(dependsOn = task1)
                                 .assign(DataFixtures.employee2, start, dur2),
                         )
                     val project = Project.valueOf(setOf(DataFixtures.employee1, DataFixtures.employee2), tasks).getOrThrow()
@@ -118,7 +118,7 @@ class ProjectTest :
                         setOf(
                             task1,
                             DataFixtures.task3
-                                .copy(dependsOn = task1)
+                                .changeDependency(dependsOn = task1)
                                 .assign(DataFixtures.employee2, start + dur1, dur2),
                         )
                     val project = Project.valueOf(setOf(DataFixtures.employee1, DataFixtures.employee2), tasks).getOrThrow()
@@ -130,8 +130,8 @@ class ProjectTest :
             }
 
             context("tasks with circular dependencies") {
-                val task5Deps = DataFixtures.task5.copy(dependsOn = DataFixtures.task3)
-                val task1Deps = DataFixtures.task1.copy(dependsOn = task5Deps)
+                val task5Deps = DataFixtures.task5.changeDependency(dependsOn = DataFixtures.task3)
+                val task1Deps = DataFixtures.task1.changeDependency(dependsOn = task5Deps)
 
                 test("must fail while initializing in case a circular dependencies is found") {
                     val tasks = setOf(task1Deps, DataFixtures.task2, DataFixtures.task3, DataFixtures.task4, task5Deps)
@@ -155,5 +155,7 @@ class ProjectTest :
                     vals.errors.size shouldBe 0
                 }
             }
+
+            // add allocated tasks must contains only project employees
         }
     })

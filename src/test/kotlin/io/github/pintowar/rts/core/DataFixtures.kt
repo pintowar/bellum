@@ -6,17 +6,18 @@ import io.github.pintowar.rts.core.domain.Task
 import io.github.pintowar.rts.core.domain.UnassignedTask
 import io.github.pintowar.rts.core.estimator.TimeEstimator
 import java.time.Duration
+import kotlin.getOrThrow
 
 object DataFixtures {
-    val task1 = UnassignedTask.valueOf("Task 1").getOrNull()!!
-    val task2 = UnassignedTask.valueOf("Task 2").getOrNull()!!
-    val task3 = UnassignedTask.valueOf("Task 3", dependsOn = task1).getOrNull()!!
-    val task4 = UnassignedTask.valueOf("Task 4", dependsOn = task2).getOrNull()!!
-    val task5 = UnassignedTask.valueOf("Task 5").getOrNull()!!
+    val task1 = UnassignedTask.valueOf("Task 1").getOrThrow()
+    val task2 = UnassignedTask.valueOf("Task 2").getOrThrow()
+    val task3 = UnassignedTask.valueOf("Task 3", dependsOn = task1).getOrThrow()
+    val task4 = UnassignedTask.valueOf("Task 4", dependsOn = task2).getOrThrow()
+    val task5 = UnassignedTask.valueOf("Task 5").getOrThrow()
 
-    val employee1 = Employee.valueOf("Employee 1").getOrNull()!!
-    val employee2 = Employee.valueOf("Employee 2").getOrNull()!!
-    val employee3 = Employee.valueOf("Employee 3").getOrNull()!!
+    val employee1 = Employee.valueOf("Employee 1").getOrThrow()
+    val employee2 = Employee.valueOf("Employee 2").getOrThrow()
+    val employee3 = Employee.valueOf("Employee 3").getOrThrow()
 
     val sampleProjectSmall =
         Project

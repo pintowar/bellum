@@ -17,7 +17,7 @@ class ChocoScheduler(
     override fun solve(
         project: Project,
         start: Instant,
-    ): SchedulerSolution {
+    ): Result<SchedulerSolution> {
         val employees = project.allEmployees()
         val tasks = project.allTasks()
 
@@ -41,11 +41,13 @@ class ChocoScheduler(
         val durs = modelVars.taskDuration.map { unitDuration(solution.getIntVal(it)) }
         val assigneds = tasks.mapIndexed { idx, tsk -> tsk.assign(emps[idx], inits[idx], durs[idx]) }
 
-        return SchedulerSolution(
-            project.copy(tasks = assigneds.toSet()),
-            true,
-            Duration.ofMillis(time.inWholeMilliseconds),
-        )
+        return Project.valueOf(employees.toSet(), assigneds.toSet()).map { newProject ->
+            SchedulerSolution(
+                newProject,
+                true,
+                Duration.ofMillis(time.inWholeMilliseconds),
+            )
+        }
     }
 
     fun generateModel(

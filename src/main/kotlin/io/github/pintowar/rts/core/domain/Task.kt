@@ -27,15 +27,17 @@ sealed interface Task {
     val requiredSkills: Map<String, SkillPoint>
     val dependsOn: Task?
 
+    fun changeDependency(dependsOn: Task): Task
+
     fun isAssigned(): Boolean = this is AssignedTask
 
     fun assign(
         employee: Employee,
         startAt: Instant,
         duration: Duration,
-    ): Task = AssignedTask(id, description, priority, requiredSkills, dependsOn, employee, startAt, duration)
+    ): Task = AssignedTask.valueOf(id(), description, priority, requiredSkills, dependsOn, employee, startAt, duration).getOrThrow()
 
-    fun unassign(): Task = UnassignedTask(id, description, priority, requiredSkills, dependsOn)
+    fun unassign(): Task = UnassignedTask.valueOf(id(), description, priority, requiredSkills, dependsOn).getOrThrow()
 
     fun endsAt(): Instant? {
         if (this is AssignedTask) return endsAt
@@ -50,7 +52,7 @@ sealed interface Task {
     }
 }
 
-data class UnassignedTask(
+class UnassignedTask private constructor(
     override val id: TaskId,
     override val description: String,
     override val priority: TaskPriority,
@@ -64,21 +66,24 @@ data class UnassignedTask(
             priority: TaskPriority = TaskPriority.MINOR,
             skills: Map<String, SkillPoint> = emptyMap(),
             dependsOn: Task? = null,
-        ): Result<UnassignedTask> = valueOf(description, priority, skills, dependsOn).map { it.copy(id = TaskId(id)) }
+        ): Result<UnassignedTask> =
+            runCatching {
+                UnassignedTask(TaskId(id), description, priority, skills, dependsOn)
+            }
 
         fun valueOf(
             description: String,
             priority: TaskPriority = TaskPriority.MINOR,
             skills: Map<String, SkillPoint> = emptyMap(),
             dependsOn: Task? = null,
-        ): Result<UnassignedTask> =
-            runCatching {
-                UnassignedTask(TaskId(), description, priority, skills, dependsOn)
-            }
+        ): Result<UnassignedTask> = valueOf(TaskId()(), description, priority, skills, dependsOn)
     }
+
+    override fun changeDependency(dependsOn: Task): UnassignedTask =
+        valueOf(id(), description, priority, requiredSkills, dependsOn).getOrThrow()
 }
 
-data class AssignedTask(
+class AssignedTask private constructor(
     override val id: TaskId,
     override val description: String,
     override val priority: TaskPriority,
@@ -88,7 +93,35 @@ data class AssignedTask(
     val startAt: Instant,
     val duration: Duration,
 ) : Task {
-    val endsAt: Instant = startAt + duration
+    companion object {
+        fun valueOf(
+            id: UUID,
+            description: String,
+            priority: TaskPriority = TaskPriority.MINOR,
+            skills: Map<String, SkillPoint> = emptyMap(),
+            dependsOn: Task? = null,
+            employee: Employee,
+            startAt: Instant,
+            duration: Duration,
+        ): Result<AssignedTask> =
+            runCatching {
+                AssignedTask(TaskId(id), description, priority, skills, dependsOn, employee, startAt, duration)
+            }
 
+        fun valueOf(
+            description: String,
+            priority: TaskPriority = TaskPriority.MINOR,
+            skills: Map<String, SkillPoint> = emptyMap(),
+            dependsOn: Task? = null,
+            employee: Employee,
+            startAt: Instant,
+            duration: Duration,
+        ): Result<AssignedTask> = valueOf(TaskId()(), description, priority, skills, dependsOn, employee, startAt, duration)
+    }
+
+    val endsAt: Instant = startAt + duration
     val interval = Interval.of(startAt, duration)
+
+    override fun changeDependency(dependsOn: Task): AssignedTask =
+        valueOf(id(), description, priority, requiredSkills, dependsOn, employee, startAt, duration).getOrThrow()
 }
