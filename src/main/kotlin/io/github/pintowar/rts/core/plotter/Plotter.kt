@@ -16,27 +16,37 @@ import java.time.Duration
 import java.time.Instant
 
 object Plotter {
+    fun generateTable(
+        project: Project,
+        from: Instant,
+    ): Map<String, List<*>> {
+        val assignedTasks = project.allTasks().filter { it.isAssigned() }.map { it as AssignedTask }
+
+        return mapOf(
+            "job" to assignedTasks.map { it.description },
+            "employee" to assignedTasks.map { it.employee.name },
+            "start" to assignedTasks.map { Duration.between(from, it.startAt).toMinutes() },
+            "end" to assignedTasks.map { Duration.between(from, it.endsAt).toMinutes() },
+            "priority" to assignedTasks.map { it.priority.toString() },
+        )
+    }
+
+    fun plotGantt(project: Project): Plot = plotGantt(project, from = Instant.now())
+
     fun plotGantt(
         project: Project,
         from: Instant,
     ): Plot {
-        val assignedTasks = project.allTasks().filter { it.isAssigned() }.map { it as AssignedTask }
-        val data =
-            mapOf(
-                "job" to assignedTasks.map { it.description },
-                "employee" to assignedTasks.map { it.employee.name },
-                "start" to assignedTasks.map { Duration.between(from, it.startAt).toMinutes() },
-                "end" to assignedTasks.map { Duration.between(from, it.endsAt).toMinutes() },
-                "end" to assignedTasks.map { it.priority.toString() },
-            )
+        val duration = Duration.between(from, project.endsAt()).toMinutes()
+        val data = generateTable(project, from)
 
         var p =
             letsPlot(data) {
                 x = "start"
                 y = "employee"
             }
-        p += ggtitle("Max period: ${project.endsAt()}")
-        p += xlab("Time")
+        p += ggtitle("Total duration: $duration minutes")
+        p += xlab("Time (minutes)")
         p += ylab("Employees")
         p += geomSegment(
             size = 15.0, // Adjust the thickness of the bars
