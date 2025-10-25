@@ -11,8 +11,10 @@ import java.util.UUID
 
 enum class ProjectScheduled { NONE, PARTIAL, SCHEDULED }
 
-@JvmInline value class ProjectId(private val id: UUID)  {
-    constructor(): this(Helper.uuidV7())
+@JvmInline value class ProjectId(
+    private val id: UUID,
+) {
+    constructor() : this(Helper.uuidV7())
 
     operator fun invoke() = id
 }
@@ -22,33 +24,42 @@ data class Project(
     private val employees: Set<Employee>,
     private val tasks: Set<Task>,
 ) {
-
     companion object {
-        private val initValidator = Validation<Project> {
-            Project::hasCircularTaskDependency {
-                constrain("Circular task dependency found {value}.") { it.isEmpty() }
-            }
-        }
-
-        private val validator = initValidator andThen Validation<Project> {
-            Project::employeesWithOverlap {
-                constrain("Overlapped tasks for employee: {value}.") { it.isEmpty() }
+        private val initValidator =
+            Validation<Project> {
+                Project::hasCircularTaskDependency {
+                    constrain("Circular task dependency found {value}.") { it.isEmpty() }
+                }
             }
 
-            Project::precedenceBroken {
-                constrain("Precedences broken: {value}.") { it.isEmpty() }
-            }
-        }
+        private val validator =
+            initValidator andThen
+                Validation<Project> {
+                    Project::employeesWithOverlap {
+                        constrain("Overlapped tasks for employee: {value}.") { it.isEmpty() }
+                    }
 
-        fun valueOf(id: UUID, employees: Set<Employee>, tasks: Set<Task>): Result<Project> =
-            valueOf(employees, tasks).map { it.copy(id = ProjectId(id)) }
+                    Project::precedenceBroken {
+                        constrain("Precedences broken: {value}.") { it.isEmpty() }
+                    }
+                }
 
-        fun valueOf(employees: Set<Employee>, tasks: Set<Task>): Result<Project> = runCatching {
-            Project(ProjectId(), employees, tasks).also {
-                val res = initValidator.validate(it)
-                if (!res.isValid) throw ValidationException(res.errors)
+        fun valueOf(
+            id: UUID,
+            employees: Set<Employee>,
+            tasks: Set<Task>,
+        ): Result<Project> = valueOf(employees, tasks).map { it.copy(id = ProjectId(id)) }
+
+        fun valueOf(
+            employees: Set<Employee>,
+            tasks: Set<Task>,
+        ): Result<Project> =
+            runCatching {
+                Project(ProjectId(), employees, tasks).also {
+                    val res = initValidator.validate(it)
+                    if (!res.isValid) throw ValidationException(res.errors)
+                }
             }
-        }
     }
 
     fun allEmployees() = employees.toList()
@@ -70,32 +81,34 @@ data class Project(
 
     fun isValid() = validate().isValid
 
-    fun employeesWithOverlap(): List<String>  {
-        return tasks.asSequence()
+    fun employeesWithOverlap(): List<String> =
+        tasks
+            .asSequence()
             .filter { it.isAssigned() }
             .map { it as AssignedTask }
             .groupBy({ it.employee })
             .map { (emp, tasks) -> emp.name to tasks.hasOverlappingIntervals() }
             .filter { (_, overs) -> overs }
             .map { (emp, _) -> emp }
-    }
 
-    fun precedenceBroken(): List<String>  {
-        return tasks.asSequence()
-            .filter { it.isAssigned() && (it.dependsOn?.isAssigned() ?: false)}
+    fun precedenceBroken(): List<String> =
+        tasks
+            .asSequence()
+            .filter { it.isAssigned() && (it.dependsOn?.isAssigned() ?: false) }
             .map { it as AssignedTask to it.dependsOn as AssignedTask }
             .filter { (a, b) -> a.startAt < b.endsAt }
             .map { (a, b) -> "${a.employee.name} (start: ${a.startAt}) < ${b.employee.name} (end: ${b.startAt})" }
             .toList()
-    }
 
     fun hasCircularTaskDependency(): String {
         val graph = DefaultDirectedGraph<TaskId, DefaultEdge>(DefaultEdge::class.java)
         val byIds = tasks.associateBy { it.id }
 
-        val precedence = tasks.asSequence()
-            .filter { it.dependsOn != null }
-            .map { it.id to it.dependsOn!!.id }
+        val precedence =
+            tasks
+                .asSequence()
+                .filter { it.dependsOn != null }
+                .map { it.id to it.dependsOn!!.id }
 
         precedence.flatMap { it.toList() }.toSet().forEach { graph.addVertex(it) }
         precedence.forEach { (a, b) -> graph.addEdge(a, b) }
@@ -103,5 +116,4 @@ data class Project(
         val cycle = CycleDetector(graph).findCycles().map { byIds.getValue(it).description }.sorted()
         return (cycle + cycle.take(1)).joinToString(" - ")
     }
-
 }

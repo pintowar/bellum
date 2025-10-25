@@ -7,5 +7,3 @@ object Helper {
 
     fun uuidV7() = generator.generate()
 }
-
-

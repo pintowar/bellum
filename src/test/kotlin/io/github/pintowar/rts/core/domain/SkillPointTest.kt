@@ -7,20 +7,21 @@ import io.kotest.matchers.result.shouldBeSuccess
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeTypeOf
 
-class SkillPointTest : FunSpec({
-    context("create valid point") {
-        withData(0, 1,3, 4, 8, 9) {
-            SkillPoint.valueOf(it) shouldBeSuccess { res ->
-                res() shouldBe it
+class SkillPointTest :
+    FunSpec({
+        context("create valid point") {
+            withData(0, 1, 3, 4, 8, 9) {
+                SkillPoint.valueOf(it) shouldBeSuccess { res ->
+                    res() shouldBe it
+                }
             }
         }
-    }
 
-    context("create invalid point") {
-        withData(-3, -2, -1, 10, 15) {
-            SkillPoint.valueOf(it) shouldBeFailure { ex ->
-                ex.shouldBeTypeOf<ValidationException>()
+        context("create invalid point") {
+            withData(-3, -2, -1, 10, 15) {
+                SkillPoint.valueOf(it) shouldBeFailure { ex ->
+                    ex.shouldBeTypeOf<ValidationException>()
+                }
             }
         }
-    }
-})
+    })

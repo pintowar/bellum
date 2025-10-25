@@ -6,5 +6,5 @@ import java.time.Duration
 data class SchedulerSolution(
     val project: Project,
     val optimal: Boolean,
-    val duration: Duration
+    val duration: Duration,
 )

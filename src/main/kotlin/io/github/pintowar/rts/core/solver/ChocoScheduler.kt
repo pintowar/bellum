@@ -12,10 +12,12 @@ import java.time.Instant
 import kotlin.time.measureTimedValue
 
 class ChocoScheduler(
-    override val estimator: TimeEstimator
+    override val estimator: TimeEstimator,
 ) : Scheduler {
-
-    override fun solve(project: Project, start: Instant): SchedulerSolution {
+    override fun solve(
+        project: Project,
+        start: Instant,
+    ): SchedulerSolution {
         val employees = project.allEmployees()
         val tasks = project.allTasks()
 
@@ -29,9 +31,10 @@ class ChocoScheduler(
         val solver = model.solver
 
         val timeLimit = TimeCounter(model, Duration.ofSeconds(10).toNanos())
-        val (solution, time) = measureTimedValue {
-            solver.findOptimalSolution(makespan, Model.MINIMIZE, timeLimit)
-        }
+        val (solution, time) =
+            measureTimedValue {
+                solver.findOptimalSolution(makespan, Model.MINIMIZE, timeLimit)
+            }
 
         val emps = modelVars.taskAssignee.map { employees[solution.getIntVal(it)] }
         val inits = modelVars.taskStartTime.map { start + unitDuration(solution.getIntVal(it)) }
@@ -41,11 +44,16 @@ class ChocoScheduler(
         return SchedulerSolution(
             project.copy(tasks = assigneds.toSet()),
             true,
-            Duration.ofMillis(time.inWholeMilliseconds)
+            Duration.ofMillis(time.inWholeMilliseconds),
         )
     }
 
-    fun generateModel(numEmployees: Int, numTasks: Int, matrix: Array<IntArray>, precedences: Array<IntArray>): ModelVars {
+    fun generateModel(
+        numEmployees: Int,
+        numTasks: Int,
+        matrix: Array<IntArray>,
+        precedences: Array<IntArray>,
+    ): ModelVars {
         val model = Model("ProjectSchedulerModel")
         // --- Variables ---
 
@@ -81,16 +89,17 @@ class ChocoScheduler(
         // This is a robust way to model: employeeWorkload[e] = sum(duration[t] for all t assigned to e)
         for (e in 0 until numEmployees) {
             // Create an array of variables representing the duration of each task IF assigned to this employee
-            val assignedTaskDurations = Array(numTasks) { t ->
-                model.intVar("duration_e${e}_t${t}", 0, matrix[e][t])
-            }
+            val assignedTaskDurations =
+                Array(numTasks) { t ->
+                    model.intVar("duration_e${e}_t$t", 0, matrix[e][t])
+                }
 
             for (t in 0 until numTasks) {
                 // If task 't' is assigned to employee 'e', then its duration is estimationMatrix[e][t], else 0.
                 model.ifThenElse(
                     model.arithm(taskAssignee[t], "=", e),
                     model.arithm(assignedTaskDurations[t], "=", matrix[e][t]),
-                    model.arithm(assignedTaskDurations[t], "=", 0)
+                    model.arithm(assignedTaskDurations[t], "=", 0),
                 )
             }
             // The employee's total workload is the sum of these conditional durations
@@ -112,7 +121,7 @@ class ChocoScheduler(
         model.diffN(taskStartTime, taskAssignee, taskDuration, taskHeights, false).post()
 
         // Constraint: The makespan is the maximum of all employee workloads
-        //model.max(makespan, employeeWorkload).post()
+        // model.max(makespan, employeeWorkload).post()
         model.max(makespan, taskEndTime).post()
 
         return ModelVars(
@@ -124,18 +133,23 @@ class ChocoScheduler(
         )
     }
 
-    fun durationMatrix(employees: List<Employee>, tasks: List<Task>): Array<IntArray> {
-        return employees.map { emp ->
-            tasks.map { tsk -> durationUnit(estimator.estimate(emp, tsk)) }.toIntArray()
-        }.toTypedArray()
-    }
+    fun durationMatrix(
+        employees: List<Employee>,
+        tasks: List<Task>,
+    ): Array<IntArray> =
+        employees
+            .map { emp ->
+                tasks.map { tsk -> durationUnit(estimator.estimate(emp, tsk)) }.toIntArray()
+            }.toTypedArray()
 
     fun precedenceTable(tasks: List<Task>): Array<IntArray> {
-        val idxTask = tasks.withIndex().associate { (idx, it) -> it.id to idx  }
-        return tasks.filter { it.dependsOn != null }.map { tsk ->
-            val (a, b) = idxTask.getValue(tsk.dependsOn!!.id) to idxTask.getValue(tsk.id)
-            intArrayOf(a, b)
-        }.toTypedArray()
+        val idxTask = tasks.withIndex().associate { (idx, it) -> it.id to idx }
+        return tasks
+            .filter { it.dependsOn != null }
+            .map { tsk ->
+                val (a, b) = idxTask.getValue(tsk.dependsOn!!.id) to idxTask.getValue(tsk.id)
+                intArrayOf(a, b)
+            }.toTypedArray()
     }
 
     fun durationUnit(duration: Duration): Int = duration.toMinutes().toInt()
