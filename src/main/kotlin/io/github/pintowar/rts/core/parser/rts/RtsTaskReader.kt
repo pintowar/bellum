@@ -5,6 +5,7 @@ import io.github.pintowar.rts.core.domain.Task
 import io.github.pintowar.rts.core.domain.TaskPriority
 import io.github.pintowar.rts.core.domain.UnassignedTask
 import io.github.pintowar.rts.core.parser.ContentReader
+import io.github.pintowar.rts.core.parser.InvalidFileFormat
 
 object RtsTaskReader : ContentReader<List<Task>> {
     override fun readContent(
@@ -12,10 +13,17 @@ object RtsTaskReader : ContentReader<List<Task>> {
         sep: String,
     ): Result<List<Task>> =
         runCatching {
+            if (content.isBlank()) throw InvalidFileFormat("Empty task content")
             val lines = content.lines()
+
             val (header, body) = lines.first().split(sep) to lines.drop(1).map { it.split(sep) }
             val data =
-                body.map { line ->
+                body.mapIndexed { idx, line ->
+                    if (header.size != line.size) {
+                        throw InvalidFileFormat(
+                            "Invalid task content on line ${idx + 1}: num contents (${line.size}) values does not match headers (${header.size}).",
+                        )
+                    }
                     val row = header.zip(line).toMap()
                     val (id, content, priority, precedes) = listOf("id", "content", "priority", "precedes").map(row::getValue)
                     val skills =

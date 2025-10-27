@@ -17,7 +17,6 @@ repositories {
 
 dependencies {
     implementation("io.konform:konform-jvm:0.11.0")
-    implementation("org.threeten:threeten-extra:1.8.0")
     implementation("org.choco-solver:choco-solver:4.10.18")
     implementation("com.fasterxml.uuid:java-uuid-generator:5.1.1")
     implementation("org.jgrapht:jgrapht-core:1.5.2")
