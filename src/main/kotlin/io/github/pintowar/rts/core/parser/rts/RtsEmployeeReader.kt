@@ -10,7 +10,7 @@ object RtsEmployeeReader : ContentReader<List<Employee>> {
         sep: String,
     ): Result<List<Employee>> =
         runCatching {
-            val lines = content.lines()
+            val lines = content.trim().lines()
             val (header, body) = lines.first().split(sep) to lines.drop(1).map { it.split(sep) }
             body.map { line ->
                 val row = header.zip(line).toMap()

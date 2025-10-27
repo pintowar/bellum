@@ -17,38 +17,39 @@ class ChocoScheduler(
     override fun solve(
         project: Project,
         start: Instant,
-    ): Result<SchedulerSolution> {
-        val employees = project.allEmployees()
-        val tasks = project.allTasks()
+    ): Result<SchedulerSolution> =
+        runCatching {
+            val employees = project.allEmployees()
+            val tasks = project.allTasks()
 
-        val numEmployees = employees.size
-        val numTasks = tasks.size
-        val precedences = precedenceTable(tasks)
-        val matrix = durationMatrix(employees, tasks)
+            val numEmployees = employees.size
+            val numTasks = tasks.size
+            val precedences = precedenceTable(tasks)
+            val matrix = durationMatrix(employees, tasks).getOrThrow()
 
-        val modelVars = generateModel(numEmployees, numTasks, matrix, precedences)
-        val (model, makespan) = modelVars
-        val solver = model.solver
+            val modelVars = generateModel(numEmployees, numTasks, matrix, precedences)
+            val (model, makespan) = modelVars
+            val solver = model.solver
 
-        val timeLimit = TimeCounter(model, Duration.ofSeconds(10).toNanos())
-        val (solution, time) =
-            measureTimedValue {
-                solver.findOptimalSolution(makespan, Model.MINIMIZE, timeLimit)
+            val timeLimit = TimeCounter(model, Duration.ofSeconds(10).toNanos())
+            val (solution, time) =
+                measureTimedValue {
+                    solver.findOptimalSolution(makespan, Model.MINIMIZE, timeLimit)
+                }
+
+            val emps = modelVars.taskAssignee.map { employees[solution.getIntVal(it)] }
+            val inits = modelVars.taskStartTime.map { start + unitDuration(solution.getIntVal(it)) }
+            val durs = modelVars.taskDuration.map { unitDuration(solution.getIntVal(it)) }
+            val assigneds = tasks.mapIndexed { idx, tsk -> tsk.assign(emps[idx], inits[idx], durs[idx]) }
+
+            return Project(employees.toSet(), assigneds.toSet()).map { newProject ->
+                SchedulerSolution(
+                    newProject,
+                    true,
+                    Duration.ofMillis(time.inWholeMilliseconds),
+                )
             }
-
-        val emps = modelVars.taskAssignee.map { employees[solution.getIntVal(it)] }
-        val inits = modelVars.taskStartTime.map { start + unitDuration(solution.getIntVal(it)) }
-        val durs = modelVars.taskDuration.map { unitDuration(solution.getIntVal(it)) }
-        val assigneds = tasks.mapIndexed { idx, tsk -> tsk.assign(emps[idx], inits[idx], durs[idx]) }
-
-        return Project(employees.toSet(), assigneds.toSet()).map { newProject ->
-            SchedulerSolution(
-                newProject,
-                true,
-                Duration.ofMillis(time.inWholeMilliseconds),
-            )
         }
-    }
 
     fun generateModel(
         numEmployees: Int,
@@ -138,11 +139,13 @@ class ChocoScheduler(
     fun durationMatrix(
         employees: List<Employee>,
         tasks: List<Task>,
-    ): Array<IntArray> =
-        employees
-            .map { emp ->
-                tasks.map { tsk -> durationUnit(estimator.estimate(emp, tsk)) }.toIntArray()
-            }.toTypedArray()
+    ): Result<Array<IntArray>> =
+        runCatching {
+            employees
+                .map { emp ->
+                    tasks.map { tsk -> durationUnit(estimator.estimate(emp, tsk).getOrThrow()) }.toIntArray()
+                }.toTypedArray()
+        }
 
     fun precedenceTable(tasks: List<Task>): Array<IntArray> {
         val idxTask = tasks.withIndex().associate { (idx, it) -> it.id to idx }

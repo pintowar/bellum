@@ -9,7 +9,7 @@ object RtsProjectReader : ContentReader<Project> {
         sep: String,
     ): Result<Project> =
         runCatching {
-            val lines = content.lines()
+            val lines = content.trim().lines()
             val idx = lines.indexOfFirst { it.startsWith("=====") }
             val (employeeContent, taskContent) = lines.take(idx) to lines.drop(idx + 1)
 

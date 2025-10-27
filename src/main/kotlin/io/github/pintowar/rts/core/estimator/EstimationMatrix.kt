@@ -15,7 +15,7 @@ class EstimationMatrix private constructor(
     private val matrix: MutableMap<Pair<EmployeeId, TaskId>, Duration> = mutableMapOf()
 
     companion object {
-        fun valueOf(
+        operator fun invoke(
             project: Project,
             estimator: TimeEstimator,
         ): EstimationMatrix {
@@ -33,7 +33,7 @@ class EstimationMatrix private constructor(
             val employee = employeeIds[employeeId] ?: throw IllegalArgumentException("Invalid employee id: $employeeId")
             val task = taskIds[taskId] ?: throw IllegalArgumentException("Invalid task id: $taskId")
             matrix.getOrPut(employeeId to taskId) {
-                estimator.estimate(employee, task)
+                estimator.estimate(employee, task).getOrThrow()
             }
         }
 }

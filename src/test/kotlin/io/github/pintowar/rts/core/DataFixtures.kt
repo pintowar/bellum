@@ -52,11 +52,11 @@ object DataFixtures {
             override fun estimate(
                 employeeSkills: Array<Int>,
                 taskSkills: Array<Int>,
-            ): Duration = TODO("Not yet implemented")
+            ): Result<Duration> = TODO("Not yet implemented")
 
             override fun estimate(
                 employee: Employee,
                 task: Task,
-            ): Duration = cache.getValue(employee).getValue(task)
+            ): Result<Duration> = runCatching { cache.getValue(employee).getValue(task) }
         }
 }

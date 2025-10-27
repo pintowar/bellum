@@ -13,6 +13,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import java.time.Duration
+import kotlin.Result.Companion.success
 
 class EstimationMatrixTest :
     FunSpec({
@@ -22,9 +23,9 @@ class EstimationMatrixTest :
             val task = UnassignedTask("Task 1").getOrNull()!!
             val project = Project(employees = setOf(employee), tasks = setOf(task)).getOrThrow()
             val estimator = mockk<TimeEstimator>()
-            every { estimator.estimate(any<Employee>(), any<Task>()) } returns Duration.ofHours(1)
+            every { estimator.estimate(any<Employee>(), any<Task>()) } returns success(Duration.ofHours(1))
 
-            val matrix = EstimationMatrix.valueOf(project, estimator)
+            val matrix = EstimationMatrix(project, estimator)
 
             // Test valid duration
             val result = matrix.duration(employee.id, task.id)
@@ -37,8 +38,8 @@ class EstimationMatrixTest :
             val task = UnassignedTask("Task 1").getOrNull()!!
             val project = Project(employees = setOf(employee), tasks = setOf(task)).getOrThrow()
             val estimator = mockk<TimeEstimator>()
-            every { estimator.estimate(any<Employee>(), any<Task>()) } returns Duration.ofHours(1)
-            val matrix = EstimationMatrix.valueOf(project, estimator)
+            every { estimator.estimate(any<Employee>(), any<Task>()) } returns success(Duration.ofHours(1))
+            val matrix = EstimationMatrix(project, estimator)
 
             // First call
             val result1 = matrix.duration(employee.id, task.id)
@@ -57,9 +58,9 @@ class EstimationMatrixTest :
             val task = UnassignedTask("Task 1").getOrNull()!!
             val project = Project(employees = setOf(employee), tasks = setOf(task)).getOrThrow()
             val estimator = mockk<TimeEstimator>()
-            every { estimator.estimate(any<Employee>(), any<Task>()) } returns Duration.ofHours(1)
+            every { estimator.estimate(any<Employee>(), any<Task>()) } returns success(Duration.ofHours(1))
 
-            val matrix = EstimationMatrix.valueOf(project, estimator)
+            val matrix = EstimationMatrix(project, estimator)
             val invalidEmployeeId = EmployeeId()
 
             // Test
@@ -73,9 +74,9 @@ class EstimationMatrixTest :
             val task = UnassignedTask("Task 1").getOrNull()!!
             val project = Project(employees = setOf(employee), tasks = setOf(task)).getOrThrow()
             val estimator = mockk<TimeEstimator>()
-            every { estimator.estimate(any<Employee>(), any<Task>()) } returns Duration.ofHours(1)
+            every { estimator.estimate(any<Employee>(), any<Task>()) } returns success(Duration.ofHours(1))
 
-            val matrix = EstimationMatrix.valueOf(project, estimator)
+            val matrix = EstimationMatrix(project, estimator)
             val invalidTaskId = TaskId()
 
             // Test

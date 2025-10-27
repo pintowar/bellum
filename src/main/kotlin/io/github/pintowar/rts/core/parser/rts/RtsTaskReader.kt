@@ -12,7 +12,7 @@ object RtsTaskReader : ContentReader<List<Task>> {
         sep: String,
     ): Result<List<Task>> =
         runCatching {
-            val lines = content.lines()
+            val lines = content.trim().lines()
             val (header, body) = lines.first().split(sep) to lines.drop(1).map { it.split(sep) }
             val data =
                 body.map { line ->

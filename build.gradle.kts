@@ -21,6 +21,7 @@ dependencies {
     implementation("org.choco-solver:choco-solver:4.10.18")
     implementation("com.fasterxml.uuid:java-uuid-generator:5.1.1")
     implementation("org.jgrapht:jgrapht-core:1.5.2")
+    implementation("org.apache.commons:commons-math3:3.6.1")
 
     implementation("org.jetbrains.lets-plot:lets-plot-kotlin-jvm:4.11.2")
 

@@ -3,7 +3,7 @@ package io.github.pintowar.rts.core.parser.rts
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 
-class ProjectReaderTest :
+class RtsProjectReaderTest :
     FunSpec({
 
         test("successfully read content") {
