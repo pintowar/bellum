@@ -2,7 +2,7 @@ package io.github.pintowar.rts.core.estimator
 
 import io.github.pintowar.rts.core.domain.Employee
 import io.github.pintowar.rts.core.domain.Task
-import java.time.Duration
+import kotlin.time.Duration
 
 interface TimeEstimator {
     fun estimate(

@@ -4,7 +4,7 @@ import io.github.pintowar.rts.core.DataFixtures
 import io.github.pintowar.rts.core.domain.ProjectScheduled
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
-import java.time.Instant
+import kotlinx.datetime.Instant
 
 class ChocoSchedulerTest :
     FunSpec({

@@ -4,11 +4,13 @@ import io.github.pintowar.rts.core.domain.Employee
 import io.github.pintowar.rts.core.domain.Project
 import io.github.pintowar.rts.core.domain.Task
 import io.github.pintowar.rts.core.estimator.TimeEstimator
+import kotlinx.datetime.Instant
 import org.chocosolver.solver.Model
 import org.chocosolver.solver.search.limits.TimeCounter
 import org.chocosolver.solver.variables.IntVar
-import java.time.Duration
-import java.time.Instant
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
 import kotlin.time.measureTimedValue
 
 class ChocoScheduler(
@@ -30,7 +32,7 @@ class ChocoScheduler(
         val (model, makespan) = modelVars
         val solver = model.solver
 
-        val timeLimit = TimeCounter(model, Duration.ofSeconds(10).toNanos())
+        val timeLimit = TimeCounter(model, 10.seconds.inWholeNanoseconds)
         val (solution, time) =
             measureTimedValue {
                 solver.findOptimalSolution(makespan, Model.MINIMIZE, timeLimit)
@@ -45,7 +47,7 @@ class ChocoScheduler(
             SchedulerSolution(
                 newProject,
                 true,
-                Duration.ofMillis(time.inWholeMilliseconds),
+                time,
             )
         }
     }
@@ -154,9 +156,9 @@ class ChocoScheduler(
             }.toTypedArray()
     }
 
-    fun durationUnit(duration: Duration): Int = duration.toMinutes().toInt()
+    fun durationUnit(duration: Duration): Int = duration.inWholeMinutes.toInt()
 
-    fun unitDuration(duration: Int): Duration = Duration.ofMinutes(duration.toLong())
+    fun unitDuration(duration: Int): Duration = duration.minutes
 
     data class ModelVars(
         val model: Model,

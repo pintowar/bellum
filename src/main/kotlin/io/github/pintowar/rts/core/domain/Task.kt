@@ -1,10 +1,9 @@
 package io.github.pintowar.rts.core.domain
 
 import io.github.pintowar.rts.core.util.Helper
-import org.threeten.extra.Interval
-import java.time.Duration
-import java.time.Instant
+import kotlinx.datetime.Instant
 import java.util.UUID
+import kotlin.time.Duration
 
 interface InvalidTask
 
@@ -46,7 +45,7 @@ sealed interface Task {
 
     fun overlaps(other: Task): Boolean {
         if (this is AssignedTask && other is AssignedTask) {
-            return this.interval.overlaps(other.interval)
+            return this == other || startAt < other.endsAt && other.startAt < endsAt
         }
         return false
     }
@@ -120,7 +119,6 @@ class AssignedTask private constructor(
     }
 
     val endsAt: Instant = startAt + duration
-    val interval = Interval.of(startAt, duration)
 
     override fun changeDependency(dependsOn: Task): AssignedTask =
         invoke(id(), description, priority, requiredSkills, dependsOn, employee, startAt, duration).getOrThrow()

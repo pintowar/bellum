@@ -1,7 +1,7 @@
 package io.github.pintowar.rts.core.solver
 
 import io.github.pintowar.rts.core.domain.Project
-import java.time.Duration
+import kotlin.time.Duration
 
 data class SchedulerSolution(
     val project: Project,

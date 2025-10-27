@@ -5,8 +5,9 @@ import io.github.pintowar.rts.core.domain.Project
 import io.github.pintowar.rts.core.domain.Task
 import io.github.pintowar.rts.core.domain.UnassignedTask
 import io.github.pintowar.rts.core.estimator.TimeEstimator
-import java.time.Duration
 import kotlin.getOrThrow
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.minutes
 
 object DataFixtures {
     val task1 = UnassignedTask("Task 1").getOrThrow()
@@ -32,7 +33,7 @@ object DataFixtures {
         project.allEmployees().zip(mtx).associate { (employee, row) ->
             val tasks =
                 project.allTasks().zip(row).associate { (task, duration) ->
-                    task to Duration.ofMinutes(duration)
+                    task to duration.minutes
                 }
             employee to tasks
         }
