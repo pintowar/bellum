@@ -18,13 +18,13 @@ class IllegalNumSkills(
     size: Int,
 ) : EstimatorIllegalArgument("Insufficient $kind skills $size, must be at least 2.")
 
-interface TimeEstimator {
-    fun estimate(
+abstract class TimeEstimator {
+    internal abstract fun skillsEstimation(
         employeeSkills: Array<Int>,
         taskSkills: Array<Int>,
     ): Result<Duration>
 
-    fun estimate(
+    open fun estimate(
         employee: Employee,
         task: Task,
     ): Result<Duration> =
@@ -34,7 +34,7 @@ interface TimeEstimator {
             val taskSkills = allSkills.map { task.requiredSkills[it]?.let { s -> s() } ?: 0 }.toTypedArray()
 
             check(employeeSkills, taskSkills)
-            return estimate(employeeSkills, taskSkills)
+            return skillsEstimation(employeeSkills, taskSkills)
         }
 
     fun check(

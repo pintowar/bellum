@@ -17,7 +17,13 @@ object RtsTaskReader : ContentReader<List<Task>> {
             val data =
                 body.map { line ->
                     val row = header.zip(line).toMap()
-                    val (id, content, priority, precedes) = listOf("id", "content", "priority", "precedes").map(row::getValue)
+                    val (id, content, priority, precedes) =
+                        listOf(
+                            "id",
+                            "content",
+                            "priority",
+                            "precedes",
+                        ).map(row::getValue)
                     val skills =
                         row
                             .filterKeys { it.startsWith("skill") }

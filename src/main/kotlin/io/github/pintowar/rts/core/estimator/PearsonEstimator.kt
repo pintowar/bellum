@@ -4,8 +4,8 @@ import org.apache.commons.math3.stat.correlation.PearsonsCorrelation
 import java.time.Duration
 import kotlin.math.roundToLong
 
-class PearsonEstimator : TimeEstimator {
-    override fun estimate(
+class PearsonEstimator : TimeEstimator() {
+    override fun skillsEstimation(
         employeeSkills: Array<Int>,
         taskSkills: Array<Int>,
     ): Result<Duration> =

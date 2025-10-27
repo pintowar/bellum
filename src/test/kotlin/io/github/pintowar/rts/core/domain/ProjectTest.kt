@@ -147,7 +147,8 @@ class ProjectTest :
                 }
 
                 test("must pass in case a circular dependencies is not found") {
-                    val tasks = setOf(DataFixtures.task1, DataFixtures.task2, DataFixtures.task3, DataFixtures.task4, task5Deps)
+                    val tasks =
+                        setOf(DataFixtures.task1, DataFixtures.task2, DataFixtures.task3, DataFixtures.task4, task5Deps)
                     val project = Project(setOf(DataFixtures.employee1), tasks).getOrThrow()
 
                     project.isValid() shouldBe true

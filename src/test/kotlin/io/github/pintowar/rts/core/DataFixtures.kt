@@ -2,10 +2,8 @@ package io.github.pintowar.rts.core
 
 import io.github.pintowar.rts.core.domain.Employee
 import io.github.pintowar.rts.core.domain.Project
-import io.github.pintowar.rts.core.domain.Task
 import io.github.pintowar.rts.core.domain.UnassignedTask
-import io.github.pintowar.rts.core.estimator.TimeEstimator
-import java.time.Duration
+import io.github.pintowar.rts.core.estimator.CustomEstimator
 import kotlin.getOrThrow
 
 object DataFixtures {
@@ -25,38 +23,12 @@ object DataFixtures {
             tasks = setOf(task1, task2, task3, task4, task5),
         ).getOrThrow()
 
-    fun generateEstimator(
-        project: Project,
-        mtx: List<List<Long>>,
-    ): Map<Employee, Map<Task, Duration>> =
-        project.allEmployees().zip(mtx).associate { (employee, row) ->
-            val tasks =
-                project.allTasks().zip(row).associate { (task, duration) ->
-                    task to Duration.ofMinutes(duration)
-                }
-            employee to tasks
-        }
+    val smallMatrix =
+        listOf(
+            listOf(10L, 20, 30, 40, 50), // Employee 0
+            listOf(15L, 25, 35, 45, 55), // Employee 1
+            listOf(12L, 22, 32, 42, 52), // Employee 2
+        )
 
-    val smallTimeEstimator =
-        object : TimeEstimator {
-            private val cache =
-                generateEstimator(
-                    sampleProjectSmall,
-                    listOf(
-                        listOf(10L, 20, 30, 40, 50), // Employee 0
-                        listOf(15L, 25, 35, 45, 55), // Employee 1
-                        listOf(12L, 22, 32, 42, 52), // Employee 2
-                    ),
-                )
-
-            override fun estimate(
-                employeeSkills: Array<Int>,
-                taskSkills: Array<Int>,
-            ): Result<Duration> = TODO("Not yet implemented")
-
-            override fun estimate(
-                employee: Employee,
-                task: Task,
-            ): Result<Duration> = runCatching { cache.getValue(employee).getValue(task) }
-        }
+    val smallTimeEstimator = CustomEstimator(sampleProjectSmall, smallMatrix)
 }
