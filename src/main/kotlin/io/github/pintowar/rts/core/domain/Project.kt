@@ -11,7 +11,8 @@ import java.util.UUID
 
 enum class ProjectScheduled { NONE, PARTIAL, SCHEDULED }
 
-@JvmInline value class ProjectId(
+@JvmInline
+value class ProjectId(
     private val value: UUID,
 ) {
     constructor() : this(Helper.uuidV7())
@@ -31,8 +32,12 @@ class Project private constructor(
                     constrain("Circular task dependency found {value}.") { it.isEmpty() }
                 }
 
-                Project::hasUnkonwnEmployees {
+                Project::hasUnknownEmployees {
                     constrain("Some tasks are assigned to employees out of the project: {value}.") { it.isEmpty() }
+                }
+
+                Project::hasMissingTaskDependencies {
+                    constrain("Following task dependencies were not found: {value}.") { it.isEmpty() }
                 }
             }
 
@@ -122,9 +127,15 @@ class Project private constructor(
         return (cycle + cycle.take(1)).joinToString(" - ")
     }
 
-    fun hasUnkonwnEmployees(): List<String> {
+    fun hasUnknownEmployees(): List<String> {
         val projectEmployees = employees.map { it.id }.toSet()
         val assignedEmployees = tasks.filter { it.isAssigned() }.map { it as AssignedTask }.map { it.employee }
         return assignedEmployees.filter { it.id !in projectEmployees }.map { it.name }
+    }
+
+    fun hasMissingTaskDependencies(): String {
+        val taskIds = tasks.associateBy { it.id }
+        val dependenciesIds = tasks.mapNotNull { it.dependsOn }.associateBy { it.id }
+        return (dependenciesIds.keys - taskIds.keys).joinToString(", ") { dependenciesIds.getValue(it).description }
     }
 }

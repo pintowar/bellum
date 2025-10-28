@@ -129,7 +129,7 @@ class ProjectTest :
                 }
             }
 
-            context("tasks with circular dependencies") {
+            context("check for tasks with circular dependencies") {
                 val task5Deps = DataFixtures.task5.changeDependency(dependsOn = DataFixtures.task3)
                 val task1Deps = DataFixtures.task1.changeDependency(dependsOn = task5Deps)
 
@@ -157,7 +157,7 @@ class ProjectTest :
                 }
             }
 
-            context("tasks with invalid employee") {
+            context("check for tasks with invalid employee") {
                 val start = Instant.parse("2022-01-01T00:00:00Z")
                 val dur = 5.minutes
 
@@ -171,7 +171,7 @@ class ProjectTest :
                         val ex = project.exceptionOrNull() as ValidationException
                         val msg = "Some tasks are assigned to employees out of the project: [Employee 1]."
                         ex.errors.size shouldBe 1
-                        ex.errors.messagesAtPath(Project::hasUnkonwnEmployees) shouldBe listOf(msg)
+                        ex.errors.messagesAtPath(Project::hasUnknownEmployees) shouldBe listOf(msg)
                     }
                 }
 
@@ -179,6 +179,33 @@ class ProjectTest :
                     val task1 = DataFixtures.task1.assign(DataFixtures.employee1, start, dur)
                     val tasks = setOf(task1, DataFixtures.task2, DataFixtures.task3)
                     val project = Project(setOf(DataFixtures.employee1, DataFixtures.employee2), tasks).getOrThrow()
+
+                    project.isValid() shouldBe true
+                    val vals = project.validate()
+                    vals.errors.size shouldBe 0
+                }
+            }
+
+            context("check for missing task dependencies") {
+                val start = Instant.parse("2022-01-01T00:00:00Z")
+                val dur = 5.minutes
+
+                test("must fail while initializing in case a missing task dependency is found") {
+                    val tasks = setOf(DataFixtures.task2, DataFixtures.task3, DataFixtures.task4)
+                    val project = Project(setOf(DataFixtures.employee2), tasks)
+
+                    project.shouldBeFailure<ValidationException>()
+                    if (project.isFailure) {
+                        val ex = project.exceptionOrNull() as ValidationException
+                        val msg = "Following task dependencies were not found: Task 1."
+                        ex.errors.size shouldBe 1
+                        ex.errors.messagesAtPath(Project::hasMissingTaskDependencies) shouldBe listOf(msg)
+                    }
+                }
+
+                test("must pass while initializing in case a missing task dependency is not found") {
+                    val tasks = setOf(DataFixtures.task1, DataFixtures.task2, DataFixtures.task3)
+                    val project = Project(setOf(DataFixtures.employee2), tasks).getOrThrow()
 
                     project.isValid() shouldBe true
                     val vals = project.validate()
