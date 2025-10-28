@@ -12,8 +12,8 @@ import io.kotest.matchers.result.shouldBeSuccess
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import java.time.Duration
 import kotlin.Result.Companion.success
+import kotlin.time.Duration.Companion.hours
 
 class EstimationMatrixTest :
     FunSpec({
@@ -23,13 +23,13 @@ class EstimationMatrixTest :
             val task = UnassignedTask("Task 1").getOrNull()!!
             val project = Project(employees = setOf(employee), tasks = setOf(task)).getOrThrow()
             val estimator = mockk<TimeEstimator>()
-            every { estimator.estimate(any<Employee>(), any<Task>()) } returns success(Duration.ofHours(1))
+            every { estimator.estimate(any<Employee>(), any<Task>()) } returns success(1.hours)
 
             val matrix = EstimationMatrix(project, estimator)
 
             // Test valid duration
             val result = matrix.duration(employee.id, task.id)
-            result shouldBeSuccess Duration.ofHours(1)
+            result shouldBeSuccess 1.hours
         }
 
         test("cache duration after first estimation") {
@@ -38,17 +38,17 @@ class EstimationMatrixTest :
             val task = UnassignedTask("Task 1").getOrNull()!!
             val project = Project(employees = setOf(employee), tasks = setOf(task)).getOrThrow()
             val estimator = mockk<TimeEstimator>()
-            every { estimator.estimate(any<Employee>(), any<Task>()) } returns success(Duration.ofHours(1))
+            every { estimator.estimate(any<Employee>(), any<Task>()) } returns success(1.hours)
             val matrix = EstimationMatrix(project, estimator)
 
             // First call
             val result1 = matrix.duration(employee.id, task.id)
-            result1 shouldBeSuccess Duration.ofHours(1)
+            result1 shouldBeSuccess 1.hours
             verify(exactly = 1) { estimator.estimate(employee, task) }
 
             // Second call
             val result2 = matrix.duration(employee.id, task.id)
-            result2 shouldBeSuccess Duration.ofHours(1)
+            result2 shouldBeSuccess 1.hours
             verify(exactly = 1) { estimator.estimate(employee, task) }
         }
 
@@ -58,7 +58,7 @@ class EstimationMatrixTest :
             val task = UnassignedTask("Task 1").getOrNull()!!
             val project = Project(employees = setOf(employee), tasks = setOf(task)).getOrThrow()
             val estimator = mockk<TimeEstimator>()
-            every { estimator.estimate(any<Employee>(), any<Task>()) } returns success(Duration.ofHours(1))
+            every { estimator.estimate(any<Employee>(), any<Task>()) } returns success(1.hours)
 
             val matrix = EstimationMatrix(project, estimator)
             val invalidEmployeeId = EmployeeId()
@@ -74,7 +74,7 @@ class EstimationMatrixTest :
             val task = UnassignedTask("Task 1").getOrNull()!!
             val project = Project(employees = setOf(employee), tasks = setOf(task)).getOrThrow()
             val estimator = mockk<TimeEstimator>()
-            every { estimator.estimate(any<Employee>(), any<Task>()) } returns success(Duration.ofHours(1))
+            every { estimator.estimate(any<Employee>(), any<Task>()) } returns success(1.hours)
 
             val matrix = EstimationMatrix(project, estimator)
             val invalidTaskId = TaskId()

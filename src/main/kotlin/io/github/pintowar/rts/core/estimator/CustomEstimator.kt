@@ -5,7 +5,8 @@ import io.github.pintowar.rts.core.domain.EmployeeId
 import io.github.pintowar.rts.core.domain.Project
 import io.github.pintowar.rts.core.domain.Task
 import io.github.pintowar.rts.core.domain.TaskId
-import java.time.Duration
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.minutes
 
 class CustomEstimator(
     private val matrix: Map<EmployeeId, Map<TaskId, Duration>>,
@@ -18,7 +19,7 @@ class CustomEstimator(
             project.allEmployees().zip(mtx).associate { (employee, row) ->
                 val tasks =
                     project.allTasks().zip(row).associate { (task, duration) ->
-                        task.id to Duration.ofMinutes(duration)
+                        task.id to duration.minutes
                     }
                 employee.id to tasks
             }

@@ -6,14 +6,14 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.result.shouldBeFailure
 import io.kotest.matchers.result.shouldBeSuccess
 import io.kotest.matchers.shouldBe
-import java.time.Duration
-import java.time.Instant
+import kotlinx.datetime.Instant
+import kotlin.time.Duration.Companion.minutes
 
 class ProjectTest :
     FunSpec({
         context("scheduledStatus") {
             val start = Instant.parse("2022-01-01T00:00:00Z")
-            val (dur1, dur2) = Duration.ofMinutes(5) to Duration.ofMinutes(10)
+            val dur = 5.minutes
 
             test("scheduledStatus returns NONE when no tasks") {
                 val project = Project(emptySet(), emptySet())
@@ -23,8 +23,8 @@ class ProjectTest :
             }
 
             test("scheduledStatus returns SCHEDULED when all tasks are assigned") {
-                val task1 = DataFixtures.task1.assign(DataFixtures.employee1, start, dur1)
-                val task2 = DataFixtures.task2.assign(DataFixtures.employee2, start, dur1)
+                val task1 = DataFixtures.task1.assign(DataFixtures.employee1, start, dur)
+                val task2 = DataFixtures.task2.assign(DataFixtures.employee2, start, dur)
                 val project = Project(setOf(DataFixtures.employee1, DataFixtures.employee2), setOf(task1, task2))
                 project shouldBeSuccess {
                     it.scheduledStatus() shouldBe ProjectScheduled.SCHEDULED
@@ -32,7 +32,7 @@ class ProjectTest :
             }
 
             test("scheduledStatus returns PARTIAL when some tasks are assigned") {
-                val task1 = DataFixtures.task1.assign(DataFixtures.employee1, start, dur1)
+                val task1 = DataFixtures.task1.assign(DataFixtures.employee1, start, dur)
                 val task2 = DataFixtures.task2
                 val project = Project(setOf(DataFixtures.employee1), setOf(task1, task2))
                 project shouldBeSuccess {
@@ -61,7 +61,7 @@ class ProjectTest :
 
             context("check for overlapped tasks for the same employee") {
                 val start = Instant.parse("2022-01-01T00:00:00Z")
-                val (dur1, dur2) = Duration.ofMinutes(5) to Duration.ofMinutes(10)
+                val (dur1, dur2) = 5.minutes to 10.minutes
 
                 test("must fail in case of overlap") {
                     val tasks =
@@ -93,7 +93,7 @@ class ProjectTest :
 
             context("check for precedence") {
                 val start = Instant.parse("2022-01-01T00:00:00Z")
-                val (dur1, dur2) = Duration.ofMinutes(5) to Duration.ofMinutes(10)
+                val (dur1, dur2) = 5.minutes to 10.minutes
 
                 test("must fail in case of break precedence") {
                     val task1 = DataFixtures.task1.assign(DataFixtures.employee1, start + dur2, dur1)
@@ -159,7 +159,7 @@ class ProjectTest :
 
             context("tasks with invalid employee") {
                 val start = Instant.parse("2022-01-01T00:00:00Z")
-                val dur = Duration.ofMinutes(5)
+                val dur = 5.minutes
 
                 test("must fail while initializing in case a invalid employee is found") {
                     val task1 = DataFixtures.task1.assign(DataFixtures.employee1, start, dur)

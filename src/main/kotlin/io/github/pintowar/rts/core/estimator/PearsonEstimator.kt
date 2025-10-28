@@ -1,8 +1,9 @@
 package io.github.pintowar.rts.core.estimator
 
 import org.apache.commons.math3.stat.correlation.PearsonsCorrelation
-import java.time.Duration
 import kotlin.math.roundToLong
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.minutes
 
 class PearsonEstimator : TimeEstimator() {
     override fun skillsEstimation(
@@ -20,6 +21,6 @@ class PearsonEstimator : TimeEstimator() {
                 )
             val corr = if (correlation.isNaN()) 0.0 else correlation
             val time = 5 + (40 * (1 - corr)).roundToLong()
-            Duration.ofMinutes(time)
+            time.minutes
         }
 }

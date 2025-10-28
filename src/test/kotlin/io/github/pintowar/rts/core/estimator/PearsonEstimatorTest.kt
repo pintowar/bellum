@@ -5,7 +5,7 @@ import io.kotest.matchers.result.shouldBeFailure
 import io.kotest.matchers.result.shouldBeSuccess
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeTypeOf
-import java.time.Duration
+import kotlin.time.Duration.Companion.minutes
 
 class PearsonEstimatorTest :
     FunSpec({
@@ -15,21 +15,21 @@ class PearsonEstimatorTest :
             val employeeSkills = arrayOf(1, 2, 3)
             val taskSkills = arrayOf(1, 2, 3)
             val result = estimator.skillsEstimation(employeeSkills, taskSkills)
-            result shouldBeSuccess Duration.ofMinutes(5)
+            result shouldBeSuccess 5.minutes
         }
 
         test("anti-correlation returns 85 minutes") {
             val employeeSkills = arrayOf(1, 2, 3)
             val taskSkills = arrayOf(3, 2, 1)
             val result = estimator.skillsEstimation(employeeSkills, taskSkills)
-            result shouldBeSuccess Duration.ofMinutes(85)
+            result shouldBeSuccess 85.minutes
         }
 
         test("zero correlation returns 45 minutes") {
             val employeeSkills = arrayOf(1, 2, 3)
             val taskSkills = arrayOf(1, 1, 1)
             val result = estimator.skillsEstimation(employeeSkills, taskSkills)
-            result shouldBeSuccess Duration.ofMinutes(45)
+            result shouldBeSuccess 45.minutes
         }
 
         test("different array lengths throw exception") {

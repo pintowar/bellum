@@ -5,7 +5,7 @@ import io.github.pintowar.rts.core.domain.EmployeeId
 import io.github.pintowar.rts.core.domain.Project
 import io.github.pintowar.rts.core.domain.Task
 import io.github.pintowar.rts.core.domain.TaskId
-import java.time.Duration
+import kotlin.time.Duration
 
 class EstimationMatrix private constructor(
     private val employeeIds: Map<EmployeeId, Employee>,

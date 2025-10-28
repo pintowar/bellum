@@ -3,6 +3,7 @@ package io.github.pintowar.rts.core.parser.rts
 import io.github.pintowar.rts.core.domain.Employee
 import io.github.pintowar.rts.core.domain.SkillPoint
 import io.github.pintowar.rts.core.parser.ContentReader
+import io.github.pintowar.rts.core.parser.InvalidFileFormat
 
 object RtsEmployeeReader : ContentReader<List<Employee>> {
     override fun readContent(
@@ -10,9 +11,16 @@ object RtsEmployeeReader : ContentReader<List<Employee>> {
         sep: String,
     ): Result<List<Employee>> =
         runCatching {
+            if (content.isBlank()) throw InvalidFileFormat("Empty employee content.")
             val lines = content.trim().lines()
+
             val (header, body) = lines.first().split(sep) to lines.drop(1).map { it.split(sep) }
-            body.map { line ->
+            body.mapIndexed { idx, line ->
+                if (header.size != line.size) {
+                    throw InvalidFileFormat(
+                        "Invalid employee content on line ${idx + 1}: num contents (${line.size}) values does not match headers (${header.size}).",
+                    )
+                }
                 val row = header.zip(line).toMap()
                 val content = row.getValue("content")
                 val skills =

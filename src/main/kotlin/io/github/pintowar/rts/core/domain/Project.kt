@@ -3,20 +3,20 @@ package io.github.pintowar.rts.core.domain
 import io.github.pintowar.rts.core.util.Helper
 import io.konform.validation.Validation
 import io.konform.validation.andThen
+import kotlinx.datetime.Instant
 import org.jgrapht.alg.cycle.CycleDetector
 import org.jgrapht.graph.DefaultDirectedGraph
 import org.jgrapht.graph.DefaultEdge
-import java.time.Instant
 import java.util.UUID
 
 enum class ProjectScheduled { NONE, PARTIAL, SCHEDULED }
 
 @JvmInline value class ProjectId(
-    private val id: UUID,
+    private val value: UUID,
 ) {
     constructor() : this(Helper.uuidV7())
 
-    operator fun invoke() = id
+    operator fun invoke() = value
 }
 
 class Project private constructor(
