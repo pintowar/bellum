@@ -7,17 +7,20 @@ import kotlinx.datetime.Instant
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 
-interface Scheduler {
-    val estimator: TimeEstimator
+abstract class Scheduler {
+    abstract val estimator: TimeEstimator
+    protected val listeners: MutableList<(solution: SchedulerSolution) -> Unit> = mutableListOf()
 
     fun solve(
         project: Project,
-        timeLimit: Duration,
-    ): Result<SchedulerSolution> = solve(project, 1.minutes, Clock.System.now())
+        timeLimit: Duration = 1.minutes,
+    ): Result<SchedulerSolution> = solve(project, timeLimit, Clock.System.now())
 
-    fun solve(
+    abstract fun solve(
         project: Project,
         timeLimit: Duration,
         startTime: Instant,
     ): Result<SchedulerSolution>
+
+    fun addSolutionListener(listener: (solution: SchedulerSolution) -> Unit) = listeners.add(listener)
 }

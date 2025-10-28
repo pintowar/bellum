@@ -4,18 +4,18 @@ import io.github.pintowar.rts.core.domain.Employee
 import io.github.pintowar.rts.core.domain.Project
 import io.github.pintowar.rts.core.domain.Task
 import io.github.pintowar.rts.core.estimator.TimeEstimator
+import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import org.chocosolver.solver.Model
 import org.chocosolver.solver.Solution
 import org.chocosolver.solver.variables.IntVar
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
-import kotlin.time.measureTimedValue
 
 class ChocoScheduler(
     override val estimator: TimeEstimator,
     private val withLexicalConstraint: Boolean = true,
-) : Scheduler {
+) : Scheduler() {
     override fun solve(
         project: Project,
         timeLimit: Duration,
@@ -31,18 +31,20 @@ class ChocoScheduler(
             val matrix = durationMatrix(employees, tasks).getOrThrow()
 
             val modelVars = generateModel(numEmployees, numTasks, matrix, precedences, withLexicalConstraint)
-            val (model, makespan) = modelVars
-            val solver = model.solver
+            val solver = modelVars.model.solver
 
             solver.limitTime(timeLimit.inWholeMilliseconds)
-            val (solution, time) =
-                measureTimedValue {
-                    solver.findOptimalSolution(makespan, Model.MINIMIZE)
+            val solution = Solution(modelVars.model)
+            val initSolving = Clock.System.now()
+            while (solver.solve()) {
+                solution.record()
+                val (currentDuration, optimal) = (Clock.System.now() - initSolving) to solver.isSearchCompleted
+                decode(startTime, employees, tasks, solution, modelVars, currentDuration, optimal).onSuccess {
+                    listeners.forEach { listener -> listener(it) }
                 }
-
-            solver.printStatistics()
-
-            return decode(startTime, employees, tasks, solution, modelVars, time, solver.isObjectiveOptimal)
+            }
+            val currentDuration = Clock.System.now() - initSolving
+            return decode(startTime, employees, tasks, solution, modelVars, currentDuration, solver.isObjectiveOptimal)
         }
 
     private fun decode(
@@ -177,6 +179,9 @@ class ChocoScheduler(
         // Constraint: The makespan is the maximum of all employee workloads
         // model.max(makespan, employeeWorkload).post()
         model.max(makespan, taskEndTime).post()
+
+        // Objective
+        model.setObjective(Model.MINIMIZE, makespan)
 
         return ModelVars(
             model = model,
