@@ -6,19 +6,20 @@ import io.github.pintowar.rts.core.domain.Task
 import io.github.pintowar.rts.core.estimator.TimeEstimator
 import kotlinx.datetime.Instant
 import org.chocosolver.solver.Model
-import org.chocosolver.solver.search.limits.TimeCounter
+import org.chocosolver.solver.Solution
 import org.chocosolver.solver.variables.IntVar
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
-import kotlin.time.Duration.Companion.seconds
 import kotlin.time.measureTimedValue
 
 class ChocoScheduler(
     override val estimator: TimeEstimator,
+    private val withLexicalConstraint: Boolean = true,
 ) : Scheduler {
     override fun solve(
         project: Project,
-        start: Instant,
+        timeLimit: Duration,
+        startTime: Instant,
     ): Result<SchedulerSolution> =
         runCatching {
             val employees = project.allEmployees()
@@ -29,35 +30,52 @@ class ChocoScheduler(
             val precedences = precedenceTable(tasks)
             val matrix = durationMatrix(employees, tasks).getOrThrow()
 
-            val modelVars = generateModel(numEmployees, numTasks, matrix, precedences)
+            val modelVars = generateModel(numEmployees, numTasks, matrix, precedences, withLexicalConstraint)
             val (model, makespan) = modelVars
             val solver = model.solver
 
-            val timeLimit = TimeCounter(model, 10.seconds.inWholeNanoseconds)
+            solver.limitTime(timeLimit.inWholeMilliseconds)
             val (solution, time) =
                 measureTimedValue {
-                    solver.findOptimalSolution(makespan, Model.MINIMIZE, timeLimit)
+                    solver.findOptimalSolution(makespan, Model.MINIMIZE)
                 }
 
+            solver.printStatistics()
+
+            return decode(startTime, employees, tasks, solution, modelVars, time, solver.isObjectiveOptimal)
+        }
+
+    private fun decode(
+        startTime: Instant,
+        employees: List<Employee>,
+        tasks: List<Task>,
+        solution: Solution,
+        modelVars: ModelVars,
+        currentDuration: Duration,
+        optimal: Boolean = false,
+    ): Result<SchedulerSolution> =
+        runCatching {
             val emps = modelVars.taskAssignee.map { employees[solution.getIntVal(it)] }
-            val inits = modelVars.taskStartTime.map { start + unitDuration(solution.getIntVal(it)) }
+            val inits = modelVars.taskStartTime.map { startTime + unitDuration(solution.getIntVal(it)) }
             val durs = modelVars.taskDuration.map { unitDuration(solution.getIntVal(it)) }
             val assigneds = tasks.mapIndexed { idx, tsk -> tsk.assign(emps[idx], inits[idx], durs[idx]) }
 
-            return Project(employees.toSet(), assigneds.toSet()).map { newProject ->
-                SchedulerSolution(
-                    newProject,
-                    true,
-                    time,
-                )
-            }
+            Project(employees.toSet(), assigneds.toSet())
+                .map { newProject ->
+                    SchedulerSolution(
+                        newProject,
+                        optimal,
+                        currentDuration,
+                    )
+                }.getOrThrow()
         }
 
-    fun generateModel(
+    private fun generateModel(
         numEmployees: Int,
         numTasks: Int,
         matrix: Array<IntArray>,
         precedences: Array<IntArray>,
+        withLexicalConstraint: Boolean = true,
     ): ModelVars {
         val model = Model("ProjectSchedulerModel")
         // --- Variables ---
@@ -67,7 +85,7 @@ class ChocoScheduler(
 
         // Calculate a safe upper bound for time-related variables
         val maxPossibleTime = matrix.sumOf { it.sum() }
-        val maxPossibleDuration = matrix.map { it.max() }.max()
+        val maxPossibleDuration = matrix.maxOf { it.max() }
 
         // employeeWorkload[e] = total time for employee 'e'
         val employeeWorkload = model.intVarArray("employeeWorkload", numEmployees, 0, maxPossibleTime)
@@ -81,6 +99,37 @@ class ChocoScheduler(
         val makespan = model.intVar("makespan", 0, maxPossibleTime)
 
         // --- Constraints ---
+
+        if (withLexicalConstraint) {
+            // Add a lexicographic constraint for tasks without dependencies to break symmetries
+            // This should only be applied to groups of identical employees.
+            val rootTaskIndices =
+                (0 until numTasks)
+                    .filter { t -> precedences.none { it[1] == t } }
+                    .sorted()
+
+            if (rootTaskIndices.isNotEmpty()) {
+                val identicalEmployeeGroups =
+                    (0 until numEmployees)
+                        .groupBy { e -> matrix[e].toList() }
+                        .values
+                        .filter { it.size > 1 }
+
+                for (group in identicalEmployeeGroups) {
+                    val groupSize = group.size
+                    val numRootTasks = rootTaskIndices.size
+                    val employeeToRootTasks =
+                        Array(groupSize) { i ->
+                            val e = group[i]
+                            Array(numRootTasks) { tIdx ->
+                                val t = rootTaskIndices[tIdx]
+                                model.arithm(taskAssignee[t], "=", e).reify()
+                            }
+                        }
+                    model.lexChainLessEq(*employeeToRootTasks).post()
+                }
+            }
+        }
 
         // Constraint: Link task duration to the assigned employee's estimated time
         for (t in 0 until numTasks) {
@@ -138,7 +187,7 @@ class ChocoScheduler(
         )
     }
 
-    fun durationMatrix(
+    private fun durationMatrix(
         employees: List<Employee>,
         tasks: List<Task>,
     ): Result<Array<IntArray>> =
@@ -149,7 +198,7 @@ class ChocoScheduler(
                 }.toTypedArray()
         }
 
-    fun precedenceTable(tasks: List<Task>): Array<IntArray> {
+    private fun precedenceTable(tasks: List<Task>): Array<IntArray> {
         val idxTask = tasks.withIndex().associate { (idx, it) -> it.id to idx }
         return tasks
             .filter { it.dependsOn != null }

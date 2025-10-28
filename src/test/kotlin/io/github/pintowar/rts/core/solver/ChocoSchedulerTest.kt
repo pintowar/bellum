@@ -5,6 +5,7 @@ import io.github.pintowar.rts.core.domain.ProjectScheduled
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import kotlinx.datetime.Instant
+import kotlin.time.Duration.Companion.seconds
 
 class ChocoSchedulerTest :
     FunSpec({
@@ -15,7 +16,7 @@ class ChocoSchedulerTest :
         test("successful solve") {
             val solver = ChocoScheduler(smallTimeEstimator)
 
-            val solution = solver.solve(sampleProjectSmall, Instant.parse("2022-01-01T00:00:00Z"))
+            val solution = solver.solve(sampleProjectSmall, 30.seconds, Instant.parse("2022-01-01T00:00:00Z"))
 
             val (scheduledProject, optimal) = solution.getOrThrow()
             scheduledProject.scheduledStatus() shouldBe ProjectScheduled.SCHEDULED
