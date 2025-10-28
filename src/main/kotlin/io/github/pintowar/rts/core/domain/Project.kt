@@ -12,11 +12,11 @@ import java.util.UUID
 enum class ProjectScheduled { NONE, PARTIAL, SCHEDULED }
 
 @JvmInline value class ProjectId(
-    private val id: UUID,
+    private val value: UUID,
 ) {
     constructor() : this(Helper.uuidV7())
 
-    operator fun invoke() = id
+    operator fun invoke() = value
 }
 
 class Project private constructor(

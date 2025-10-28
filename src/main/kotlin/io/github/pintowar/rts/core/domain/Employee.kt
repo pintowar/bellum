@@ -6,11 +6,11 @@ import io.konform.validation.constraints.notBlank
 import java.util.UUID
 
 @JvmInline value class EmployeeId(
-    private val id: UUID,
+    private val value: UUID,
 ) {
     constructor() : this(Helper.uuidV7())
 
-    operator fun invoke() = id
+    operator fun invoke() = value
 }
 
 class Employee private constructor(

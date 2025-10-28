@@ -1,22 +1,21 @@
 package io.github.pintowar.rts.core.domain
 
+import io.github.pintowar.rts.core.domain.Task.Companion.validator
 import io.github.pintowar.rts.core.util.Helper
+import io.konform.validation.Validation
+import io.konform.validation.constraints.notBlank
 import kotlinx.datetime.Instant
 import java.util.UUID
 import kotlin.time.Duration
 
-interface InvalidTask
-
-object InvalidTaskName : InvalidTask
-
 enum class TaskPriority { CRITICAL, MAJOR, MINOR }
 
 @JvmInline value class TaskId(
-    private val id: UUID,
+    private val value: UUID,
 ) {
     constructor() : this(Helper.uuidV7())
 
-    operator fun invoke() = id
+    operator fun invoke() = value
 }
 
 sealed interface Task {
@@ -25,6 +24,15 @@ sealed interface Task {
     val priority: TaskPriority
     val requiredSkills: Map<String, SkillPoint>
     val dependsOn: Task?
+
+    companion object {
+        val validator =
+            Validation<Task> {
+                Task::description {
+                    notBlank()
+                }
+            }
+    }
 
     fun changeDependency(dependsOn: Task): Task
 
@@ -67,7 +75,10 @@ class UnassignedTask private constructor(
             dependsOn: Task? = null,
         ): Result<UnassignedTask> =
             runCatching {
-                UnassignedTask(TaskId(id), description, priority, skills, dependsOn)
+                UnassignedTask(TaskId(id), description, priority, skills, dependsOn).also {
+                    val res = validator.validate(it)
+                    if (!res.isValid) throw ValidationException(res.errors)
+                }
             }
 
         operator fun invoke(
@@ -104,7 +115,10 @@ class AssignedTask private constructor(
             duration: Duration,
         ): Result<AssignedTask> =
             runCatching {
-                AssignedTask(TaskId(id), description, priority, skills, dependsOn, employee, startAt, duration)
+                AssignedTask(TaskId(id), description, priority, skills, dependsOn, employee, startAt, duration).also {
+                    val res = validator.validate(it)
+                    if (!res.isValid) throw ValidationException(res.errors)
+                }
             }
 
         operator fun invoke(

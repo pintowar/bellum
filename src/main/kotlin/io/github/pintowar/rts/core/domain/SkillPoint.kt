@@ -5,14 +5,14 @@ import io.konform.validation.constraints.maximum
 import io.konform.validation.constraints.minimum
 
 @JvmInline value class SkillPoint private constructor(
-    private val point: Int,
+    private val value: Int,
 ) {
-    operator fun invoke() = point
+    operator fun invoke() = value
 
     companion object {
         private val validator =
             Validation<SkillPoint> {
-                SkillPoint::point {
+                SkillPoint::value {
                     minimum(0)
                     maximum(9)
                 }

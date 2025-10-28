@@ -13,7 +13,7 @@ object RtsTaskReader : ContentReader<List<Task>> {
         sep: String,
     ): Result<List<Task>> =
         runCatching {
-            if (content.isBlank()) throw InvalidFileFormat("Empty task content")
+            if (content.isBlank()) throw InvalidFileFormat("Empty task content.")
             val lines = content.lines()
 
             val (header, body) = lines.first().split(sep) to lines.drop(1).map { it.split(sep) }
@@ -50,7 +50,8 @@ object RtsTaskReader : ContentReader<List<Task>> {
                 .withIndex()
                 .filter { (_, id) -> id != "-1" }
                 .map { (idx, id) ->
-                    taskByKey.getValue(ids[idx]).changeDependency(taskByKey.getValue(id))
+                    val precedenceId = taskByKey[id] ?: throw InvalidFileFormat("Precedence ($id) of task (${ids[idx]}) not found.")
+                    taskByKey.getValue(ids[idx]).changeDependency(precedenceId)
                 }.associateBy { it.id }
 
         return tasks.map { tasksWithDepsById.getOrDefault(it.id, it) }
