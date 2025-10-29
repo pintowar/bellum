@@ -1,14 +1,20 @@
 plugins {
-    kotlin("jvm") version "2.2.20"
+    kotlin("jvm") version "2.2.21"
+    kotlin("kapt") version "2.2.21"
     id("org.jlleitschuh.gradle.ktlint") version "13.1.0"
+    id("org.graalvm.buildtools.native") version "0.9.28"
     id("idea")
+    application
 }
 
 group = "io.github.pintowar"
 version = "0.1.0-SNAPSHOT"
 
 kotlin {
-    jvmToolchain(21)
+    jvmToolchain {
+        languageVersion.set(JavaLanguageVersion.of(21))
+        vendor.set(JvmVendorSpec.GRAAL_VM)
+    }
 }
 
 repositories {
@@ -16,6 +22,13 @@ repositories {
 }
 
 dependencies {
+    // Picocli for command-line parsing
+    implementation("info.picocli:picocli:4.7.5")
+    kapt("info.picocli:picocli-codegen:4.7.5") // Annotation processor for GraalVM
+
+    // Koin for dependency injection
+    implementation("io.insert-koin:koin-core:3.5.3")
+
     implementation("io.konform:konform-jvm:0.11.0")
     implementation("org.choco-solver:choco-solver:4.10.18")
     implementation("com.fasterxml.uuid:java-uuid-generator:5.1.1")
@@ -28,6 +41,16 @@ dependencies {
     testImplementation("io.kotest:kotest-runner-junit5:6.0.4")
     testImplementation("io.kotest:kotest-assertions-core:6.0.4")
     testImplementation("io.kotest:kotest-assertions-konform-jvm:6.0.4")
+}
+
+application {
+    mainClass.set("io.github.pintowar.rts.cli.MainKt")
+}
+
+kapt {
+    arguments {
+        arg("project", "${project.group}/${project.name}")
+    }
 }
 
 tasks.test {
