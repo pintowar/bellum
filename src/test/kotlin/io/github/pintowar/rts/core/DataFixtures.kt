@@ -4,6 +4,7 @@ import io.github.pintowar.rts.core.domain.Employee
 import io.github.pintowar.rts.core.domain.Project
 import io.github.pintowar.rts.core.domain.UnassignedTask
 import io.github.pintowar.rts.core.estimator.CustomEstimator
+import kotlinx.datetime.Instant
 import kotlin.getOrThrow
 
 object DataFixtures {
@@ -19,6 +20,8 @@ object DataFixtures {
 
     val sampleProjectSmall =
         Project(
+            name = "Sample Project Small",
+            kickOff = Instant.parse("2022-01-01T00:00:00Z"),
             employees = setOf(employee1, employee2, employee3),
             tasks = setOf(task1, task2, task3, task4, task5),
         ).getOrThrow()

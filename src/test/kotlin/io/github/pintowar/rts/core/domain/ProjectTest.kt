@@ -1,6 +1,7 @@
 package io.github.pintowar.rts.core.domain
 
 import io.github.pintowar.rts.core.DataFixtures
+import io.github.pintowar.rts.core.DataFixtures.sampleProjectSmall
 import io.konform.validation.messagesAtPath
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.result.shouldBeFailure
@@ -16,7 +17,7 @@ class ProjectTest :
             val dur = 5.minutes
 
             test("scheduledStatus returns NONE when no tasks") {
-                val project = Project(emptySet(), emptySet())
+                val project = sampleProjectSmall.replace(employees = emptySet(), tasks = emptySet())
                 project shouldBeSuccess {
                     it.scheduledStatus() shouldBe ProjectScheduled.NONE
                 }
@@ -25,7 +26,11 @@ class ProjectTest :
             test("scheduledStatus returns SCHEDULED when all tasks are assigned") {
                 val task1 = DataFixtures.task1.assign(DataFixtures.employee1, start, dur)
                 val task2 = DataFixtures.task2.assign(DataFixtures.employee2, start, dur)
-                val project = Project(setOf(DataFixtures.employee1, DataFixtures.employee2), setOf(task1, task2))
+                val project =
+                    sampleProjectSmall.replace(
+                        employees = setOf(DataFixtures.employee1, DataFixtures.employee2),
+                        tasks = setOf(task1, task2),
+                    )
                 project shouldBeSuccess {
                     it.scheduledStatus() shouldBe ProjectScheduled.SCHEDULED
                 }
@@ -34,14 +39,14 @@ class ProjectTest :
             test("scheduledStatus returns PARTIAL when some tasks are assigned") {
                 val task1 = DataFixtures.task1.assign(DataFixtures.employee1, start, dur)
                 val task2 = DataFixtures.task2
-                val project = Project(setOf(DataFixtures.employee1), setOf(task1, task2))
+                val project = sampleProjectSmall.replace(employees = setOf(DataFixtures.employee1), tasks = setOf(task1, task2))
                 project shouldBeSuccess {
                     it.scheduledStatus() shouldBe ProjectScheduled.PARTIAL
                 }
             }
 
             test("scheduledStatus handles empty tasks") {
-                val project = Project(emptySet(), emptySet())
+                val project = sampleProjectSmall.replace(employees = emptySet(), tasks = emptySet())
                 project shouldBeSuccess {
                     it.scheduledStatus() shouldBe ProjectScheduled.NONE
                 }
@@ -50,7 +55,7 @@ class ProjectTest :
             test("scheduledStatus handles all tasks unassigned") {
                 val task1 = DataFixtures.task1
                 val task2 = DataFixtures.task2
-                val project = Project(emptySet(), setOf(task1, task2))
+                val project = sampleProjectSmall.replace(employees = emptySet(), tasks = setOf(task1, task2))
                 project shouldBeSuccess {
                     it.scheduledStatus() shouldBe ProjectScheduled.NONE
                 }
@@ -69,7 +74,7 @@ class ProjectTest :
                             DataFixtures.task1.assign(DataFixtures.employee1, start, dur1),
                             DataFixtures.task2.assign(DataFixtures.employee1, start, dur2),
                         )
-                    val project = Project(setOf(DataFixtures.employee1), tasks).getOrThrow()
+                    val project = sampleProjectSmall.replace(employees = setOf(DataFixtures.employee1), tasks = tasks).getOrThrow()
 
                     project.isValid() shouldBe false
                     val vals = project.validate()
@@ -83,7 +88,7 @@ class ProjectTest :
                             DataFixtures.task1.assign(DataFixtures.employee1, start, dur1),
                             DataFixtures.task2.assign(DataFixtures.employee1, start + dur1, dur2),
                         )
-                    val project = Project(setOf(DataFixtures.employee1), tasks).getOrThrow()
+                    val project = sampleProjectSmall.replace(employees = setOf(DataFixtures.employee1), tasks = tasks).getOrThrow()
 
                     project.isValid() shouldBe true
                     val vals = project.validate()
@@ -104,7 +109,12 @@ class ProjectTest :
                                 .changeDependency(dependsOn = task1)
                                 .assign(DataFixtures.employee2, start, dur2),
                         )
-                    val project = Project(setOf(DataFixtures.employee1, DataFixtures.employee2), tasks).getOrThrow()
+                    val project =
+                        sampleProjectSmall
+                            .replace(
+                                employees = setOf(DataFixtures.employee1, DataFixtures.employee2),
+                                tasks = tasks,
+                            ).getOrThrow()
 
                     project.isValid() shouldBe false
                     val vals = project.validate()
@@ -121,7 +131,12 @@ class ProjectTest :
                                 .changeDependency(dependsOn = task1)
                                 .assign(DataFixtures.employee2, start + dur1, dur2),
                         )
-                    val project = Project(setOf(DataFixtures.employee1, DataFixtures.employee2), tasks).getOrThrow()
+                    val project =
+                        sampleProjectSmall
+                            .replace(
+                                employees = setOf(DataFixtures.employee1, DataFixtures.employee2),
+                                tasks = tasks,
+                            ).getOrThrow()
 
                     project.isValid() shouldBe true
                     val vals = project.validate()
@@ -135,7 +150,7 @@ class ProjectTest :
 
                 test("must fail while initializing in case a circular dependencies is found") {
                     val tasks = setOf(task1Deps, DataFixtures.task2, DataFixtures.task3, DataFixtures.task4, task5Deps)
-                    val project = Project(setOf(DataFixtures.employee1), tasks)
+                    val project = sampleProjectSmall.replace(employees = setOf(DataFixtures.employee1), tasks = tasks)
 
                     project.shouldBeFailure<ValidationException>()
                     if (project.isFailure) {
@@ -149,7 +164,7 @@ class ProjectTest :
                 test("must pass in case a circular dependencies is not found") {
                     val tasks =
                         setOf(DataFixtures.task1, DataFixtures.task2, DataFixtures.task3, DataFixtures.task4, task5Deps)
-                    val project = Project(setOf(DataFixtures.employee1), tasks).getOrThrow()
+                    val project = sampleProjectSmall.replace(employees = setOf(DataFixtures.employee1), tasks = tasks).getOrThrow()
 
                     project.isValid() shouldBe true
                     val vals = project.validate()
@@ -164,7 +179,7 @@ class ProjectTest :
                 test("must fail while initializing in case a invalid employee is found") {
                     val task1 = DataFixtures.task1.assign(DataFixtures.employee1, start, dur)
                     val tasks = setOf(task1, DataFixtures.task2, DataFixtures.task3)
-                    val project = Project(setOf(DataFixtures.employee2), tasks)
+                    val project = sampleProjectSmall.replace(employees = setOf(DataFixtures.employee2), tasks = tasks)
 
                     project.shouldBeFailure<ValidationException>()
                     if (project.isFailure) {
@@ -178,7 +193,12 @@ class ProjectTest :
                 test("must pass while initializing in case a invalid employee is not found") {
                     val task1 = DataFixtures.task1.assign(DataFixtures.employee1, start, dur)
                     val tasks = setOf(task1, DataFixtures.task2, DataFixtures.task3)
-                    val project = Project(setOf(DataFixtures.employee1, DataFixtures.employee2), tasks).getOrThrow()
+                    val project =
+                        sampleProjectSmall
+                            .replace(
+                                employees = setOf(DataFixtures.employee1, DataFixtures.employee2),
+                                tasks = tasks,
+                            ).getOrThrow()
 
                     project.isValid() shouldBe true
                     val vals = project.validate()
@@ -192,7 +212,7 @@ class ProjectTest :
 
                 test("must fail while initializing in case a missing task dependency is found") {
                     val tasks = setOf(DataFixtures.task2, DataFixtures.task3, DataFixtures.task4)
-                    val project = Project(setOf(DataFixtures.employee2), tasks)
+                    val project = sampleProjectSmall.replace(employees = setOf(DataFixtures.employee2), tasks = tasks)
 
                     project.shouldBeFailure<ValidationException>()
                     if (project.isFailure) {
@@ -205,7 +225,7 @@ class ProjectTest :
 
                 test("must pass while initializing in case a missing task dependency is not found") {
                     val tasks = setOf(DataFixtures.task1, DataFixtures.task2, DataFixtures.task3)
-                    val project = Project(setOf(DataFixtures.employee2), tasks).getOrThrow()
+                    val project = sampleProjectSmall.replace(employees = setOf(DataFixtures.employee2), tasks = tasks).getOrThrow()
 
                     project.isValid() shouldBe true
                     val vals = project.validate()

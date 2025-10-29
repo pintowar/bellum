@@ -1,27 +1,23 @@
-package io.github.pintowar.rts.core.solver
+package io.github.pintowar.rts.core.solver.choco
 
 import io.github.pintowar.rts.core.DataFixtures
 import io.github.pintowar.rts.core.domain.ProjectScheduled
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import kotlinx.datetime.Instant
-import kotlin.time.Duration.Companion.seconds
 
 class ChocoSchedulerTest :
     FunSpec({
 
-        val sampleProjectSmall = DataFixtures.sampleProjectSmall
-        val smallTimeEstimator = DataFixtures.smallTimeEstimator
-
         test("successful solve") {
-            val solver = ChocoScheduler(smallTimeEstimator)
+            val solver = ChocoScheduler(DataFixtures.smallTimeEstimator)
 
-            val solution = solver.solve(sampleProjectSmall, 30.seconds, Instant.parse("2022-01-01T00:00:00Z"))
+            val solution = solver.solve(DataFixtures.sampleProjectSmall)
 
             val (scheduledProject, optimal) = solution.getOrThrow()
             scheduledProject.scheduledStatus() shouldBe ProjectScheduled.SCHEDULED
             scheduledProject.isValid() shouldBe true
-            scheduledProject.endsAt() shouldBe Instant.parse("2022-01-01T01:00:00Z")
+            scheduledProject.endsAt() shouldBe Instant.Companion.parse("2022-01-01T01:00:00Z")
             optimal shouldBe true
         }
     })

@@ -2,8 +2,6 @@ package io.github.pintowar.rts.core.plotter
 
 import io.github.pintowar.rts.core.domain.AssignedTask
 import io.github.pintowar.rts.core.domain.Project
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
 import org.jetbrains.letsPlot.asDiscrete
 import org.jetbrains.letsPlot.geom.geomSegment
 import org.jetbrains.letsPlot.geom.geomText
@@ -16,29 +14,21 @@ import org.jetbrains.letsPlot.letsPlot
 import org.jetbrains.letsPlot.themes.flavorSolarizedDark
 
 object Plotter {
-    fun generateTable(
-        project: Project,
-        from: Instant,
-    ): Map<String, List<*>> {
+    fun generateTable(project: Project): Map<String, List<*>> {
         val assignedTasks = project.allTasks().filter { it.isAssigned() }.map { it as AssignedTask }
 
         return mapOf(
             "job" to assignedTasks.map { it.description },
             "employee" to assignedTasks.map { it.employee.name },
-            "start" to assignedTasks.map { (it.startAt - from).inWholeMinutes },
-            "end" to assignedTasks.map { (it.endsAt - from).inWholeMinutes },
+            "start" to assignedTasks.map { (it.startAt - project.kickOff).inWholeMinutes },
+            "end" to assignedTasks.map { (it.endsAt - project.kickOff).inWholeMinutes },
             "priority" to assignedTasks.map { it.priority.toString() },
         )
     }
 
-    fun plotGantt(project: Project): Plot = plotGantt(project, from = Clock.System.now())
-
-    fun plotGantt(
-        project: Project,
-        from: Instant,
-    ): Plot {
-        val duration = project.endsAt()?.let { (it - from).inWholeMinutes } ?: 0
-        val data = generateTable(project, from)
+    fun plotGantt(project: Project): Plot {
+        val duration = project.totalDuration()?.inWholeMinutes ?: 0
+        val data = generateTable(project)
 
         var p =
             letsPlot(data) {
@@ -71,3 +61,5 @@ object Plotter {
         return p
     }
 }
+
+fun Project.plotGantt() = Plotter.plotGantt(this)

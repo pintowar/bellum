@@ -22,7 +22,7 @@ class RtsProjectReaderTest :
                 5,Task 5,major,2,4,4,0,1,0,1,5,5,1,0
                 """.trimIndent()
 
-            val result = RtsProjectReader.readContent(content).getOrThrow()
+            val result = RtsProjectReader("Sample Project").readContent(content).getOrThrow()
             result.allEmployees().size shouldBe 3
             result.allTasks().size shouldBe 5
         }

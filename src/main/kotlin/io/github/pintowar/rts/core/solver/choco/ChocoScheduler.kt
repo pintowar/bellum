@@ -1,11 +1,12 @@
-package io.github.pintowar.rts.core.solver
+package io.github.pintowar.rts.core.solver.choco
 
 import io.github.pintowar.rts.core.domain.Employee
 import io.github.pintowar.rts.core.domain.Project
 import io.github.pintowar.rts.core.domain.Task
 import io.github.pintowar.rts.core.estimator.TimeEstimator
+import io.github.pintowar.rts.core.solver.Scheduler
+import io.github.pintowar.rts.core.solver.SchedulerSolution
 import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
 import org.chocosolver.solver.Model
 import org.chocosolver.solver.Solution
 import org.chocosolver.solver.variables.IntVar
@@ -19,7 +20,6 @@ class ChocoScheduler(
     override fun solve(
         project: Project,
         timeLimit: Duration,
-        startTime: Instant,
     ): Result<SchedulerSolution> =
         runCatching {
             val employees = project.allEmployees()
@@ -40,37 +40,39 @@ class ChocoScheduler(
             while (solver.solve()) {
                 solution.record()
                 val (currentDuration, optimal) = (Clock.System.now() - initSolving) to solver.isSearchCompleted
-                decode(startTime, employees, tasks, solution, modelVars, currentDuration, optimal).onSuccess {
+                decode(project, solution, modelVars, currentDuration, optimal).onSuccess {
                     listeners.forEach { listener -> listener(it) }
                 }
             }
             val currentDuration = Clock.System.now() - initSolving
-            return decode(startTime, employees, tasks, solution, modelVars, currentDuration, solver.isObjectiveOptimal)
+            return decode(project, solution, modelVars, currentDuration, solver.isObjectiveOptimal)
         }
 
     private fun decode(
-        startTime: Instant,
-        employees: List<Employee>,
-        tasks: List<Task>,
+        project: Project,
         solution: Solution,
         modelVars: ModelVars,
         currentDuration: Duration,
         optimal: Boolean = false,
     ): Result<SchedulerSolution> =
         runCatching {
+            val employees = project.allEmployees()
+            val tasks = project.allTasks()
+
             val emps = modelVars.taskAssignee.map { employees[solution.getIntVal(it)] }
-            val inits = modelVars.taskStartTime.map { startTime + unitDuration(solution.getIntVal(it)) }
+            val inits = modelVars.taskStartTime.map { project.kickOff + unitDuration(solution.getIntVal(it)) }
             val durs = modelVars.taskDuration.map { unitDuration(solution.getIntVal(it)) }
             val assigneds = tasks.mapIndexed { idx, tsk -> tsk.assign(emps[idx], inits[idx], durs[idx]) }
 
-            Project(employees.toSet(), assigneds.toSet())
+            return project
+                .replace(tasks = assigneds.toSet())
                 .map { newProject ->
                     SchedulerSolution(
                         newProject,
                         optimal,
                         currentDuration,
                     )
-                }.getOrThrow()
+                }
         }
 
     private fun generateModel(
