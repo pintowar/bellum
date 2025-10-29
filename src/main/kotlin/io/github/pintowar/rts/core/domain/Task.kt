@@ -8,7 +8,13 @@ import kotlinx.datetime.Instant
 import java.util.UUID
 import kotlin.time.Duration
 
-enum class TaskPriority { CRITICAL, MAJOR, MINOR }
+enum class TaskPriority(
+    val value: Int,
+) {
+    CRITICAL(0),
+    MAJOR(1),
+    MINOR(2),
+}
 
 @JvmInline value class TaskId(
     private val value: UUID,

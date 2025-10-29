@@ -29,8 +29,9 @@ class ChocoScheduler(
             val numTasks = tasks.size
             val precedences = precedenceTable(tasks)
             val matrix = durationMatrix(employees, tasks).getOrThrow()
+            val taskPriorities = tasks.map { it.priority.value }.toIntArray()
 
-            val modelVars = generateModel(numEmployees, numTasks, matrix, precedences, withLexicalConstraint)
+            val modelVars = generateModel(numEmployees, numTasks, matrix, precedences, taskPriorities, withLexicalConstraint)
             val solver = modelVars.model.solver
 
             solver.limitTime(timeLimit.inWholeMilliseconds)
@@ -77,6 +78,7 @@ class ChocoScheduler(
         numTasks: Int,
         matrix: Array<IntArray>,
         precedences: Array<IntArray>,
+        taskPriorities: IntArray,
         withLexicalConstraint: Boolean = true,
     ): ModelVars {
         val model = Model("ProjectSchedulerModel")
@@ -180,11 +182,50 @@ class ChocoScheduler(
         // model.max(makespan, employeeWorkload).post()
         model.max(makespan, taskEndTime).post()
 
+        // A list to hold indicator variables for each potential priority inversion
+        val inversionIndicators = mutableListOf<IntVar>()
+
+        // Iterate over all unique pairs of tasks
+        for (t1 in 0 until numTasks) {
+            for (t2 in t1 + 1 until numTasks) {
+                val p1 = taskPriorities[t1]
+                val p2 = taskPriorities[t2]
+
+                // Case 1: Task 1 has lower priority than Task 2.
+                // Penalize if Task 1 starts before Task 2.
+                if (p1 > p2) {
+                    val inversion = model.boolVar("inv_${t1}_before_$t2")
+                    // inversion = 1 if startTime[t1] < startTime[t2], 0 otherwise
+                    model.arithm(taskStartTime[t1], "<", taskStartTime[t2]).reifyWith(inversion)
+                    inversionIndicators.add(inversion)
+                } else if (p2 > p1) {
+                    // Case 2: Task 2 has lower priority than Task 1.
+                    // Penalize if Task 2 starts before Task 1.
+                    val inversion = model.boolVar("inv_${t2}_before_$t1")
+                    // inversion = 1 if startTime[t2] < startTime[t1], 0 otherwise
+                    model.arithm(taskStartTime[t2], "<", taskStartTime[t1]).reifyWith(inversion)
+                    inversionIndicators.add(inversion)
+                }
+            }
+        }
+
+        // The total cost is the sum of all priority inversions.
+        // The lower this value, the better the priority ordering.
+        val priorityCost = model.intVar("priorityCost", 0, numTasks * numTasks)
+        if (inversionIndicators.isNotEmpty()) {
+            model.sum(inversionIndicators.toTypedArray(), "=", priorityCost).post()
+        } else {
+            // If there are no pairs with different priorities, cost is always 0.
+            model.arithm(priorityCost, "=", 0).post()
+        }
+
         // Objective
-        model.setObjective(Model.MINIMIZE, makespan)
+//        model.setObjective(Model.MINIMIZE, makespan)
+        model.setObjective(Model.MINIMIZE, makespan.mul(100).add(priorityCost).intVar())
 
         return ModelVars(
             model = model,
+            priorityCost = priorityCost,
             makespan = makespan,
             taskAssignee = taskAssignee,
             taskStartTime = taskStartTime,
@@ -219,6 +260,7 @@ class ChocoScheduler(
 
     data class ModelVars(
         val model: Model,
+        val priorityCost: IntVar,
         val makespan: IntVar,
         val taskAssignee: Array<IntVar>,
         val taskStartTime: Array<IntVar>,
