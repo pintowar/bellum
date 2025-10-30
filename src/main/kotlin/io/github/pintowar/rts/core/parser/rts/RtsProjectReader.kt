@@ -2,8 +2,11 @@ package io.github.pintowar.rts.core.parser.rts
 
 import io.github.pintowar.rts.core.domain.Project
 import io.github.pintowar.rts.core.parser.ContentReader
+import kotlinx.datetime.Clock
 
-object RtsProjectReader : ContentReader<Project> {
+class RtsProjectReader(
+    private val name: String,
+) : ContentReader<Project> {
     override fun readContent(
         content: String,
         sep: String,
@@ -16,6 +19,6 @@ object RtsProjectReader : ContentReader<Project> {
             val employees = RtsEmployeeReader.readContent(employeeContent.joinToString("\n")).getOrThrow()
             val tasks = RtsTaskReader.readContent(taskContent.joinToString("\n")).getOrThrow()
 
-            Project(employees.toSet(), tasks.toSet()).getOrThrow()
+            return Project(name, Clock.System.now(), employees.toSet(), tasks.toSet())
         }
 }

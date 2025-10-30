@@ -1,6 +1,6 @@
+import io.github.pintowar.rts.core.DataFixtures.sampleProjectSmall
 import io.github.pintowar.rts.core.domain.Employee
 import io.github.pintowar.rts.core.domain.EmployeeId
-import io.github.pintowar.rts.core.domain.Project
 import io.github.pintowar.rts.core.domain.Task
 import io.github.pintowar.rts.core.domain.TaskId
 import io.github.pintowar.rts.core.domain.UnassignedTask
@@ -21,7 +21,7 @@ class EstimationMatrixTest :
             // Setup
             val employee = Employee("Alice").getOrNull()!!
             val task = UnassignedTask("Task 1").getOrNull()!!
-            val project = Project(employees = setOf(employee), tasks = setOf(task)).getOrThrow()
+            val project = sampleProjectSmall.replace(employees = setOf(employee), tasks = setOf(task)).getOrThrow()
             val estimator = mockk<TimeEstimator>()
             every { estimator.estimate(any<Employee>(), any<Task>()) } returns success(1.hours)
 
@@ -36,7 +36,7 @@ class EstimationMatrixTest :
             // Setup
             val employee = Employee("Alice").getOrNull()!!
             val task = UnassignedTask("Task 1").getOrNull()!!
-            val project = Project(employees = setOf(employee), tasks = setOf(task)).getOrThrow()
+            val project = sampleProjectSmall.replace(employees = setOf(employee), tasks = setOf(task)).getOrThrow()
             val estimator = mockk<TimeEstimator>()
             every { estimator.estimate(any<Employee>(), any<Task>()) } returns success(1.hours)
             val matrix = EstimationMatrix(project, estimator)
@@ -56,7 +56,7 @@ class EstimationMatrixTest :
             // Setup
             val employee = Employee("Alice").getOrNull()!!
             val task = UnassignedTask("Task 1").getOrNull()!!
-            val project = Project(employees = setOf(employee), tasks = setOf(task)).getOrThrow()
+            val project = sampleProjectSmall.replace(employees = setOf(employee), tasks = setOf(task)).getOrThrow()
             val estimator = mockk<TimeEstimator>()
             every { estimator.estimate(any<Employee>(), any<Task>()) } returns success(1.hours)
 
@@ -72,7 +72,7 @@ class EstimationMatrixTest :
             // Setup
             val employee = Employee("Alice").getOrNull()!!
             val task = UnassignedTask("Task 1").getOrNull()!!
-            val project = Project(employees = setOf(employee), tasks = setOf(task)).getOrThrow()
+            val project = sampleProjectSmall.replace(employees = setOf(employee), tasks = setOf(task)).getOrThrow()
             val estimator = mockk<TimeEstimator>()
             every { estimator.estimate(any<Employee>(), any<Task>()) } returns success(1.hours)
 

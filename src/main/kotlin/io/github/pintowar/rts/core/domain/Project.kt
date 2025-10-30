@@ -8,6 +8,7 @@ import org.jgrapht.alg.cycle.CycleDetector
 import org.jgrapht.graph.DefaultDirectedGraph
 import org.jgrapht.graph.DefaultEdge
 import java.util.UUID
+import kotlin.time.Duration
 
 enum class ProjectScheduled { NONE, PARTIAL, SCHEDULED }
 
@@ -22,6 +23,8 @@ value class ProjectId(
 
 class Project private constructor(
     val id: ProjectId,
+    val name: String,
+    val kickOff: Instant,
     private val employees: Set<Employee>,
     private val tasks: Set<Task>,
 ) {
@@ -55,20 +58,24 @@ class Project private constructor(
 
         operator fun invoke(
             id: UUID,
+            name: String,
+            kickOff: Instant,
             employees: Set<Employee>,
             tasks: Set<Task>,
         ): Result<Project> =
             runCatching {
-                Project(ProjectId(id), employees, tasks).also {
+                Project(ProjectId(id), name, kickOff, employees, tasks).also {
                     val res = initValidator.validate(it)
                     if (!res.isValid) throw ValidationException(res.errors)
                 }
             }
 
         operator fun invoke(
+            name: String,
+            kickOff: Instant,
             employees: Set<Employee>,
             tasks: Set<Task>,
-        ): Result<Project> = invoke(ProjectId()(), employees, tasks)
+        ): Result<Project> = invoke(ProjectId()(), name, kickOff, employees, tasks)
     }
 
     fun allEmployees() = employees.toList()
@@ -86,9 +93,25 @@ class Project private constructor(
 
     fun endsAt(): Instant? = allTasks().mapNotNull { it.endsAt() }.maxOrNull()
 
+    fun totalDuration(): Duration? = endsAt()?.let { it - kickOff }
+
     fun validate() = validator.validate(this)
 
     fun isValid() = validate().isValid
+
+    fun replace(
+        name: String? = null,
+        kickOff: Instant? = null,
+        employees: Set<Employee>? = null,
+        tasks: Set<Task>? = null,
+    ): Result<Project> =
+        invoke(
+            id = id(),
+            name = name ?: this.name,
+            kickOff = kickOff ?: this.kickOff,
+            employees = employees ?: this.employees,
+            tasks = tasks ?: this.tasks,
+        )
 
     // validations
     fun employeesWithOverlap(): List<String> =

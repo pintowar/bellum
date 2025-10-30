@@ -2,25 +2,42 @@ package io.github.pintowar.rts.core.solver
 
 import io.github.pintowar.rts.core.domain.Project
 import io.github.pintowar.rts.core.estimator.TimeEstimator
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
+import java.util.concurrent.ConcurrentLinkedQueue
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 
 abstract class Scheduler {
     abstract val estimator: TimeEstimator
-    protected val listeners: MutableList<(solution: SchedulerSolution) -> Unit> = mutableListOf()
+
+    private val isProcessing = AtomicBoolean(false)
+
+    internal abstract fun innerSolve(
+        project: Project,
+        timeLimit: Duration = 1.minutes,
+        callback: (SchedulerSolution) -> Unit = {},
+    ): Result<SchedulerSolution>
 
     fun solve(
         project: Project,
         timeLimit: Duration = 1.minutes,
-    ): Result<SchedulerSolution> = solve(project, timeLimit, Clock.System.now())
+        callback: (SchedulerSolution) -> Unit = {},
+    ): Result<SchedulerSolution> {
+        if (!isProcessing.compareAndSet(false, true)) {
+            return Result.failure(IllegalStateException("Scheduler is already processing."))
+        }
 
-    abstract fun solve(
+        val result = innerSolve(project, timeLimit, callback)
+        isProcessing.set(false)
+        return result
+    }
+
+    fun allSolutions(
         project: Project,
-        timeLimit: Duration,
-        startTime: Instant,
-    ): Result<SchedulerSolution>
-
-    fun addSolutionListener(listener: (solution: SchedulerSolution) -> Unit) = listeners.add(listener)
+        timeLimit: Duration = 1.minutes,
+    ): Result<SolutionHistory> {
+        val solutions = ConcurrentLinkedQueue<SchedulerSolution>()
+        val finalSolution = solve(project, timeLimit) { solutions.add(it) }
+        return finalSolution.map { SolutionHistory(solutions + it) }
+    }
 }
