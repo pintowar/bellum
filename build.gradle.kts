@@ -44,7 +44,7 @@ dependencies {
 }
 
 application {
-    mainClass.set("io.github.pintowar.rts.cli.MainKt")
+    mainClass.set("io.github.pintowar.bellum.cli.MainKt")
 }
 
 kapt {
