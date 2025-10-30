@@ -3,10 +3,28 @@ package io.github.pintowar.bellum.core.parser.rts
 import io.github.pintowar.bellum.core.domain.Project
 import io.github.pintowar.bellum.core.parser.ContentReader
 import kotlinx.datetime.Clock
+import java.net.URI
 
 class RtsProjectReader(
     private val name: String,
 ) : ContentReader<Project> {
+    companion object {
+        private fun content(uri: String) = URI(uri).toURL().readText()
+
+        fun readContentFromPath(
+            base: String,
+            uri: String,
+        ): Result<Project> =
+            Result
+                .success(uri)
+                .mapCatching { content(it) }
+                .recoverCatching { content("file://$base/$uri") }
+                .recoverCatching { content("file://$uri") }
+                .mapCatching {
+                    RtsProjectReader("Sample input").readContent(it).getOrThrow()
+                }
+    }
+
     override fun readContent(
         content: String,
         sep: String,

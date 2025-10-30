@@ -1,14 +1,18 @@
+import org.apache.tools.ant.filters.ReplaceTokens
+import org.gradle.kotlin.dsl.invoke
+import org.gradle.kotlin.dsl.processResources
+import org.gradle.kotlin.dsl.test
+
 plugins {
     kotlin("jvm") version "2.2.21"
     kotlin("kapt") version "2.2.21"
     id("org.jlleitschuh.gradle.ktlint") version "13.1.0"
-    id("org.graalvm.buildtools.native") version "0.9.28"
+    id("org.graalvm.buildtools.native") version "0.11.2"
     id("idea")
     application
 }
 
 group = "io.github.pintowar"
-version = "0.1.0-SNAPSHOT"
 
 kotlin {
     jvmToolchain {
@@ -25,9 +29,6 @@ dependencies {
     // Picocli for command-line parsing
     implementation("info.picocli:picocli:4.7.5")
     kapt("info.picocli:picocli-codegen:4.7.5") // Annotation processor for GraalVM
-
-    // Koin for dependency injection
-    implementation("io.insert-koin:koin-core:3.5.3")
 
     implementation("io.konform:konform-jvm:0.11.0")
     implementation("org.choco-solver:choco-solver:4.10.18")
@@ -53,6 +54,23 @@ kapt {
     }
 }
 
-tasks.test {
-    useJUnitPlatform()
+graalvmNative {
+    binaries {
+        named("main") {
+            buildArgs.add("-H:IncludeResources=application\\.properties")
+            buildArgs.add("--enable-url-protocols=https")
+        }
+    }
+}
+
+tasks {
+    processResources {
+        filesMatching("**/application.properties") {
+            filter(ReplaceTokens::class, "tokens" to mapOf("version" to project.version))
+        }
+    }
+
+    test {
+        useJUnitPlatform()
+    }
 }
