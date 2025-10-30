@@ -20,6 +20,7 @@ class ChocoScheduler(
     override fun solve(
         project: Project,
         timeLimit: Duration,
+        callback: (SchedulerSolution) -> Unit,
     ): Result<SchedulerSolution> =
         runCatching {
             val employees = project.allEmployees()
@@ -40,9 +41,7 @@ class ChocoScheduler(
             while (solver.solve()) {
                 solution.record()
                 val (currentDuration, optimal) = (Clock.System.now() - initSolving) to solver.isSearchCompleted
-                decode(project, solution, modelVars, currentDuration, optimal).onSuccess {
-                    listeners.forEach { listener -> listener(it) }
-                }
+                decode(project, solution, modelVars, currentDuration, optimal).onSuccess(callback)
             }
             val currentDuration = Clock.System.now() - initSolving
             return decode(project, solution, modelVars, currentDuration, solver.isObjectiveOptimal)

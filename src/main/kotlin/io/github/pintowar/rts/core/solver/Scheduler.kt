@@ -7,12 +7,19 @@ import kotlin.time.Duration.Companion.minutes
 
 abstract class Scheduler {
     abstract val estimator: TimeEstimator
-    protected val listeners: MutableList<(solution: SchedulerSolution) -> Unit> = mutableListOf()
 
     abstract fun solve(
         project: Project,
         timeLimit: Duration = 1.minutes,
+        callback: (SchedulerSolution) -> Unit = {},
     ): Result<SchedulerSolution>
 
-    fun addSolutionListener(listener: (solution: SchedulerSolution) -> Unit) = listeners.add(listener)
+    fun allSolutions(
+        project: Project,
+        timeLimit: Duration = 1.minutes,
+    ): Result<SolutionHistory> {
+        val solutions = mutableListOf<SchedulerSolution>()
+        val finalSolution = solve(project, timeLimit) { solutions.add(it) }
+        return finalSolution.map { SolutionHistory(solutions + it) }
+    }
 }
