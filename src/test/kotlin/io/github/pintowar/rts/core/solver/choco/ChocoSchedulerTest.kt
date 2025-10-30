@@ -17,7 +17,7 @@ class ChocoSchedulerTest :
             val (scheduledProject, optimal) = solution.getOrThrow()
             scheduledProject.scheduledStatus() shouldBe ProjectScheduled.SCHEDULED
             scheduledProject.isValid() shouldBe true
-            scheduledProject.endsAt() shouldBe Instant.Companion.parse("2022-01-01T01:00:00Z")
+            scheduledProject.endsAt() shouldBe Instant.parse("2022-01-01T01:00:00Z")
             optimal shouldBe true
         }
     })
