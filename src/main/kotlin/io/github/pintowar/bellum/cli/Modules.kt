@@ -1,4 +1,4 @@
-package io.github.pintowar.rts.cli
+package io.github.pintowar.bellum.cli
 
 import org.koin.dsl.module
 

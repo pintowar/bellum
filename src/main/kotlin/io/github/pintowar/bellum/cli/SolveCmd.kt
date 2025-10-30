@@ -1,4 +1,4 @@
-package io.github.pintowar.rts.cli
+package io.github.pintowar.bellum.cli
 
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
