@@ -113,13 +113,25 @@ class Project private constructor(
             tasks = tasks ?: this.tasks,
         )
 
-    // validations
-    fun employeesWithOverlap(): List<String> =
+    fun assignedTasks() =
         tasks
             .asSequence()
             .filter { it.isAssigned() }
             .map { it as AssignedTask }
             .groupBy({ it.employee })
+
+    fun describe(): String =
+        """
+        |Project: $name (starting at $kickOff). Max duration: ${totalDuration()}.
+        |-------
+        ${assignedTasks().map { (emp, tasks) ->
+            "|${emp.name}: ${tasks.map { "${it.description} (${it.priority}) - ${it.duration}" }}"
+        }.joinToString("\n")}
+    """.trimMargin("|")
+
+    // validations
+    fun employeesWithOverlap(): List<String> =
+        assignedTasks()
             .map { (emp, tasks) -> emp.name to tasks.hasOverlappingIntervals() }
             .filter { (_, overs) -> overs }
             .map { (emp, _) -> emp }

@@ -27,11 +27,11 @@ object RtsTaskReader : ContentReader<List<Task>> {
                     val row = header.zip(line).toMap()
                     val (id, content, priority, precedes) =
                         listOf(
-                            "id",
-                            "content",
-                            "priority",
-                            "precedes",
-                        ).map(row::getValue)
+                            row.getValue("id"),
+                            row.getValue("content"),
+                            row["criticity"] ?: row.getValue("priority"),
+                            row.getValue("precedes"),
+                        )
                     val skills =
                         row
                             .filterKeys { it.startsWith("skill") }
