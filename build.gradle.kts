@@ -13,10 +13,20 @@ plugins {
 
 group = "io.github.pintowar"
 
+val javaLangVersion = JavaLanguageVersion.of(21)
+val javaVendor = JvmVendorSpec.GRAAL_VM
+
+java {
+    toolchain {
+        languageVersion.set(javaLangVersion)
+        vendor.set(javaVendor)
+    }
+}
+
 kotlin {
     jvmToolchain {
-        languageVersion.set(JavaLanguageVersion.of(21))
-        vendor.set(JvmVendorSpec.GRAAL_VM)
+        languageVersion.set(javaLangVersion)
+        vendor.set(javaVendor)
     }
 }
 
