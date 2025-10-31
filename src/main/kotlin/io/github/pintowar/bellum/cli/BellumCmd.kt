@@ -31,23 +31,26 @@ class BellumCmd : Callable<Int> {
     @Parameters(paramLabel = "PATH", description = ["file to be solved"])
     lateinit var path: String
 
-    fun describe(sol: SchedulerSolution) {
+    private fun describe(sol: SchedulerSolution) {
         val isOptimal = if (sol.optimal) "@|bold,green optimal|@" else "@|bold,red suboptimal|@"
         val desc = Ansi.AUTO.string("[${sol.duration}]: ${sol.project.name}, ${sol.project.totalDuration()} ($isOptimal)")
         stdOutput.println(desc)
     }
 
-    override fun call(): Int {
-        val currentDir = System.getProperty("user.dir")
-        try {
+    private fun readAndSolveProject(currentDir: String): Result<SchedulerSolution> =
+        runCatching {
             val estimator = PearsonEstimator()
             val scheduler = ChocoScheduler(estimator)
 
-            val result =
-                RtsProjectReader
-                    .readContentFromPath(currentDir, path)
-                    .mapCatching { scheduler.solve(it, timeLimit.seconds, ::describe).getOrThrow() }
-                    .getOrThrow()
+            return RtsProjectReader
+                .readContentFromPath(currentDir, path)
+                .mapCatching { scheduler.solve(it, timeLimit.seconds, ::describe).getOrThrow() }
+        }
+
+    override fun call(): Int {
+        val currentDir = System.getProperty("user.dir")
+        try {
+            val result = readAndSolveProject(currentDir).getOrThrow()
 
             describe(result)
             stdOutput.println()
