@@ -77,7 +77,11 @@ tasks {
 sonarqube {
     properties {
         val sonarToken = project.findProperty("sonar.token")?.toString() ?: System.getenv("SONAR_TOKEN")
-        val koverPath = project.layout.buildDirectory.dir("reports/kover/xml").get().asFile.absolutePath
+        val koverPath =
+            project.layout.buildDirectory
+                .dir("reports/kover/xml")
+                .get()
+                .asFile.absolutePath
 
         property("sonar.sourceEncoding", "UTF-8")
         property("sonar.organization", "pintowar")
