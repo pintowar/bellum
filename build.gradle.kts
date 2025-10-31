@@ -1,13 +1,12 @@
 import org.apache.tools.ant.filters.ReplaceTokens
-import org.gradle.kotlin.dsl.invoke
-import org.gradle.kotlin.dsl.processResources
-import org.gradle.kotlin.dsl.test
 
 plugins {
     kotlin("jvm") version "2.2.21"
     kotlin("kapt") version "2.2.21"
     id("org.jlleitschuh.gradle.ktlint") version "13.1.0"
     id("org.graalvm.buildtools.native") version "0.11.2"
+    id("org.jetbrains.kotlinx.kover") version "0.9.3"
+    id("org.sonarqube") version "7.0.1.6134"
     id("idea")
     application
 }
@@ -73,4 +72,26 @@ tasks {
     test {
         useJUnitPlatform()
     }
+}
+
+sonarqube {
+    properties {
+        val sonarToken = project.findProperty("sonar.token")?.toString() ?: System.getenv("SONAR_TOKEN")
+        val koverPath = project.layout.buildDirectory.dir("reports/kover/xml").get().asFile.absolutePath
+
+        property("sonar.sourceEncoding", "UTF-8")
+        property("sonar.organization", "pintowar")
+        property("sonar.projectName", "bellum")
+        property("sonar.projectKey", "pintowar_bellum")
+        property("sonar.projectVersion", project.version.toString())
+        property("sonar.host.url", "https://sonarcloud.io")
+        property("sonar.token", sonarToken)
+        property("sonar.verbose", true)
+        property("sonar.github.repository", "pintowar/bellum")
+        property("sonar.coverage.jacoco.xmlReportPaths", "$koverPath/report.xml")
+    }
+}
+
+tasks.sonarqube {
+    dependsOn(tasks.koverXmlReport)
 }
