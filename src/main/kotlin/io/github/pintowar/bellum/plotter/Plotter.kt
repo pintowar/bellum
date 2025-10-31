@@ -1,4 +1,4 @@
-package io.github.pintowar.bellum.core.plotter
+package io.github.pintowar.bellum.plotter
 
 import io.github.pintowar.bellum.core.domain.AssignedTask
 import io.github.pintowar.bellum.core.domain.Project

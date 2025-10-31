@@ -25,15 +25,6 @@ class BellumCmd : Callable<Int> {
     @Option(names = ["-l", "--limit"], defaultValue = "30", description = ["solver time limit in seconds"])
     private var timeLimit: Int = 30
 
-    @Option(names = ["-r", "--reader"], defaultValue = "rts", description = ["reader formatter"])
-    private var reader: String = "rts"
-
-    @Option(names = ["-s", "--solver"], defaultValue = "choco", description = ["solver name"])
-    private var solver: String = "choco"
-
-    @Option(names = ["-e", "--estimator"], defaultValue = "pearson", description = ["task duration estimator"])
-    private var estimator: String = "pearson"
-
     @Option(names = ["-o", "--output"], description = ["output format [json, png]"])
     private var output: String? = null
 
