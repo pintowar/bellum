@@ -75,7 +75,7 @@ graalvmNative {
 tasks {
     processResources {
         filesMatching("**/application.properties") {
-            filter(ReplaceTokens::class, "tokens" to mapOf("version" to project.version))
+            filter(ReplaceTokens::class, "tokens" to mapOf("version" to version))
         }
     }
 
