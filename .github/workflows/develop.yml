@@ -34,6 +34,6 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
 
       - name: Running gradle task
-        run: ./gradlew clean ktlintCheck sonar -PenvironmentName=single
+        run: ./gradlew clean ktlintCheck test sonar -PenvironmentName=single
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
