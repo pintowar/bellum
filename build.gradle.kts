@@ -1,5 +1,4 @@
 import org.apache.tools.ant.filters.ReplaceTokens
-import org.gradle.jvm.toolchain.JavaToolchainService
 
 plugins {
     kotlin("jvm") version "2.2.21"
@@ -88,6 +87,10 @@ tasks {
     test {
         useJUnitPlatform()
     }
+
+    named("sonarqube") {
+        dependsOn(koverXmlReport)
+    }
 }
 
 sonarqube {
@@ -110,8 +113,4 @@ sonarqube {
         property("sonar.github.repository", "pintowar/bellum")
         property("sonar.coverage.jacoco.xmlReportPaths", "$koverPath/report.xml")
     }
-}
-
-tasks.sonarqube {
-    dependsOn(tasks.koverXmlReport)
 }
