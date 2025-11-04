@@ -1,8 +1,10 @@
 import org.apache.tools.ant.filters.ReplaceTokens
+import org.gradle.jvm.toolchain.JavaToolchainService
 
 plugins {
     kotlin("jvm") version "2.2.21"
     kotlin("kapt") version "2.2.21"
+    id("org.jreleaser") version "1.21.0"
     id("org.jlleitschuh.gradle.ktlint") version "13.1.0"
     id("org.graalvm.buildtools.native") version "0.11.2"
     id("org.jetbrains.kotlinx.kover") version "0.9.3"
@@ -14,7 +16,7 @@ plugins {
 group = "io.github.pintowar"
 
 val javaLangVersion = JavaLanguageVersion.of(21)
-val javaVendor = JvmVendorSpec.matching("GraalVM Community")
+val javaVendor = JvmVendorSpec.GRAAL_VM
 
 java {
     toolchain {
@@ -47,7 +49,7 @@ dependencies {
 
     implementation("org.jetbrains.lets-plot:lets-plot-kotlin-jvm:4.11.2")
 
-    testImplementation("io.mockk:mockk-jvm:1.14.6")
+    testImplementation("io.mockk:mockk:1.14.6")
     testImplementation("io.kotest:kotest-runner-junit5:6.0.4")
     testImplementation("io.kotest:kotest-assertions-core:6.0.4")
     testImplementation("io.kotest:kotest-assertions-konform-jvm:6.0.4")
@@ -66,6 +68,10 @@ kapt {
 graalvmNative {
     binaries {
         named("main") {
+            buildArgs.add("-H:IncludeResources=application\\.properties")
+            buildArgs.add("--enable-url-protocols=https")
+        }
+        named("test") {
             buildArgs.add("-H:IncludeResources=application\\.properties")
             buildArgs.add("--enable-url-protocols=https")
         }

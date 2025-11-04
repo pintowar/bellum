@@ -1,23 +1,24 @@
-name: Bellum Develop CI
+name: Bellum Tag Release Workflow CI
 on:
-  push:
-    # Sequence of patterns matched against refs/heads
-    branches:
-      - 'develop'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'The tag to release'
+        required: true
 
 env:
   JAVA_VERSION: '21'
   JAVA_DISTRO: 'graalvm'
 
 jobs:
-  gradle_develop_build:
-    name: Gradle Develop Build
+  gradle_master_build:
+    name: Gradle Release Task
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
         with:
-          ref: develop
+          ref: ${{ github.event.inputs.tag }} # This checks out the specific tag that triggered the workflow
           fetch-depth: 0
 
       - uses: n1hility/cancel-previous-runs@v3
@@ -35,8 +36,6 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
 
       - name: Running gradle task
-        run: |
-          ./gradlew clean ktlintCheck
-          ./gradlew koverXmlReport sonar
+        run: ./gradlew clean jreleaserRelease
         env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          JRELEASER_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
