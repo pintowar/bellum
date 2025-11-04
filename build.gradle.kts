@@ -88,7 +88,7 @@ tasks {
         useJUnitPlatform()
     }
 
-    named("sonarqube") {
+    named("sonar") {
         dependsOn(koverXmlReport)
     }
 }
@@ -98,7 +98,7 @@ sonarqube {
         val sonarToken = project.findProperty("sonar.token")?.toString() ?: System.getenv("SONAR_TOKEN")
         val koverPath =
             project.layout.buildDirectory
-                .dir("reports/kover/xml")
+                .dir("reports/kover")
                 .get()
                 .asFile.absolutePath
 
