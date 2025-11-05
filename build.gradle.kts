@@ -4,6 +4,7 @@ import org.apache.tools.ant.filters.ReplaceTokens
 plugins {
     alias(libs.plugins.kotlin.jvm)
     alias(libs.plugins.kotlin.kapt)
+    alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ktlint)
     alias(libs.plugins.graalvm.native)
     alias(libs.plugins.kotlinx.kover)
@@ -49,6 +50,7 @@ dependencies {
 
     implementation(libs.lets.plot.kotlin.jvm)
     implementation(libs.lets.plot.image.export)
+    implementation(libs.kotlinx.serialization.json)
 
     testImplementation(libs.mockk.jvm)
     testImplementation(libs.bundles.kotest)
