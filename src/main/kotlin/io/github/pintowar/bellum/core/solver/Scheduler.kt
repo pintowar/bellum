@@ -35,9 +35,14 @@ abstract class Scheduler {
     fun allSolutions(
         project: Project,
         timeLimit: Duration = 1.minutes,
+        callback: (SchedulerSolution) -> Unit = {},
     ): Result<SolutionHistory> {
         val solutions = ConcurrentLinkedQueue<SchedulerSolution>()
-        val finalSolution = solve(project, timeLimit) { solutions.add(it) }
+        val finalSolution =
+            solve(project, timeLimit) {
+                callback(it)
+                solutions.add(it)
+            }
         return finalSolution.map { SolutionHistory(solutions + it) }
     }
 }

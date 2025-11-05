@@ -3,7 +3,10 @@ package io.github.pintowar.bellum.cli
 import io.github.pintowar.bellum.core.estimator.PearsonEstimator
 import io.github.pintowar.bellum.core.parser.rts.RtsProjectReader
 import io.github.pintowar.bellum.core.solver.SchedulerSolution
+import io.github.pintowar.bellum.core.solver.SolutionHistory
 import io.github.pintowar.bellum.core.solver.choco.ChocoScheduler
+import io.github.pintowar.bellum.plotter.export
+import io.github.pintowar.bellum.plotter.plotHistoryAndBest
 import picocli.CommandLine
 import picocli.CommandLine.Command
 import picocli.CommandLine.Help.Ansi
@@ -37,24 +40,38 @@ class BellumCmd : Callable<Int> {
         stdOutput.println(desc)
     }
 
-    private fun readAndSolveProject(currentDir: String): Result<SchedulerSolution> =
+    private fun readAndSolveProject(currentDir: String): Result<SolutionHistory> =
         runCatching {
             val estimator = PearsonEstimator()
             val scheduler = ChocoScheduler(estimator)
 
             return RtsProjectReader
                 .readContentFromPath(currentDir, path)
-                .mapCatching { scheduler.solve(it, timeLimit.seconds, ::describe).getOrThrow() }
+                .mapCatching {
+                    scheduler
+                        .allSolutions(it, timeLimit.seconds) { sol ->
+                            describe(sol)
+                        }.getOrThrow()
+                }
         }
+
+    private fun writeOutput(
+        currentDir: String,
+        result: SolutionHistory,
+    ) {
+        when (output) {
+            "png" -> result.plotHistoryAndBest().export("$currentDir/output.png")
+        }
+    }
 
     override fun call(): Int {
         val currentDir = System.getProperty("user.dir")
         try {
             val result = readAndSolveProject(currentDir).getOrThrow()
+            writeOutput(currentDir, result)
 
-            describe(result)
             stdOutput.println()
-            stdOutput.println(result.project.describe())
+            stdOutput.println(result.describeLastProject())
             return CommandLine.ExitCode.OK
         } catch (e: Exception) {
             stdError.println(Ansi.AUTO.string("@|bold,red ${e.message}|@"))

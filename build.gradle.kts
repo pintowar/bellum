@@ -46,6 +46,7 @@ dependencies {
     implementation("org.apache.commons:commons-math3:3.6.1")
 
     implementation("org.jetbrains.lets-plot:lets-plot-kotlin-jvm:4.11.2")
+    implementation("org.jetbrains.lets-plot:lets-plot-image-export:4.7.3")
 
     testImplementation("io.mockk:mockk-jvm:1.14.6")
     testImplementation("io.kotest:kotest-runner-junit5:6.0.4")

@@ -82,10 +82,11 @@ internal class ChocoModel(
     private val taskAssignee = model.intVarArray("taskAssignee", numTasks, 0, numEmployees - 1)
 
     /**
-     * A safe upper bound for time-related variables, calculated as the sum of all possible task durations.
-     * This ensures that variables like start times and workloads have a sufficiently large domain.
+     * A safe upper bound for time-related variables, calculated as the min of max duration for all employees
+     * (as if all tasks were assigned to only that employee).
+     * This ensures that variables like `taskStartTime` have a sufficiently large domain.
      */
-    private val maxPossibleTime = taskDurationMatrix.sumOf { it.sum() }
+    private val maxPossibleTime = taskDurationMatrix.minOf { it.sum() }
 
     /**
      * The maximum possible duration for any single task across all employees.
