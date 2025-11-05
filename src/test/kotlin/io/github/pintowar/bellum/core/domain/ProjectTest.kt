@@ -7,11 +7,218 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.result.shouldBeFailure
 import io.kotest.matchers.result.shouldBeSuccess
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
+import io.kotest.matchers.string.shouldNotContain
 import kotlinx.datetime.Instant
 import kotlin.time.Duration.Companion.minutes
 
 class ProjectTest :
     FunSpec({
+        context("describe") {
+            val start = Instant.parse("2022-01-01T00:00:00Z")
+            val dur = 5.minutes
+
+            test("empty project with no tasks") {
+                val project = sampleProjectSmall.replace(employees = emptySet(), tasks = emptySet()).getOrThrow()
+                val description = project.describe()
+
+                description shouldContain "Project: Sample Project Small (starting at 2022-01-01T00:00:00Z). Max duration: null."
+                description shouldNotContain "Employee"
+            }
+
+            test("project with only unassigned tasks") {
+                val project =
+                    sampleProjectSmall
+                        .replace(
+                            employees = setOf(DataFixtures.employee1, DataFixtures.employee2),
+                            tasks = setOf(DataFixtures.task1, DataFixtures.task2, DataFixtures.task3),
+                        ).getOrThrow()
+                val description = project.describe()
+
+                description shouldContain "Project: Sample Project Small (starting at 2022-01-01T00:00:00Z). Max duration: null."
+                description shouldNotContain "Employee"
+            }
+
+            test("project with single task assigned to one employee") {
+                val task1 = DataFixtures.task1.assign(DataFixtures.employee1, start, dur)
+                val project =
+                    sampleProjectSmall
+                        .replace(
+                            employees = setOf(DataFixtures.employee1),
+                            tasks = setOf(task1, DataFixtures.task2, DataFixtures.task3),
+                        ).getOrThrow()
+                val description = project.describe()
+
+                description shouldContain "Project: Sample Project Small (starting at 2022-01-01T00:00:00Z). Max duration: 5m."
+                description shouldContain "-------"
+                description shouldContain "Employee 1: [Task 1 (NORMAL) - 5m]"
+            }
+
+            test("project with multiple tasks assigned to same employee") {
+                val task1 = DataFixtures.task1.assign(DataFixtures.employee1, start, dur)
+                val task2 = DataFixtures.task2.assign(DataFixtures.employee1, start + dur, dur)
+                val project =
+                    sampleProjectSmall
+                        .replace(
+                            employees = setOf(DataFixtures.employee1),
+                            tasks = setOf(task1, task2),
+                        ).getOrThrow()
+                val description = project.describe()
+
+                description shouldContain "Project: Sample Project Small (starting at 2022-01-01T00:00:00Z). Max duration: 10m."
+                description shouldContain "-------"
+                description shouldContain "Employee 1: [Task 1 (NORMAL) - 5m, Task 2 (NORMAL) - 5m]"
+            }
+
+            test("project with tasks assigned to multiple employees") {
+                val task1 = DataFixtures.task1.assign(DataFixtures.employee1, start, dur)
+                val task2 = DataFixtures.task2.assign(DataFixtures.employee2, start, dur)
+                val task3 = DataFixtures.task3.assign(DataFixtures.employee3, start, dur)
+                val project =
+                    sampleProjectSmall
+                        .replace(
+                            employees = setOf(DataFixtures.employee1, DataFixtures.employee2, DataFixtures.employee3),
+                            tasks = setOf(task1, task2, task3),
+                        ).getOrThrow()
+                val description = project.describe()
+
+                description shouldContain "Project: Sample Project Small (starting at 2022-01-01T00:00:00Z). Max duration: 5m."
+                description shouldContain "-------"
+                description shouldContain "Employee 1: [Task 1 (NORMAL) - 5m]"
+                description shouldContain "Employee 2: [Task 2 (NORMAL) - 5m]"
+                description shouldContain "Employee 3: [Task 3 (NORMAL) - 5m]"
+            }
+
+            test("project with different task priorities") {
+                val task1 = DataFixtures.task1.assign(DataFixtures.employee1, start, dur)
+                val taskWithDifferentPriority = UnassignedTask("Task with CRITICAL priority", priority = TaskPriority.CRITICAL).getOrThrow()
+                val task2 = taskWithDifferentPriority.assign(DataFixtures.employee1, start + dur, dur)
+                val project =
+                    sampleProjectSmall
+                        .replace(
+                            employees = setOf(DataFixtures.employee1),
+                            tasks = setOf(task1, task2),
+                        ).getOrThrow()
+                val description = project.describe()
+
+                description shouldContain "Employee 1: [Task 1 (MINOR) - 5m, Task with CRITICAL priority (CRITICAL) - 5m]"
+            }
+
+            test("project with different task durations") {
+                val task1 = DataFixtures.task1.assign(DataFixtures.employee1, start, dur)
+                val task2 = DataFixtures.task2.assign(DataFixtures.employee1, start + dur, 15.minutes)
+                val project =
+                    sampleProjectSmall
+                        .replace(
+                            employees = setOf(DataFixtures.employee1),
+                            tasks = setOf(task1, task2),
+                        ).getOrThrow()
+                val description = project.describe()
+
+                description shouldContain "Employee 1: [Task 1 (MINOR) - 5m, Task 2 (MINOR) - 15m]"
+                description shouldContain "Max duration: 20m"
+            }
+
+            test("project with tasks having dependencies") {
+                val task1 = DataFixtures.task1.assign(DataFixtures.employee1, start, dur)
+                val task3 = DataFixtures.task3.assign(DataFixtures.employee2, start + dur, dur)
+                val project =
+                    sampleProjectSmall
+                        .replace(
+                            employees = setOf(DataFixtures.employee1, DataFixtures.employee2),
+                            tasks = setOf(task1, task3),
+                        ).getOrThrow()
+                val description = project.describe()
+
+                description shouldContain "-------"
+                description shouldContain "Employee 1: [Task 1 (MINOR) - 5m]"
+                description shouldContain "Employee 2: [Task 3 (MINOR) - 5m]"
+            }
+
+            test("project with special characters in names") {
+                val taskWithSpecialChars = UnassignedTask("Task with \"quotes\" & <tags>").getOrThrow()
+                val task1 = taskWithSpecialChars.assign(DataFixtures.employee1, start, dur)
+                val employeeWithSpecialChars = Employee("Employee with 'apostrophe'").getOrThrow()
+                val project =
+                    Project(
+                        name = "Project with \"quotes\" & <special>",
+                        kickOff = start,
+                        employees = setOf(employeeWithSpecialChars),
+                        tasks = setOf(task1),
+                    ).getOrThrow()
+                val description = project.describe()
+
+                description shouldContain "Project: Project with \"quotes\" & <special> (starting at 2022-01-01T00:00:00Z). Max duration: 5m."
+                description shouldContain "-------"
+                description shouldContain "Employee with 'apostrophe': [Task with \"quotes\" & <tags> (MINOR) - 5m]"
+            }
+
+            test("project with many tasks displays correctly") {
+                val tasks =
+                    (1..10).map { i ->
+                        UnassignedTask("Task $i")
+                            .getOrThrow()
+                            .assign(DataFixtures.employee1, start + ((i - 1) * 5).minutes, dur)
+                    }
+                val project =
+                    sampleProjectSmall
+                        .replace(
+                            employees = setOf(DataFixtures.employee1),
+                            tasks = tasks.toSet(),
+                        ).getOrThrow()
+                val description = project.describe()
+
+                description shouldContain
+                    "Employee 1: [Task 1 (MINOR) - 5m, Task 2 (MINOR) - 5m, Task 3 (MINOR) - 5m, Task 4 (MINOR) - 5m, Task 5 (MINOR) - 5m, Task 6 (MINOR) - 5m, Task 7 (MINOR) - 5m, Task 8 (MINOR) - 5m, Task 9 (MINOR) - 5m, Task 10 (MINOR) - 5m]"
+            }
+
+            test("project with no assigned tasks shows null duration") {
+                val project =
+                    sampleProjectSmall
+                        .replace(
+                            employees = setOf(DataFixtures.employee1, DataFixtures.employee2),
+                            tasks = setOf(DataFixtures.task1, DataFixtures.task2),
+                        ).getOrThrow()
+                val description = project.describe()
+
+                description shouldContain "Max duration: null."
+            }
+
+            test("describe format consistency") {
+                val task1 = DataFixtures.task1.assign(DataFixtures.employee1, start, dur)
+                val task2 = DataFixtures.task2.assign(DataFixtures.employee2, start + dur, dur)
+                val project =
+                    sampleProjectSmall
+                        .replace(
+                            employees = setOf(DataFixtures.employee1, DataFixtures.employee2),
+                            tasks = setOf(task1, task2),
+                        ).getOrThrow()
+                val description = project.describe()
+
+                // Check basic format structure
+                description.lines().size shouldBe 4
+                description.lines()[0] shouldBe "Project: Sample Project Small (starting at 2022-01-01T00:00:00Z). Max duration: 5m."
+                description.lines()[1] shouldBe "-------"
+                description.lines()[2] shouldBe "Employee 1: [Task 1 (MINOR) - 5m]"
+                description.lines()[3] shouldBe "Employee 2: [Task 2 (MINOR) - 5m]"
+            }
+
+            test("mixed assigned and unassigned tasks") {
+                val task1 = DataFixtures.task1.assign(DataFixtures.employee1, start, dur)
+                val project =
+                    sampleProjectSmall
+                        .replace(
+                            employees = setOf(DataFixtures.employee1),
+                            tasks = setOf(task1, DataFixtures.task2, DataFixtures.task3),
+                        ).getOrThrow()
+                val description = project.describe()
+
+                description shouldContain "Employee 1: [Task 1 (MINOR) - 5m]"
+                description shouldNotContain "Task 2"
+                description shouldNotContain "Task 3"
+            }
+        }
+
         context("scheduledStatus") {
             val start = Instant.parse("2022-01-01T00:00:00Z")
             val dur = 5.minutes
