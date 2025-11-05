@@ -51,7 +51,7 @@ class ProjectTest :
 
                 description shouldContain "Project: Sample Project Small (starting at 2022-01-01T00:00:00Z). Max duration: 5m."
                 description shouldContain "-------"
-                description shouldContain "Employee 1: [Task 1 (NORMAL) - 5m]"
+                description shouldContain "Employee 1: [Task 1 (MINOR) - 5m]"
             }
 
             test("project with multiple tasks assigned to same employee") {
@@ -67,7 +67,7 @@ class ProjectTest :
 
                 description shouldContain "Project: Sample Project Small (starting at 2022-01-01T00:00:00Z). Max duration: 10m."
                 description shouldContain "-------"
-                description shouldContain "Employee 1: [Task 1 (NORMAL) - 5m, Task 2 (NORMAL) - 5m]"
+                description shouldContain "Employee 1: [Task 1 (MINOR) - 5m, Task 2 (MINOR) - 5m]"
             }
 
             test("project with tasks assigned to multiple employees") {
@@ -84,9 +84,9 @@ class ProjectTest :
 
                 description shouldContain "Project: Sample Project Small (starting at 2022-01-01T00:00:00Z). Max duration: 5m."
                 description shouldContain "-------"
-                description shouldContain "Employee 1: [Task 1 (NORMAL) - 5m]"
-                description shouldContain "Employee 2: [Task 2 (NORMAL) - 5m]"
-                description shouldContain "Employee 3: [Task 3 (NORMAL) - 5m]"
+                description shouldContain "Employee 1: [Task 1 (MINOR) - 5m]"
+                description shouldContain "Employee 2: [Task 2 (MINOR) - 5m]"
+                description shouldContain "Employee 3: [Task 3 (MINOR) - 5m]"
             }
 
             test("project with different task priorities") {
@@ -137,8 +137,8 @@ class ProjectTest :
 
             test("project with special characters in names") {
                 val taskWithSpecialChars = UnassignedTask("Task with \"quotes\" & <tags>").getOrThrow()
-                val task1 = taskWithSpecialChars.assign(DataFixtures.employee1, start, dur)
                 val employeeWithSpecialChars = Employee("Employee with 'apostrophe'").getOrThrow()
+                val task1 = taskWithSpecialChars.assign(employeeWithSpecialChars, start, dur)
                 val project =
                     Project(
                         name = "Project with \"quotes\" & <special>",
@@ -148,7 +148,8 @@ class ProjectTest :
                     ).getOrThrow()
                 val description = project.describe()
 
-                description shouldContain "Project: Project with \"quotes\" & <special> (starting at 2022-01-01T00:00:00Z). Max duration: 5m."
+                description shouldContain
+                    "Project: Project with \"quotes\" & <special> (starting at 2022-01-01T00:00:00Z). Max duration: 5m."
                 description shouldContain "-------"
                 description shouldContain "Employee with 'apostrophe': [Task with \"quotes\" & <tags> (MINOR) - 5m]"
             }
@@ -197,7 +198,7 @@ class ProjectTest :
 
                 // Check basic format structure
                 description.lines().size shouldBe 4
-                description.lines()[0] shouldBe "Project: Sample Project Small (starting at 2022-01-01T00:00:00Z). Max duration: 5m."
+                description.lines()[0] shouldBe "Project: Sample Project Small (starting at 2022-01-01T00:00:00Z). Max duration: 10m."
                 description.lines()[1] shouldBe "-------"
                 description.lines()[2] shouldBe "Employee 1: [Task 1 (MINOR) - 5m]"
                 description.lines()[3] shouldBe "Employee 2: [Task 2 (MINOR) - 5m]"
