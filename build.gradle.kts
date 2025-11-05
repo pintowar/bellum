@@ -1,9 +1,11 @@
+import net.researchgate.release.ReleaseExtension
 import org.apache.tools.ant.filters.ReplaceTokens
 
 plugins {
     kotlin("jvm") version "2.2.21"
     kotlin("kapt") version "2.2.21"
     id("org.jreleaser") version "1.20.0"
+    id("net.researchgate.release") version "3.1.0"
     id("org.jlleitschuh.gradle.ktlint") version "13.1.0"
     id("org.graalvm.buildtools.native") version "0.11.2"
     id("org.jetbrains.kotlinx.kover") version "0.9.3"
@@ -90,6 +92,13 @@ tasks {
 
     named("sonar") {
         dependsOn(koverXmlReport)
+    }
+}
+
+configure<ReleaseExtension> {
+    tagTemplate.set("v\$version")
+    with(git) {
+        requireBranch.set("master")
     }
 }
 
