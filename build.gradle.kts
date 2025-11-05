@@ -1,3 +1,4 @@
+import net.researchgate.release.ReleaseExtension
 import org.apache.tools.ant.filters.ReplaceTokens
 
 plugins {
@@ -7,6 +8,8 @@ plugins {
     alias(libs.plugins.graalvm.native)
     alias(libs.plugins.kotlinx.kover)
     alias(libs.plugins.sonarqube)
+    alias(libs.plugins.jreleaser)
+    alias(libs.plugins.release)
     id("idea")
     application
 }
@@ -14,7 +17,7 @@ plugins {
 group = "io.github.pintowar"
 
 val javaLangVersion = JavaLanguageVersion.of(21)
-val javaVendor = JvmVendorSpec.matching("GraalVM Community")
+val javaVendor = JvmVendorSpec.GRAAL_VM
 
 java {
     toolchain {
@@ -67,6 +70,10 @@ graalvmNative {
             buildArgs.add("-H:IncludeResources=application\\.properties")
             buildArgs.add("--enable-url-protocols=https")
         }
+        named("test") {
+            buildArgs.add("-H:IncludeResources=application\\.properties")
+            buildArgs.add("--enable-url-protocols=https")
+        }
     }
 }
 
@@ -80,6 +87,38 @@ tasks {
     test {
         useJUnitPlatform()
     }
+
+    named("sonar") {
+        dependsOn(koverXmlReport)
+    }
+}
+
+configure<ReleaseExtension> {
+    tagTemplate.set("v\$version")
+    with(git) {
+        requireBranch.set("master")
+    }
+}
+
+jreleaser {
+    project {
+        authors.set(listOf("Thiago Oliveira Pinheiro"))
+        license.set("Apache-2.0")
+        copyright.set("Copyright (C) 2025 Thiago Oliveira Pinheiro")
+        description.set("Kotlin based scheduling system that optimizes task assignment to employees")
+        links {
+            homepage.set("https://github.com/pintowar/bellum")
+        }
+    }
+    distributions {
+        create("bellum") {
+            distributionType.set(org.jreleaser.model.Distribution.DistributionType.BINARY)
+            artifact {
+                path.set(file("$rootDir/build/native/nativeCompile/bellum"))
+                extraProperties.put("graalVMNativeImage", true)
+            }
+        }
+    }
 }
 
 sonarqube {
@@ -87,7 +126,7 @@ sonarqube {
         val sonarToken = project.findProperty("sonar.token")?.toString() ?: System.getenv("SONAR_TOKEN")
         val koverPath =
             project.layout.buildDirectory
-                .dir("reports/kover/xml")
+                .dir("reports/kover")
                 .get()
                 .asFile.absolutePath
 
@@ -102,8 +141,4 @@ sonarqube {
         property("sonar.github.repository", "pintowar/bellum")
         property("sonar.coverage.jacoco.xmlReportPaths", "$koverPath/report.xml")
     }
-}
-
-tasks.sonarqube {
-    dependsOn(tasks.koverXmlReport)
 }

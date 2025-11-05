@@ -4,6 +4,8 @@ kotlinx-kover = "0.9.3"
 ktlint = "13.1.0"
 graalvm-native = "0.11.2"
 sonarqube = "7.0.1.6134"
+jreleaser = "1.20.0"
+release = "3.1.0"
 picocli = "4.7.5"
 konform = "0.11.0"
 choco-solver = "4.10.18"
@@ -39,6 +41,8 @@ ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlint" }
 graalvm-native = { id = "org.graalvm.buildtools.native", version.ref = "graalvm-native" }
 kotlinx-kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kotlinx-kover" }
 sonarqube = { id = "org.sonarqube", version.ref = "sonarqube" }
+jreleaser = { id = "org.jreleaser", version.ref = "jreleaser" }
+release = { id = "net.researchgate.release", version.ref = "release" }
 
 [bundles]
 kotest = ["kotest-runner-junit5", "kotest-assertions-core", "kotest-assertions-konform-jvm"]
