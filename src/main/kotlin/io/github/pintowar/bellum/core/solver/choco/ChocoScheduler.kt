@@ -11,7 +11,7 @@ class ChocoScheduler(
     override val estimator: TimeEstimator,
     private val withLexicalConstraint: Boolean = true,
 ) : Scheduler() {
-    override fun innerSolve(
+    override fun solveOptimizationProblem(
         project: Project,
         timeLimit: Duration,
         callback: (SchedulerSolution) -> Unit,

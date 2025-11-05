@@ -19,15 +19,15 @@ import kotlin.time.Duration.Companion.milliseconds
 class SchedulerTest :
     FunSpec({
 
-        test("solve should not face a race condition when called concurrently") {
+        test("findOptimalSchedule should not face a race condition when called concurrently") {
             // 1. Arrange
             val scheduler = spyk<Scheduler>()
             val dummyProject = DataFixtures.sampleProjectSmall
 
-            // Mock the behavior of innerSolve.
+            // Mock the behavior of solveOptimizationProblem.
             // We add a delay to increase the chance of threads interleaving,
             // making the race condition more likely to appear if the code is flawed.
-            coEvery { scheduler.innerSolve(any(), any(), any()) } coAnswers {
+            coEvery { scheduler.solveOptimizationProblem(any(), any(), any()) } coAnswers {
                 delay(100) // Simulate work
                 Result.success(SchedulerSolution(DataFixtures.sampleProjectSmall, false, 100.milliseconds))
             }
@@ -35,13 +35,13 @@ class SchedulerTest :
             val concurrentJobs = 100 // Number of concurrent calls to simulate
 
             // 2. Act
-            // Launch all solve calls concurrently and store their results.
+            // Launch all findOptimalSchedule calls concurrently and store their results.
             // coroutineScope will ensure all launched async jobs complete before continuing.
             val results =
                 coroutineScope {
                     (1..concurrentJobs)
                         .map {
-                            async { scheduler.solve(dummyProject) }
+                            async { scheduler.findOptimalSchedule(dummyProject) }
                         }.awaitAll()
                 }
 
@@ -66,18 +66,18 @@ class SchedulerTest :
 
             // Crucially, verify that the actual heavy work was only performed ONCE.
             verify(exactly = 1) {
-                scheduler.innerSolve(any(), any(), any())
+                scheduler.solveOptimizationProblem(any(), any(), any())
             }
         }
 
-        test("scheduler should be reusable after a solve operation completes") {
+        test("scheduler should be reusable after a findOptimalSchedule operation completes") {
             val scheduler = spyk<Scheduler>()
             val dummyProject = DataFixtures.sampleProjectSmall
 
             // First call should succeed
-            scheduler.solve(dummyProject).shouldBeSuccess()
+            scheduler.findOptimalSchedule(dummyProject).shouldBeSuccess()
 
             // The state should be reset to IDLE, so a second call should also succeed
-            scheduler.solve(dummyProject).shouldBeSuccess()
+            scheduler.findOptimalSchedule(dummyProject).shouldBeSuccess()
         }
     })

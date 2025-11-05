@@ -49,7 +49,7 @@ class BellumCmd : Callable<Int> {
                 .readContentFromPath(currentDir, path)
                 .mapCatching {
                     scheduler
-                        .allSolutions(it, timeLimit.seconds) { sol ->
+                        .collectAllOptimalSchedules(it, timeLimit.seconds) { sol ->
                             describe(sol)
                         }.getOrThrow()
                 }
