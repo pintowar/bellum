@@ -2,6 +2,7 @@ package io.github.pintowar.bellum.core.parser.rts
 
 import io.github.pintowar.bellum.core.domain.Project
 import io.github.pintowar.bellum.core.parser.ContentReader
+import io.github.pintowar.bellum.core.parser.InvalidFileFormat
 import kotlinx.datetime.Clock
 import java.net.URI
 
@@ -30,12 +31,38 @@ class RtsProjectReader(
         sep: String,
     ): Result<Project> =
         runCatching {
-            val lines = content.trim().lines()
-            val idx = lines.indexOfFirst { it.startsWith("=====") }
-            val (employeeContent, taskContent) = lines.take(idx) to lines.drop(idx + 1)
+            val trimmedContent = content.trim()
+            if (trimmedContent.isBlank()) {
+                throw InvalidFileFormat("Empty project content.")
+            }
 
-            val employees = RtsEmployeeReader.readContent(employeeContent.joinToString("\n")).getOrThrow()
-            val tasks = RtsTaskReader.readContent(taskContent.joinToString("\n")).getOrThrow()
+            val lines = trimmedContent.lines()
+            val idx =
+                lines.indexOfFirst { line ->
+                    line.isNotBlank() && line.all { it == '=' || it == '-' || it == '_' || it == ' ' }
+                }
+
+            if (idx == -1) {
+                throw InvalidFileFormat("Missing separator line.")
+            }
+
+            val (employeeLines, taskLines) = lines.take(idx) to lines.drop(idx + 1)
+            val employeeContent = employeeLines.joinToString("\n")
+            val taskContent = taskLines.joinToString("\n")
+
+            val employees =
+                if (employeeContent.isBlank()) {
+                    emptyList()
+                } else {
+                    RtsEmployeeReader.readContent(employeeContent).getOrThrow()
+                }
+
+            val tasks =
+                if (taskContent.isBlank()) {
+                    emptyList()
+                } else {
+                    RtsTaskReader.readContent(taskContent).getOrThrow()
+                }
 
             return Project(name, Clock.System.now(), employees.toSet(), tasks.toSet())
         }

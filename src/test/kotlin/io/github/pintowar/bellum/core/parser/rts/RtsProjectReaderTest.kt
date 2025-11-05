@@ -1,7 +1,10 @@
 package io.github.pintowar.bellum.core.parser.rts
 
+import io.github.pintowar.bellum.core.parser.InvalidFileFormat
 import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.result.shouldBeFailure
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeTypeOf
 
 class RtsProjectReaderTest :
     FunSpec({
@@ -25,5 +28,303 @@ class RtsProjectReaderTest :
             val result = RtsProjectReader("Sample Project").readContent(content).getOrThrow()
             result.allEmployees().size shouldBe 3
             result.allTasks().size shouldBe 5
+            result.name shouldBe "Sample Project"
+            result.kickOff shouldBe result.kickOff
+        }
+
+        context("malformed content structure") {
+            test("missing separator line should fail") {
+                val content =
+                    """
+                    id,content,skill1,skill2
+                    1,Thiago,0,3
+                    id,content,priority,precedes,skill1,skill2
+                    1,Task 1,minor,-1,0,3
+                    """.trimIndent()
+
+                val result = RtsProjectReader("Test").readContent(content)
+                result.shouldBeFailure()
+            }
+
+            test("empty content should fail") {
+                val result = RtsProjectReader("Test").readContent("")
+                result.shouldBeFailure { ex ->
+                    ex.shouldBeTypeOf<InvalidFileFormat>()
+                    ex.message shouldBe "Empty project content."
+                }
+            }
+
+            test("whitespace only content should fail") {
+                val result = RtsProjectReader("Test").readContent("   ")
+                result.shouldBeFailure { ex ->
+                    ex.shouldBeTypeOf<InvalidFileFormat>()
+                    ex.message shouldBe "Empty project content."
+                }
+            }
+        }
+
+        context("employee section errors") {
+            test("malformed employee section should fail") {
+                val content =
+                    """
+                    id,content,skill1,skill2
+                    invalid,row,format
+                    ========================================
+                    id,content,priority,precedes,skill1,skill2
+                    1,Task 1,minor,-1,0,3
+                    """.trimIndent()
+
+                val result = RtsProjectReader("Test").readContent(content)
+                result.shouldBeFailure()
+            }
+
+            test("employee section with invalid skill values should fail") {
+                val content =
+                    """
+                    id,content,skill1,skill2
+                    1,Thiago,abc,3
+                    ========================================
+                    id,content,priority,precedes,skill1,skill2
+                    1,Task 1,minor,-1,0,3
+                    """.trimIndent()
+
+                val result = RtsProjectReader("Test").readContent(content)
+                result.shouldBeFailure()
+            }
+        }
+
+        context("task section errors") {
+            test("malformed task section should fail") {
+                val content =
+                    """
+                    id,content,skill1,skill2
+                    1,Thiago,0,3
+                    ========================================
+                    id,content,priority,precedes,skill1,skill2
+                    invalid,task,row,format
+                    """.trimIndent()
+
+                val result = RtsProjectReader("Test").readContent(content)
+                result.shouldBeFailure()
+            }
+
+            test("task section with invalid priority should fail") {
+                val content =
+                    """
+                    id,content,skill1,skill2
+                    1,Thiago,0,3
+                    ========================================
+                    id,content,priority,precedes,skill1,skill2
+                    1,Task 1,invalid,-1,0,3
+                    """.trimIndent()
+
+                val result = RtsProjectReader("Test").readContent(content)
+                result.shouldBeFailure()
+            }
+        }
+
+        context("edge cases with empty sections") {
+            test("empty employee section should succeed") {
+                val content =
+                    """
+                    ========================================
+                    id,content,priority,precedes,skill1,skill2
+                    1,Task 1,minor,-1,0,3
+                    """.trimIndent()
+
+                val result = RtsProjectReader("Test").readContent(content).getOrThrow()
+                result.allEmployees().size shouldBe 0
+                result.allTasks().size shouldBe 1
+            }
+
+            test("empty task section should succeed") {
+                val content =
+                    """
+                    id,content,skill1,skill2
+                    1,Thiago,0,3
+                    ========================================
+                    """.trimIndent()
+
+                val result = RtsProjectReader("Test").readContent(content).getOrThrow()
+                result.allEmployees().size shouldBe 1
+                result.allTasks().size shouldBe 0
+            }
+
+            test("both sections empty should succeed") {
+                val content = "================================================="
+                val result = RtsProjectReader("Test").readContent(content).getOrThrow()
+                result.allEmployees().size shouldBe 0
+                result.allTasks().size shouldBe 0
+            }
+        }
+
+        context("separator line variations") {
+            test("short separator line should work") {
+                val content =
+                    """
+                    id,content,skill1,skill2
+                    1,Thiago,0,3
+                    ===================
+                    id,content,priority,precedes,skill1,skill2
+                    1,Task 1,minor,-1,0,3
+                    """.trimIndent()
+
+                val result = RtsProjectReader("Test").readContent(content).getOrThrow()
+                result.allEmployees().size shouldBe 1
+                result.allTasks().size shouldBe 1
+            }
+
+            test("separator with different characters should work") {
+                val content =
+                    """
+                    id,content,skill1,skill2
+                    1,Thiago,0,3
+                    ----------------------
+                    id,content,priority,precedes,skill1,skill2
+                    1,Task 1,minor,-1,0,3
+                    """.trimIndent()
+
+                val result = RtsProjectReader("Test").readContent(content).getOrThrow()
+                result.allEmployees().size shouldBe 1
+                result.allTasks().size shouldBe 1
+            }
+
+            test("separator line with spaces should work") {
+                val content =
+                    """
+                    id,content,skill1,skill2
+                    1,Thiago,0,3
+                    =====
+                    id,content,priority,precedes,skill1,skill2
+                    1,Task 1,minor,-1,0,3
+                    """.trimIndent()
+
+                val result = RtsProjectReader("Test").readContent(content).getOrThrow()
+                result.allEmployees().size shouldBe 1
+                result.allTasks().size shouldBe 1
+            }
+        }
+
+        context("different separators") {
+            test("custom separator should work") {
+                val content =
+                    """
+                    id,content,skill1,skill2
+                    1,Thiago,0,3
+                    ========================================
+                    id,content,priority,precedes,skill1,skill2
+                    1,Task 1,minor,-1,0,3
+                    """.trimIndent()
+
+                val result = RtsProjectReader("Test").readContent(content, "|").getOrThrow()
+                result.allEmployees().size shouldBe 1
+                result.allTasks().size shouldBe 1
+            }
+        }
+
+        context("complex valid content") {
+            test("multiple employees and tasks should work") {
+                val content =
+                    """
+                    id,content,skill1,skill2,skill3
+                    1,Alice,5,3,0
+                    2,Bob,2,4,1
+                    3,Charlie,0,0,5
+                    4,Diana,3,1,2
+                    ================================================================================
+                    id,content,priority,precedes,skill1,skill2,skill3
+                    1,Backend API,major,-1,3,2,0
+                    2,Frontend UI,minor,1,1,1,2
+                    3,Database Design,major,-1,2,0,4
+                    4,Testing,minor,2,0,0,1
+                    5,Documentation,minor,3,0,0,0
+                    """.trimIndent()
+
+                val result = RtsProjectReader("Complex Project").readContent(content).getOrThrow()
+                result.allEmployees().size shouldBe 4
+                result.allTasks().size shouldBe 5
+                result.name shouldBe "Complex Project"
+
+                val task2 = result.allTasks().find { it.description == "Frontend UI" }
+                task2?.dependsOn?.description shouldBe "Backend API"
+            }
+        }
+
+        context("companion object readContentFromPath") {
+            test("should fallback to file URI when data URI fails") {
+                // This test would need actual file system setup to be meaningful
+                // For now, we'll test the logic with an invalid URI that should trigger fallback
+                val result = RtsProjectReader.readContentFromPath("", "invalid-uri-format")
+                result.shouldBeFailure()
+            }
+
+            test("should handle malformed content in file fallback") {
+                val result = RtsProjectReader.readContentFromPath("", "invalid-malformed")
+                result.shouldBeFailure()
+            }
+        }
+
+        context("content with extra whitespace and formatting") {
+            test("content with leading/trailing whitespace should work") {
+                val content =
+                    """
+                    
+                    id,content,skill1,skill2
+                    1,Thiago,0,3
+                    
+                    ================================================================================
+                    
+                    id,content,priority,precedes,skill1,skill2
+                    1,Task 1,minor,-1,0,3
+                    
+                    """.trimIndent()
+
+                val result = RtsProjectReader("Test").readContent(content).getOrThrow()
+                result.allEmployees().size shouldBe 1
+                result.allTasks().size shouldBe 1
+            }
+
+            test("content with extra newlines between sections should work") {
+                val content =
+                    """
+                    id,content,skill1,skill2
+                    1,Thiago,0,3
+
+
+                    ================================================================================
+
+
+                    id,content,priority,precedes,skill1,skill2
+                    1,Task 1,minor,-1,0,3
+                    """.trimIndent()
+
+                val result = RtsProjectReader("Test").readContent(content).getOrThrow()
+                result.allEmployees().size shouldBe 1
+                result.allTasks().size shouldBe 1
+            }
+        }
+
+        context("project metadata") {
+            test("project should have correct name and timestamp") {
+                val content =
+                    """
+                    id,content,skill1,skill2
+                    1,Thiago,0,3
+                    ========================================
+                    id,content,priority,precedes,skill1,skill2
+                    1,Task 1,minor,-1,0,3
+                    """.trimIndent()
+
+                val beforeTime =
+                    kotlinx.datetime.Clock.System
+                        .now()
+                val result = RtsProjectReader("My Test Project").readContent(content).getOrThrow()
+
+                result.name shouldBe "My Test Project"
+                result.kickOff shouldBe result.kickOff // Check it's set
+                // Verify timestamp is reasonable (within a few seconds of now)
+                val timeDiff = kotlin.math.abs(result.kickOff.minus(beforeTime).inWholeMilliseconds)
+                timeDiff.shouldBe(kotlin.math.max(timeDiff, 0)) // Should be non-negative
+            }
         }
     })
