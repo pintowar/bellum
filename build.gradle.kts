@@ -3,7 +3,7 @@ import org.apache.tools.ant.filters.ReplaceTokens
 plugins {
     kotlin("jvm") version "2.2.21"
     kotlin("kapt") version "2.2.21"
-    id("org.jreleaser") version "1.21.0"
+    id("org.jreleaser") version "1.20.0"
     id("org.jlleitschuh.gradle.ktlint") version "13.1.0"
     id("org.graalvm.buildtools.native") version "0.11.2"
     id("org.jetbrains.kotlinx.kover") version "0.9.3"
@@ -90,6 +90,27 @@ tasks {
 
     named("sonar") {
         dependsOn(koverXmlReport)
+    }
+}
+
+jreleaser {
+    project {
+        authors.set(listOf("Thiago Oliveira Pinheiro"))
+        license.set("Apache-2.0")
+        copyright.set("Copyright (C) 2025 Thiago Oliveira Pinheiro")
+        description.set("Kotlin based scheduling system that optimizes task assignment to employees")
+        links {
+            homepage.set("https://github.com/pintowar/bellum")
+        }
+    }
+    distributions {
+        create("bellum") {
+            distributionType.set(org.jreleaser.model.Distribution.DistributionType.BINARY)
+            artifact {
+                path.set(file("$rootDir/build/native/nativeCompile/bellum"))
+                extraProperties.put("graalVMNativeImage", true)
+            }
+        }
     }
 }
 
