@@ -16,6 +16,7 @@ lets-plot-kotlin = "4.11.2"
 lets-plot-image = "4.7.3"
 mockk = "1.14.6"
 kotest = "6.0.4"
+kotlinx-serialization = "1.9.0"
 
 [libraries]
 picocli = { module = "info.picocli:picocli", version.ref = "picocli" }
@@ -27,6 +28,7 @@ jgrapht-core = { module = "org.jgrapht:jgrapht-core", version.ref = "jgrapht" }
 commons-math3 = { module = "org.apache.commons:commons-math3", version.ref = "commons-math3" }
 lets-plot-kotlin-jvm = { module = "org.jetbrains.lets-plot:lets-plot-kotlin-jvm", version.ref = "lets-plot-kotlin" }
 lets-plot-image-export = { module = "org.jetbrains.lets-plot:lets-plot-image-export", version.ref = "lets-plot-image" }
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
 
 # Test libraries
 mockk-jvm = { module = "io.mockk:mockk-jvm", version.ref = "mockk" }
@@ -37,6 +39,7 @@ kotest-assertions-konform-jvm = { module = "io.kotest:kotest-assertions-konform-
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin-kapt = { id = "org.jetbrains.kotlin.kapt", version.ref = "kotlin" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlint" }
 graalvm-native = { id = "org.graalvm.buildtools.native", version.ref = "graalvm-native" }
 kotlinx-kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kotlinx-kover" }

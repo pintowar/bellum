@@ -6,8 +6,10 @@ import io.github.pintowar.bellum.core.domain.Task
 import io.github.pintowar.bellum.core.estimator.TimeEstimator
 import io.github.pintowar.bellum.core.solver.SchedulerSolution
 import org.chocosolver.solver.Model
+import org.chocosolver.solver.ResolutionPolicy
 import org.chocosolver.solver.Solution
 import org.chocosolver.solver.Solver
+import org.chocosolver.solver.search.SearchState
 import org.chocosolver.solver.variables.IntVar
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
@@ -186,9 +188,57 @@ internal class ChocoModel(
                         newProject,
                         optimal,
                         currentDuration,
+                        solverStatistics(model.solver),
                     )
                 }
         }
+
+    /**
+     * Extracts and formats solver statistics from a Choco Solver instance.
+     *
+     * This function collects various performance metrics and runtime information from the solver,
+     * formatting them into a human-readable map. The statistics include information about the
+     * search process, solution quality, and solver configuration.
+     *
+     * @param solver The Choco Solver instance to extract statistics from.
+     * @return A map containing solver information and statistics with the following keys:
+     *         - "solver": The solver name ("Choco Solver")
+     *         - "model name": The name of the constraint programming model
+     *         - "search state": Current state of the search (e.g., NEW, RUNNING, TERMINATED, STOPPED, KILLED)
+     *         - "solutions": Number of solutions found
+     *         - "build time": Time taken to build the model
+     *         - "resolution time": Total time spent in resolution
+     *         - "policy": Resolution policy used (e.g., SATISFACTION, MINIMIZE, MAXIMIZE)
+     *         - "objective": Objective value
+     *         - "nodes": Number of nodes explored in the search tree
+     *         - "backtracks": Number of backtracks during search
+     *         - "fails": Number of failures encountered
+     *         - "restarts": Number of restarts performed
+     */
+    fun solverStatistics(solver: Solver): Map<String, Any> {
+        val columns =
+            listOf(
+                "search state",
+                "solutions",
+                "build time",
+                "resolution time",
+                "policy",
+                "objective",
+                "nodes",
+                "backtracks",
+                "fails",
+                "restarts",
+            )
+        val stats =
+            columns.zip(solver.toArray()).toMap().mapValues { (k, v) ->
+                when (k) {
+                    "search state" -> SearchState.entries[v.toInt()].toString()
+                    "policy" -> ResolutionPolicy.entries[v.toInt()].toString()
+                    else -> v
+                }
+            }
+        return mapOf("solver" to "Choco Solver", "model name" to solver.modelName) + stats
+    }
 
     /**
      * Adds a lexicographic chain constraint to break symmetries between identical employees.

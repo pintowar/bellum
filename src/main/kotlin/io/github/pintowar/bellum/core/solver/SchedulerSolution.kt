@@ -7,4 +7,5 @@ data class SchedulerSolution(
     val project: Project,
     val optimal: Boolean,
     val duration: Duration,
+    val stats: Map<String, Any> = emptyMap(),
 )
