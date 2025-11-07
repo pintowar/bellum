@@ -50,6 +50,7 @@ dependencies {
 
     implementation(libs.lets.plot.kotlin.jvm)
     implementation(libs.lets.plot.image.export)
+    implementation(libs.kotlinx.datetime)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.slf4j.nop)
 
@@ -74,7 +75,6 @@ graalvmNative {
             buildArgs.add("-H:IncludeResources=application\\.properties")
             buildArgs.add("--enable-url-protocols=https")
             buildArgs.add("--rerun-class-initialization-at-runtime=kotlin.DeprecationLevel")
-            jvmArgs.add("-Djava.awt.headless=false")
         }
         named("test") {
             buildArgs.add("-H:IncludeResources=application\\.properties")

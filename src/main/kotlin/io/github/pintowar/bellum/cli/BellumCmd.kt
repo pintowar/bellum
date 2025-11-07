@@ -5,8 +5,6 @@ import io.github.pintowar.bellum.core.parser.rts.RtsProjectReader
 import io.github.pintowar.bellum.core.solver.SchedulerSolution
 import io.github.pintowar.bellum.core.solver.SolutionHistory
 import io.github.pintowar.bellum.core.solver.choco.ChocoScheduler
-import io.github.pintowar.bellum.plotter.export
-import io.github.pintowar.bellum.plotter.plotHistoryAndBest
 import io.github.pintowar.bellum.serdes.export
 import io.github.pintowar.bellum.serdes.solutionAndStats
 import picocli.CommandLine
@@ -62,7 +60,7 @@ class BellumCmd : Callable<Int> {
         result: SolutionHistory,
     ) {
         when (output) {
-            "png" -> result.plotHistoryAndBest().export("$currentDir/output.png")
+//            "png" -> result.plotHistoryAndBest().export("$currentDir/output.png")
             "json" -> result.solutionAndStats()?.export("$currentDir/output.json")
         }
     }
