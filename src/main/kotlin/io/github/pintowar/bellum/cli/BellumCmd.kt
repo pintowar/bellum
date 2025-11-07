@@ -28,8 +28,8 @@ class BellumCmd : Callable<Int> {
     @Option(names = ["-l", "--limit"], defaultValue = "30", description = ["solver time limit in seconds"])
     private var timeLimit: Int = 30
 
-    @Option(names = ["-o", "--output"], description = ["detailed solution output format [json or png]"])
-    private var output: String? = null
+    @Option(names = ["-o", "--output"], description = ["output a detailed solution on a json file: 'output.json'"])
+    private var output: Boolean = false
 
     @Parameters(paramLabel = "PATH", description = ["file to be solved"])
     lateinit var path: String
@@ -59,9 +59,9 @@ class BellumCmd : Callable<Int> {
         currentDir: String,
         result: SolutionHistory,
     ) {
-        when (output) {
+        if (output) {
 //            "png" -> result.plotHistoryAndBest().export("$currentDir/output.png")
-            "json" -> result.solutionAndStats()?.export("$currentDir/output.json")
+            result.solutionAndStats()?.export("$currentDir/output.json")
         }
     }
 
