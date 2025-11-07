@@ -5,6 +5,7 @@ import io.github.pintowar.bellum.core.domain.Project
 import io.github.pintowar.bellum.core.solver.SolutionHistory
 import org.jetbrains.letsPlot.Figure
 import org.jetbrains.letsPlot.asDiscrete
+import org.jetbrains.letsPlot.export.ggsave
 import org.jetbrains.letsPlot.geom.geomLine
 import org.jetbrains.letsPlot.geom.geomSegment
 import org.jetbrains.letsPlot.geom.geomText
@@ -18,8 +19,8 @@ import org.jetbrains.letsPlot.letsPlot
 import org.jetbrains.letsPlot.themes.flavorSolarizedDark
 
 object Plotter {
-    private val width = 1200
-    private val height = 350
+    internal val width = 1200
+    internal val height = 350
 
     fun generateTable(project: Project): Map<String, List<*>> {
         val assignedTasks = project.allTasks().filter { it.isAssigned() }.map { it as AssignedTask }
@@ -109,5 +110,9 @@ fun SolutionHistory.plotHistoryAndBest(): Figure {
             .last()
             .project
             .plotGantt()
-    return gggrid(listOf(projectPlot, historyPlot), ncol = 1)
+    return gggrid(listOf(projectPlot, historyPlot), ncol = 1) + ggsize(Plotter.width, Plotter.height * 2)
+}
+
+fun Figure.export(fileName: String) {
+    ggsave(this, fileName)
 }

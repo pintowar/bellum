@@ -40,7 +40,7 @@ sealed interface Task {
             }
     }
 
-    fun changeDependency(dependsOn: Task): Task
+    fun changeDependency(dependsOn: Task? = null): Task
 
     fun isAssigned(): Boolean = this is AssignedTask
 
@@ -95,7 +95,7 @@ class UnassignedTask private constructor(
         ): Result<UnassignedTask> = invoke(TaskId()(), description, priority, skills, dependsOn)
     }
 
-    override fun changeDependency(dependsOn: Task): UnassignedTask =
+    override fun changeDependency(dependsOn: Task?): UnassignedTask =
         invoke(id(), description, priority, requiredSkills, dependsOn).getOrThrow()
 }
 
@@ -140,6 +140,6 @@ class AssignedTask private constructor(
 
     val endsAt: Instant = startAt + duration
 
-    override fun changeDependency(dependsOn: Task): AssignedTask =
+    override fun changeDependency(dependsOn: Task?): AssignedTask =
         invoke(id(), description, priority, requiredSkills, dependsOn, employee, startAt, duration).getOrThrow()
 }
