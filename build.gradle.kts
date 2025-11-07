@@ -51,6 +51,7 @@ dependencies {
     implementation(libs.lets.plot.kotlin.jvm)
     implementation(libs.lets.plot.image.export)
     implementation(libs.kotlinx.serialization.json)
+    implementation(libs.slf4j.nop)
 
     testImplementation(libs.mockk.jvm)
     testImplementation(libs.bundles.kotest)
@@ -67,10 +68,13 @@ kapt {
 }
 
 graalvmNative {
+    toolchainDetection.set(true)
     binaries {
         named("main") {
             buildArgs.add("-H:IncludeResources=application\\.properties")
             buildArgs.add("--enable-url-protocols=https")
+            buildArgs.add("--rerun-class-initialization-at-runtime=kotlin.DeprecationLevel")
+            jvmArgs.add("-Djava.awt.headless=false")
         }
         named("test") {
             buildArgs.add("-H:IncludeResources=application\\.properties")
@@ -92,6 +96,23 @@ tasks {
 
     named("sonar") {
         dependsOn(koverXmlReport)
+    }
+
+    register<JavaExec>("runWithNativeImageAgent") {
+        group = "native"
+        description = "Run the app on the JVM with native-image agent to generate config for native-image"
+        classpath = sourceSets["main"].runtimeClasspath
+        mainClass.set(application.mainClass)
+
+        // the agent writes configs into the path you choose. This matches the files referenced above.
+        jvmArgs = listOf("-agentlib:native-image-agent=config-output-dir=src/main/resources/META-INF/native-image")
+        standardInput = System.`in`
+
+        // Add these lines to process command-line arguments
+        if (project.hasProperty("args")) {
+            // Splits the single string of arguments into a list
+            args((project.property("args") as String).split(" "))
+        }
     }
 }
 

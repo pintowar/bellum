@@ -17,6 +17,7 @@ lets-plot-image = "4.7.3"
 mockk = "1.14.6"
 kotest = "6.0.4"
 kotlinx-serialization = "1.9.0"
+sl4j = "2.0.17"
 
 [libraries]
 picocli = { module = "info.picocli:picocli", version.ref = "picocli" }
@@ -29,6 +30,7 @@ commons-math3 = { module = "org.apache.commons:commons-math3", version.ref = "co
 lets-plot-kotlin-jvm = { module = "org.jetbrains.lets-plot:lets-plot-kotlin-jvm", version.ref = "lets-plot-kotlin" }
 lets-plot-image-export = { module = "org.jetbrains.lets-plot:lets-plot-image-export", version.ref = "lets-plot-image" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
+slf4j-nop = { module = "org.slf4j:slf4j-nop", version.ref = "sl4j" }
 
 # Test libraries
 mockk-jvm = { module = "io.mockk:mockk-jvm", version.ref = "mockk" }

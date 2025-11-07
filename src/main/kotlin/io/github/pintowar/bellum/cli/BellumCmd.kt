@@ -30,7 +30,7 @@ class BellumCmd : Callable<Int> {
     @Option(names = ["-l", "--limit"], defaultValue = "30", description = ["solver time limit in seconds"])
     private var timeLimit: Int = 30
 
-    @Option(names = ["-o", "--output"], description = ["output format [json, png]"])
+    @Option(names = ["-o", "--output"], description = ["detailed solution output format [json or png]"])
     private var output: String? = null
 
     @Parameters(paramLabel = "PATH", description = ["file to be solved"])
