@@ -17,6 +17,7 @@ import org.jetbrains.letsPlot.label.xlab
 import org.jetbrains.letsPlot.label.ylab
 import org.jetbrains.letsPlot.letsPlot
 import org.jetbrains.letsPlot.themes.flavorSolarizedDark
+import org.jetbrains.letsPlot.scale.scaleColorManual
 
 object Plotter {
     internal val width = 1200
@@ -55,8 +56,16 @@ object Plotter {
                 xend = "end"
                 y = "employee"
                 yend = "employee"
-                color = asDiscrete("priority")
+                color = "priority"
             }
+        p += scaleColorManual(
+            name = "Priority",
+            values = mapOf(
+                "CRITICAL" to "red",
+                "MAJOR" to "blue",
+                "MINOR" to "green"
+            )
+        )
         p +=
             geomText(
                 color = "white", // Set text color to white for better contrast
