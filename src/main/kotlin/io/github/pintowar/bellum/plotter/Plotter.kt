@@ -4,7 +4,6 @@ import io.github.pintowar.bellum.core.domain.AssignedTask
 import io.github.pintowar.bellum.core.domain.Project
 import io.github.pintowar.bellum.core.solver.SolutionHistory
 import org.jetbrains.letsPlot.Figure
-import org.jetbrains.letsPlot.asDiscrete
 import org.jetbrains.letsPlot.export.ggsave
 import org.jetbrains.letsPlot.geom.geomLine
 import org.jetbrains.letsPlot.geom.geomSegment
@@ -16,8 +15,8 @@ import org.jetbrains.letsPlot.label.ggtitle
 import org.jetbrains.letsPlot.label.xlab
 import org.jetbrains.letsPlot.label.ylab
 import org.jetbrains.letsPlot.letsPlot
-import org.jetbrains.letsPlot.themes.flavorSolarizedDark
 import org.jetbrains.letsPlot.scale.scaleColorManual
+import org.jetbrains.letsPlot.themes.flavorSolarizedDark
 
 object Plotter {
     internal val width = 1200
@@ -58,14 +57,38 @@ object Plotter {
                 yend = "employee"
                 color = "priority"
             }
-        p += scaleColorManual(
-            name = "Priority",
-            values = mapOf(
-                "CRITICAL" to "red",
-                "MAJOR" to "blue",
-                "MINOR" to "green"
+        p +=
+            geomSegment(
+                size = 1.0, // Thin vertical border
+                color = "black",
+                showLegend = false,
+            ) {
+                x = "start"
+                xend = "start"
+                y = "employee"
+                yend = "employee"
+            }
+        p +=
+            geomSegment(
+                size = 1.0, // Thin vertical border
+                color = "black",
+                showLegend = false,
+            ) {
+                x = "end"
+                xend = "end"
+                y = "employee"
+                yend = "employee"
+            }
+        p +=
+            scaleColorManual(
+                name = "Priority",
+                values =
+                    mapOf(
+                        "CRITICAL" to "red",
+                        "MAJOR" to "yellow",
+                        "MINOR" to "green",
+                    ),
             )
-        )
         p +=
             geomText(
                 color = "white", // Set text color to white for better contrast
