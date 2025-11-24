@@ -4,67 +4,92 @@ import io.github.pintowar.bellum.core.domain.AssignedTask
 import io.github.pintowar.bellum.core.domain.Project
 import io.github.pintowar.bellum.core.solver.SolutionHistory
 import org.jetbrains.letsPlot.Figure
-import org.jetbrains.letsPlot.asDiscrete
 import org.jetbrains.letsPlot.export.ggsave
 import org.jetbrains.letsPlot.geom.geomLine
-import org.jetbrains.letsPlot.geom.geomSegment
+import org.jetbrains.letsPlot.geom.geomRect
 import org.jetbrains.letsPlot.geom.geomText
 import org.jetbrains.letsPlot.gggrid
 import org.jetbrains.letsPlot.ggsize
 import org.jetbrains.letsPlot.intern.Plot
 import org.jetbrains.letsPlot.label.ggtitle
+import org.jetbrains.letsPlot.label.labs
 import org.jetbrains.letsPlot.label.xlab
 import org.jetbrains.letsPlot.label.ylab
 import org.jetbrains.letsPlot.letsPlot
+import org.jetbrains.letsPlot.scale.scaleYContinuous
 import org.jetbrains.letsPlot.themes.flavorSolarizedDark
 
 object Plotter {
     internal val width = 1200
     internal val height = 350
+    private val tHeight = 50
+
+    private fun employeesHeights(employees: List<String>) =
+        employees
+            .distinct()
+            .sorted()
+            .let { it.zip(it.scan(0) { acc, _ -> acc + tHeight * 2 }) }
+            .toMap()
+
+    private fun projectAssignedTasks(project: Project) = project.allTasks().filter { it.isAssigned() }.map { it as AssignedTask }
 
     fun generateTable(project: Project): Map<String, List<*>> {
-        val assignedTasks = project.allTasks().filter { it.isAssigned() }.map { it as AssignedTask }
+        val assignedTasks = projectAssignedTasks(project)
+        val job = assignedTasks.map { it.description }
+        val employees = assignedTasks.map { it.employee.name }
+        val start = assignedTasks.map { (it.startAt - project.kickOff).inWholeMinutes }
+        val end = assignedTasks.map { (it.endsAt - project.kickOff).inWholeMinutes }
+        val priority = assignedTasks.map { it.priority.toString() }
+
+        val yEmployees = employeesHeights(employees)
+        val ymin = employees.mapNotNull { yEmployees.getValue(it) - tHeight / 2 }
+        val ymax = ymin.map { it + tHeight }
 
         return mapOf(
-            "job" to assignedTasks.map { it.description },
-            "employee" to assignedTasks.map { it.employee.name },
-            "start" to assignedTasks.map { (it.startAt - project.kickOff).inWholeMinutes },
-            "end" to assignedTasks.map { (it.endsAt - project.kickOff).inWholeMinutes },
-            "priority" to assignedTasks.map { it.priority.toString() },
+            "job" to job,
+            "employee" to employees,
+            "ymin" to ymin,
+            "ymax" to ymax,
+            "start" to start,
+            "end" to end,
+            "labelx" to start.zip(end).map { (s, e) -> s + (e - s) / 2 },
+            "labely" to ymin.map { it + tHeight / 2 },
+            "priority" to priority,
         )
     }
 
     fun plotGantt(project: Project): Plot {
         val duration = project.totalDuration()?.inWholeMinutes ?: 0
         val data = generateTable(project)
+        val employees = projectAssignedTasks(project).map { it.employee.name }
+        val yEmployees = employeesHeights(employees)
 
-        var p =
-            letsPlot(data) {
-                x = "start"
-                y = "employee"
-            }
-        p += ggtitle("Total duration: $duration minutes")
-        p += xlab("Time (minutes)")
-        p += ylab("Employees")
+        var p = letsPlot(data)
         p +=
-            geomSegment(
-                size = 15.0, // Adjust the thickness of the bars
-                showLegend = true, // Hide legend for colors
-            ) {
-                x = "start"
-                xend = "end"
-                y = "employee"
-                yend = "employee"
-                color = asDiscrete("priority")
+            geomRect(size = 0.5, alpha = 1, linetype = "solid", color = "black") {
+                xmin = "start"
+                xmax = "end"
+                ymin = "ymin"
+                ymax = "ymax"
+                fill = "priority"
             }
         p +=
-            geomText(
-                color = "white", // Set text color to white for better contrast
-                hjust = "left",
-                nudgeX = 0.8,
-            ) {
+            scaleYContinuous(
+                breaks = yEmployees.values.toList(),
+                labels = yEmployees.keys.toList(),
+            )
+        p +=
+            geomText(color = "white") {
+                x = "labelx"
+                y = "labely"
                 label = "job"
             }
+        p +=
+            labs(
+                x = "Time (minutes)",
+                y = "Employees",
+                title = "Total duration: $duration minutes",
+            )
         p += ggsize(width, height)
         p += flavorSolarizedDark()
 
