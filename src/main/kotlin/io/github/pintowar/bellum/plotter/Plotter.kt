@@ -16,6 +16,7 @@ import org.jetbrains.letsPlot.label.labs
 import org.jetbrains.letsPlot.label.xlab
 import org.jetbrains.letsPlot.label.ylab
 import org.jetbrains.letsPlot.letsPlot
+import org.jetbrains.letsPlot.scale.scaleFillManual
 import org.jetbrains.letsPlot.scale.scaleYContinuous
 import org.jetbrains.letsPlot.themes.flavorSolarizedDark
 
@@ -73,6 +74,16 @@ object Plotter {
                 ymax = "ymax"
                 fill = "priority"
             }
+        p +=
+            scaleFillManual(
+                name = "Priority",
+                values =
+                    mapOf(
+                        "CRITICAL" to "red",
+                        "MAJOR" to "blue",
+                        "MINOR" to "green",
+                    ),
+            )
         p +=
             scaleYContinuous(
                 breaks = yEmployees.values.toList(),
