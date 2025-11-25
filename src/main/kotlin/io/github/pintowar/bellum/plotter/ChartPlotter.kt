@@ -20,7 +20,7 @@ import org.jetbrains.letsPlot.scale.scaleFillManual
 import org.jetbrains.letsPlot.scale.scaleYContinuous
 import org.jetbrains.letsPlot.themes.flavorSolarizedDark
 
-object Plotter {
+object ChartPlotter {
     internal val width = 1200
     internal val height = 350
     private val tHeight = 50
@@ -135,9 +135,9 @@ object Plotter {
     }
 }
 
-fun Project.plotGantt() = Plotter.plotGantt(this)
+fun Project.plotGantt() = ChartPlotter.plotGantt(this)
 
-fun SolutionHistory.plotSolutionHistory() = Plotter.plotSolutionHistory(this)
+fun SolutionHistory.plotSolutionHistory() = ChartPlotter.plotSolutionHistory(this)
 
 fun SolutionHistory.plotHistoryAndBest(): Figure {
     val historyPlot = this.plotSolutionHistory()
@@ -146,7 +146,7 @@ fun SolutionHistory.plotHistoryAndBest(): Figure {
             .last()
             .project
             .plotGantt()
-    return gggrid(listOf(projectPlot, historyPlot), ncol = 1) + ggsize(Plotter.width, Plotter.height * 2)
+    return gggrid(listOf(projectPlot, historyPlot), ncol = 1) + ggsize(ChartPlotter.width, ChartPlotter.height * 2)
 }
 
 fun Figure.export(fileName: String) {
