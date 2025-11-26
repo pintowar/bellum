@@ -1,9 +1,37 @@
 package io.github.pintowar.bellum.plotter
 
+import io.github.pintowar.bellum.core.domain.AssignedTask
+import io.github.pintowar.bellum.core.domain.Employee
 import io.github.pintowar.bellum.core.domain.Project
-import kotlin.math.roundToInt
+import kotlin.math.min
 
 object CliPlotter {
+    // --- ANSI Colors ---
+    private const val BG_RED = "\u001b[41m"
+    private const val BG_BLUE = "\u001b[44m"
+    private const val BG_GREEN = "\u001b[42m"
+    private const val BG_RESET = "\u001b[0m"
+    private const val TXT_WHITE = "\u001b[97m"
+    private const val TXT_GREY = "\u001b[90m"
+
+    private val COLORS =
+        mapOf(
+            "MINOR" to BG_GREEN,
+            "MAJOR" to BG_BLUE,
+            "CRITICAL" to BG_RED,
+        )
+
+    private const val NAME_PADDING = 8
+    private const val MIN_TASK_WIDTH = 1
+    private const val TASK_LABEL_MAX_LENGTH = 8
+    private const val COMPACT_LABEL_THRESHOLD = 6
+
+    private const val RULER_STEP_LARGE_DURATION = 500
+    private const val RULER_STEP_MEDIUM_DURATION = 100
+    private const val RULER_STEP_LARGE = 100
+    private const val RULER_STEP_MEDIUM = 50
+    private const val RULER_STEP_SMALL = 10
+
     fun generateCliPlot(
         project: Project,
         width: Int = 100,
@@ -13,136 +41,130 @@ object CliPlotter {
 
         val scale = projectDuration.toDouble() / width
 
-        // --- ANSI Colors ---
-        val bgRed = "\u001b[41m"
-        val bgBlue = "\u001b[44m"
-        val bgGreen = "\u001b[42m"
-        val bgReset = "\u001b[0m"
-        val txtWhite = "\u001b[97m"
-        val txtGrey = "\u001b[90m"
-
-        val colors =
-            mapOf(
-                "MINOR" to bgGreen,
-                "MAJOR" to bgBlue,
-                "CRITICAL" to bgRed,
-            )
-
-        val output = StringBuilder()
-
-        output.appendLine("\nTotal duration: $projectDuration minutes (Scale: ~%.1f min/char)".format(scale))
-
-        // --- Helper Function to create grid lines ---
         val rulerStep =
-            if (projectDuration > 500) {
-                100
-            } else if (projectDuration > 100) {
-                50
-            } else {
-                10
+            when {
+                projectDuration > RULER_STEP_LARGE_DURATION -> RULER_STEP_LARGE
+                projectDuration > RULER_STEP_MEDIUM_DURATION -> RULER_STEP_MEDIUM
+                else -> RULER_STEP_SMALL
             }
-        val rulerMarks = (0..projectDuration step rulerStep).toList()
+        val rulerMarks = (0..projectDuration step rulerStep)
+        val gridLineIndexes = rulerMarks.map { (it / scale).toInt() }.toSet()
 
-        fun isGridLine(charIndex: Int): Boolean = rulerMarks.any { (it / scale).toInt() == charIndex }
+        val (rulerHeader, rulerLine) = buildRuler(rulerMarks, scale, width)
 
-        // 1. Render Top Ruler
-        val headerBuilder = StringBuilder("        ") // Padding for names (8 spaces)
+        val namePadding = " ".repeat(NAME_PADDING)
 
+        val body =
+            project
+                .assignedTasks()
+                .entries
+                .joinToString("\n") { (employee, tasks) ->
+                    val employeeRow = buildEmployeeRow(tasks, project, scale, width, gridLineIndexes)
+                    val separator = "$namePadding$TXT_GREY${"-".repeat(width)}$BG_RESET"
+                    "${employeeName(employee)} $employeeRow\n$separator"
+                }
+
+        val legend =
+            "\nLegend: [${COLORS["MINOR"]} MINOR $BG_RESET] [${COLORS["MAJOR"]} MAJOR $BG_RESET] [${COLORS["CRITICAL"]} CRITICAL $BG_RESET]"
+
+        return buildString {
+            appendLine()
+            appendLine("Total duration: $projectDuration minutes")
+            appendLine("$namePadding$rulerHeader")
+            appendLine("$namePadding$rulerLine")
+            appendLine(body)
+            appendLine(legend)
+        }
+    }
+
+    private fun employeeName(employee: Employee): String =
+        if (employee.name.length <= NAME_PADDING) {
+            employee.name
+        } else {
+            "E${employee.name.takeLast(NAME_PADDING - 1)}"
+        }
+
+    private fun buildRuler(
+        rulerMarks: IntProgression,
+        scale: Double,
+        width: Int,
+    ): Pair<String, String> {
+        val header = StringBuilder(width)
+        val line = StringBuilder(width)
         var lastPos = -1
-        for (mark in rulerMarks) {
+
+        rulerMarks.forEach { mark ->
             val pos = (mark / scale).toInt()
-            if (pos <= lastPos) continue // avoid printing on top of previous
-            val currentLen = headerBuilder.length - 8 // Adjust for initial padding
-            if (pos > currentLen) {
-                headerBuilder.append(" ".repeat(pos - currentLen))
+            val markStr = mark.toString()
+            if (pos < width && pos > lastPos) {
+                if (header.length < pos) header.append(" ".repeat(pos - header.length))
+                header.append(markStr)
+
+                if (line.length < pos) line.append(" ".repeat(pos - line.length))
+                line.append("|")
+
+                lastPos = header.length - 1
             }
-            headerBuilder.append(mark)
-            lastPos = headerBuilder.length - 8
         }
-        output.appendLine(headerBuilder.toString())
+        return header.toString() to line.toString()
+    }
 
-        val rulerLine = StringBuilder("        ")
-        lastPos = -1
-        for (mark in rulerMarks) {
-            val pos = (mark / scale).toInt()
-            if (pos <= lastPos) continue
-            val currentLen = rulerLine.length - 8
-            if (pos > currentLen) {
-                rulerLine.append(" ".repeat(pos - currentLen))
+    private fun buildEmployeeRow(
+        tasks: List<AssignedTask>,
+        project: Project,
+        scale: Double,
+        width: Int,
+        gridLineIndexes: Set<Int>,
+    ): String {
+        val line = StringBuilder(width)
+        var currentCharIdx = 0
+
+        tasks.sortedBy { it.startAt }.forEach { task ->
+            if (currentCharIdx >= width) return@forEach
+
+            val taskStart = (task.startAt - project.kickOff).inWholeMinutes.toInt()
+            val taskStartIdx = (taskStart / scale).toInt()
+
+            val gapEnd = min(taskStartIdx, width)
+            (currentCharIdx until gapEnd).forEach { i ->
+                line.append(if (i in gridLineIndexes) "$TXT_GREY|$BG_RESET" else " ")
             }
-            rulerLine.append("|")
-            lastPos = rulerLine.length - 8
-        }
+            currentCharIdx = gapEnd
+            if (currentCharIdx >= width) return@forEach
 
-        output.appendLine(rulerLine.toString())
+            val taskDuration = task.duration.inWholeMinutes.toInt()
+            val taskWidth = (taskDuration / scale).toInt().coerceAtLeast(MIN_TASK_WIDTH)
+            val effectiveTaskWidth = min(taskWidth, width - currentCharIdx)
 
-        // 2. Render Rows
-        val employeesTasks = project.assignedTasks()
-        for ((employee, tasks) in employeesTasks) {
-            val finalLine = StringBuilder()
-            var currentCharIdx = 0
+            val taskContent = buildTaskContent(task, effectiveTaskWidth)
+            line.append(taskContent)
 
-            val sortedTasks = tasks.sortedBy { it.startAt }
-
-            for (t in sortedTasks) {
-                val taskStart = (t.startAt - project.kickOff).inWholeMinutes.toInt()
-                val taskDuration = t.duration.inWholeMinutes.toInt()
-
-                val taskStartIdx = (taskStart / scale).toInt()
-                var taskWidth = (taskDuration / scale).toInt()
-                if (taskWidth < 1) taskWidth = 1
-
-                // A. Fill Gap (with grid lines)
-                if (currentCharIdx < taskStartIdx) {
-                    for (i in currentCharIdx until taskStartIdx) {
-                        val char = if (isGridLine(i)) "$txtGrey|$bgReset" else " "
-                        finalLine.append(char)
-                    }
-                    currentCharIdx = taskStartIdx
-                }
-
-                // B. Draw Task
-                // Determine label text
-                val taskId = t.description.substringAfterLast('-').take(8)
-                var label = if (taskWidth < 6) "T$taskId" else "Task $taskId"
-                if (label.length > taskWidth) {
-                    label = label.take(taskWidth) // Truncate
-                }
-
-                // Center text manually
-                val paddingTotal = taskWidth - label.length
-                val paddingLeft = paddingTotal / 2
-                val paddingRight = paddingTotal - paddingLeft
-
-                val textContent = " ".repeat(paddingLeft) + label + " ".repeat(paddingRight)
-
-                val colorCode = colors[t.priority.name] ?: bgReset
-                finalLine.append("$colorCode$txtWhite$textContent$bgReset")
-
-                currentCharIdx += taskWidth
-            }
-
-            // C. Fill remaining line (with grid lines)
-            if (currentCharIdx < width) {
-                for (i in currentCharIdx until width) {
-                    val char = if (isGridLine(i)) "$txtGrey|$bgReset" else " "
-                    finalLine.append(char)
-                }
-            }
-
-            // Print the row
-            // %-8s aligns the name to the left with 8 chars width
-            output.appendLine("%-8s %s".format(employee.name.take(8), finalLine.toString()))
-
-            // Optional: Separator line
-            output.appendLine(" ".repeat(8) + "$txtGrey" + "-".repeat(width) + bgReset)
+            currentCharIdx += effectiveTaskWidth
         }
 
-        output.appendLine(
-            "\nLegend: [${colors["MINOR"]} MINOR $bgReset] [${colors["MAJOR"]} MAJOR $bgReset] [${colors["CRITICAL"]} CRITICAL $bgReset]",
-        )
+        (currentCharIdx until width).forEach { i ->
+            line.append(if (i in gridLineIndexes) "$TXT_GREY|$BG_RESET" else " ")
+        }
 
-        return output.toString()
+        return line.toString()
+    }
+
+    private fun buildTaskContent(
+        task: AssignedTask,
+        taskWidth: Int,
+    ): String {
+        val taskLabel = task.description.substringAfterLast('-').take(TASK_LABEL_MAX_LENGTH)
+        val label = if (taskWidth < COMPACT_LABEL_THRESHOLD) "T$taskLabel" else "Task $taskLabel"
+        val truncatedLabel = label.take(taskWidth)
+
+        val paddingTotal = taskWidth - truncatedLabel.length
+        val paddingLeft = paddingTotal / 2
+        val paddingRight = paddingTotal - paddingLeft
+
+        val textContent = " ".repeat(paddingLeft) + truncatedLabel + " ".repeat(paddingRight)
+
+        val colorCode = COLORS[task.priority.name] ?: BG_RESET
+        return "$colorCode$TXT_WHITE$textContent$BG_RESET"
     }
 }
 
