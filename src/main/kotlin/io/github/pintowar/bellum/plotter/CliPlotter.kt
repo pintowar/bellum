@@ -1,9 +1,7 @@
 package io.github.pintowar.bellum.plotter
 
 import io.github.pintowar.bellum.core.domain.Project
-import kotlin.collections.component1
-import kotlin.collections.component2
-import kotlin.collections.iterator
+import kotlin.math.roundToInt
 
 object CliPlotter {
     fun generateCliPlot(

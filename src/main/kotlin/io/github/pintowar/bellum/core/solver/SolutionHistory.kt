@@ -3,5 +3,5 @@ package io.github.pintowar.bellum.core.solver
 class SolutionHistory(
     val solutions: List<SchedulerSolution>,
 ) {
-    fun describeLastProject() = solutions.lastOrNull()?.project?.describe()
+    fun lastProject() = solutions.lastOrNull()?.project
 }
