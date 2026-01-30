@@ -1,5 +1,6 @@
 package io.github.pintowar.bellum.core.domain
 
+import io.github.pintowar.bellum.core.domain.toDomain
 import io.github.pintowar.bellum.core.util.Helper
 import io.konform.validation.Validation
 import io.konform.validation.andThen
@@ -67,7 +68,7 @@ class Project private constructor(
             runCatching {
                 Project(ProjectId(id), name, kickOff, employees, tasks).also {
                     val res = initValidator.validate(it)
-                    if (!res.isValid) throw ValidationException(res.errors)
+                    if (!res.isValid) throw ValidationException(res.errors.toValidationErrorDetails())
                 }
             }
 
@@ -96,9 +97,9 @@ class Project private constructor(
 
     fun totalDuration(): Duration? = endsAt()?.let { it - kickOff }
 
-    fun validate() = validator.validate(this)
+    fun validate(): ValidationResult = validator.validate(this).toDomain()
 
-    fun isValid() = validate().isValid
+    fun isValid(): Boolean = validator.validate(this).isValid
 
     fun replace(
         name: String? = null,

@@ -34,7 +34,7 @@ class Employee private constructor(
             runCatching {
                 Employee(EmployeeId(id), name, skills).also {
                     val res = validator.validate(it)
-                    if (!res.isValid) throw ValidationException(res.errors)
+                    if (!res.isValid) throw ValidationException(res.errors.toValidationErrorDetails())
                 }
             }
 

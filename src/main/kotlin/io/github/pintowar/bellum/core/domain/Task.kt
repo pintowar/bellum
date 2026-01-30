@@ -83,7 +83,7 @@ class UnassignedTask private constructor(
             runCatching {
                 UnassignedTask(TaskId(id), description, priority, skills, dependsOn).also {
                     val res = validator.validate(it)
-                    if (!res.isValid) throw ValidationException(res.errors)
+                    if (!res.isValid) throw ValidationException(res.errors.toValidationErrorDetails())
                 }
             }
 
@@ -123,7 +123,7 @@ class AssignedTask private constructor(
             runCatching {
                 AssignedTask(TaskId(id), description, priority, skills, dependsOn, employee, startAt, duration).also {
                     val res = validator.validate(it)
-                    if (!res.isValid) throw ValidationException(res.errors)
+                    if (!res.isValid) throw ValidationException(res.errors.toValidationErrorDetails())
                 }
             }
 
