@@ -8,6 +8,7 @@ import org.jgrapht.alg.cycle.CycleDetector
 import org.jgrapht.graph.DefaultDirectedGraph
 import org.jgrapht.graph.DefaultEdge
 import java.util.UUID
+import kotlin.sequences.map
 import kotlin.time.Duration
 
 enum class ProjectScheduled { NONE, PARTIAL, SCHEDULED }
@@ -30,7 +31,7 @@ class Project private constructor(
 ) {
     companion object {
         private val initValidator =
-            Validation<Project> {
+            Validation {
                 Project::hasCircularTaskDependency {
                     constrain("Circular task dependency found {value}.") { it.isEmpty() }
                 }
@@ -46,12 +47,12 @@ class Project private constructor(
 
         private val validator =
             initValidator andThen
-                Validation<Project> {
-                    Project::employeesWithOverlap {
+                Validation {
+                    Project::hasEmployeesWithOverlap {
                         constrain("Overlapped tasks for employee: {value}.") { it.isEmpty() }
                     }
 
-                    Project::precedenceBroken {
+                    Project::hasPrecedenceBroken {
                         constrain("Precedences broken: {value}.") { it.isEmpty() }
                     }
                 }
@@ -130,22 +131,29 @@ class Project private constructor(
     """.trimMargin("|")
 
     // validations
-    fun employeesWithOverlap(): List<String> =
+    private val overlappedEmployees by lazy {
         assignedTasks()
-            .map { (emp, tasks) -> emp.name to tasks.hasOverlappingIntervals() }
+            .map { (emp, tasks) -> emp to tasks.hasOverlappingIntervals() }
             .filter { (_, overs) -> overs }
             .map { (emp, _) -> emp }
+    }
 
-    fun precedenceBroken(): List<String> =
+    fun hasEmployeesWithOverlap(): List<String> = overlappedEmployees.map { it.name }
+
+    private val brokenPrecedences by lazy {
         tasks
             .asSequence()
             .filter { it.isAssigned() && (it.dependsOn?.isAssigned() ?: false) }
             .map { it as AssignedTask to it.dependsOn as AssignedTask }
             .filter { (a, b) -> a.startAt < b.endsAt }
-            .map { (a, b) -> "${a.employee.name} (start: ${a.startAt}) < ${b.employee.name} (end: ${b.startAt})" }
             .toList()
+    }
 
-    fun hasCircularTaskDependency(): String {
+    fun hasPrecedenceBroken(): List<String> =
+        brokenPrecedences
+            .map { (a, b) -> "${a.employee.name} (start: ${a.startAt}) < ${b.employee.name} (end: ${b.startAt})" }
+
+    private val circularTaskDependencies by lazy {
         val graph = DefaultDirectedGraph<TaskId, DefaultEdge>(DefaultEdge::class.java)
         val byIds = tasks.associateBy { it.id }
 
@@ -158,19 +166,25 @@ class Project private constructor(
         precedence.flatMap { it.toList() }.toSet().forEach { graph.addVertex(it) }
         precedence.forEach { (a, b) -> graph.addEdge(a, b) }
 
-        val cycle = CycleDetector(graph).findCycles().map { byIds.getValue(it).description }.sorted()
-        return (cycle + cycle.take(1)).joinToString(" - ")
+        val cycle = CycleDetector(graph).findCycles().map { byIds.getValue(it) }.sortedBy { it.description }
+        (cycle + cycle.take(1))
     }
 
-    fun hasUnknownEmployees(): List<String> {
+    fun hasCircularTaskDependency(): String = circularTaskDependencies.joinToString(" - ") { it.description }
+
+    private val unknownEmployees by lazy {
         val projectEmployees = employees.map { it.id }.toSet()
         val assignedEmployees = tasks.filter { it.isAssigned() }.map { it as AssignedTask }.map { it.employee }
-        return assignedEmployees.filter { it.id !in projectEmployees }.map { it.name }
+        assignedEmployees.filter { it.id !in projectEmployees }
     }
 
-    fun hasMissingTaskDependencies(): String {
+    fun hasUnknownEmployees(): List<String> = unknownEmployees.map { it.name }
+
+    private val missingTaskDependencies by lazy {
         val taskIds = tasks.associateBy { it.id }
         val dependenciesIds = tasks.mapNotNull { it.dependsOn }.associateBy { it.id }
-        return (dependenciesIds.keys - taskIds.keys).joinToString(", ") { dependenciesIds.getValue(it).description }
+        (dependenciesIds.keys - taskIds.keys).map { dependenciesIds.getValue(it) }
     }
+
+    fun hasMissingTaskDependencies(): String = missingTaskDependencies.joinToString(", ") { it.description }
 }

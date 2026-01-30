@@ -287,7 +287,7 @@ class ProjectTest :
                     project.isValid() shouldBe false
                     val vals = project.validate()
                     val msg = "Overlapped tasks for employee: [Employee 1]."
-                    vals.errors.messagesAtPath(Project::employeesWithOverlap) shouldBe listOf(msg)
+                    vals.errors.messagesAtPath(Project::hasEmployeesWithOverlap) shouldBe listOf(msg)
                 }
 
                 test("must pass in case of no overlap") {
@@ -327,7 +327,7 @@ class ProjectTest :
                     project.isValid() shouldBe false
                     val vals = project.validate()
                     val msg = "Precedences broken: [Employee 2 (start: 2022-01-01T00:00:00Z) < Employee 1 (end: 2022-01-01T00:10:00Z)]."
-                    vals.errors.messagesAtPath(Project::precedenceBroken) shouldBe listOf(msg)
+                    vals.errors.messagesAtPath(Project::hasPrecedenceBroken) shouldBe listOf(msg)
                 }
 
                 test("must pass in case of NO break precedence") {
