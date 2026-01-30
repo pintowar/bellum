@@ -17,8 +17,8 @@ plugins {
 
 group = "io.github.pintowar"
 
-val javaLangVersion = JavaLanguageVersion.of(21)
-val javaVendor = JvmVendorSpec.GRAAL_VM
+val javaLangVersion: JavaLanguageVersion = JavaLanguageVersion.of(25)
+val javaVendor: JvmVendorSpec = JvmVendorSpec.GRAAL_VM
 
 java {
     toolchain {
