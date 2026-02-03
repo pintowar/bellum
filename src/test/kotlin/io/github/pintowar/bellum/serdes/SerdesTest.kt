@@ -6,6 +6,7 @@ import io.github.pintowar.bellum.core.solver.SolutionHistory
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import io.kotest.matchers.string.shouldContain
 import kotlinx.datetime.Instant
 import kotlin.io.path.Path
 import kotlin.io.path.deleteIfExists
@@ -45,7 +46,17 @@ class SerdesTest :
                 val jsonElement = Serdes.toJson(summaryDto)
 
                 jsonElement shouldNotBe null
-                jsonElement.toString() shouldNotBe null
+                val jsonString = jsonElement.toString()
+                jsonString shouldNotBe null
+                jsonString shouldContain "test-project"
+                jsonString shouldContain "Test Project"
+                jsonString shouldContain "solutionHistory"
+                jsonString shouldContain "\"solverDuration\""
+                jsonString shouldContain "PT5M"
+                jsonString shouldContain "\"maxDuration\""
+                jsonString shouldContain "PT10M"
+                jsonString shouldContain "\"valid\":true"
+                jsonString shouldContain "\"optimal\":false"
             }
         }
 
@@ -107,6 +118,17 @@ class SerdesTest :
                 val result = history.solutionAndStats()
 
                 result shouldNotBe null
+                val jsonResult = result!!
+                val jsonString = jsonResult.toString()
+                jsonString shouldContain "TestModel"
+                jsonString shouldContain "COMPLETE"
+                jsonString shouldContain "\"solutions\":5"
+                jsonString shouldContain "\"objective\":100"
+                jsonString shouldContain "\"nodes\":50"
+                jsonString shouldContain "\"backtracks\":25"
+                jsonString shouldContain "\"fails\":10"
+                jsonString shouldContain "\"restarts\":2"
+                jsonString shouldContain "Sample Project Small"
             }
 
             test("should create solution summary with unknown solver stats") {
@@ -140,6 +162,14 @@ class SerdesTest :
                 val result = history.solutionAndStats()
 
                 result shouldNotBe null
+                val jsonResult = result!!
+                val jsonString = jsonResult.toString()
+                jsonString shouldContain "UnknownSolverStats"
+                jsonString shouldContain "\"optimal\":true"
+                jsonString shouldContain "\"valid\":true"
+                jsonString shouldContain "\"solverDuration\""
+                jsonString shouldContain "PT8M"
+                jsonString shouldContain "Sample Project Small"
             }
 
             test("should handle multiple solutions and take the last one") {
@@ -162,7 +192,6 @@ class SerdesTest :
                             tasks = setOf(assignedTask2),
                         ).getOrThrow()
 
-                // Use unknown solver for both to avoid ChocoSolverStats constructor issues in test
                 val solverStats = mapOf("solver" to "Unknown Solver")
 
                 val solution1 =
@@ -185,6 +214,13 @@ class SerdesTest :
                 val result = history.solutionAndStats()
 
                 result shouldNotBe null
+                val jsonResult = result!!
+                val jsonString = jsonResult.toString()
+                jsonString shouldContain "\"optimal\":true"
+                jsonString shouldContain "\"solverDuration\""
+                jsonString shouldContain "PT8M"
+                jsonString shouldContain "\"solutionHistory\":["
+                jsonString shouldContain "\"valid\":true"
             }
         }
 
@@ -212,7 +248,11 @@ class SerdesTest :
                     jsonElement.export(testFilePath.toString())
 
                     testFilePath.toFile().exists() shouldBe true
-                    testFilePath.toFile().readText() shouldNotBe null
+                    val fileContent = testFilePath.toFile().readText()
+                    fileContent shouldNotBe null
+                    fileContent shouldContain "\"id\":\"test\""
+                    fileContent shouldContain "\"name\":\"Test\""
+                    fileContent shouldContain "\"solutionHistory\":[]"
                 } finally {
                     testFilePath.deleteIfExists()
                 }
@@ -262,6 +302,9 @@ class SerdesTest :
 
                     firstContent shouldNotBe secondContent
                     secondContent shouldNotBe null
+                    firstContent shouldContain "\"id\":\"test1\""
+                    secondContent shouldContain "\"id\":\"test2\""
+                    secondContent shouldContain "\"name\":\"Test2\""
                 } finally {
                     testFilePath.deleteIfExists()
                 }
@@ -284,7 +327,6 @@ class SerdesTest :
                             tasks = setOf(assignedTask),
                         ).getOrThrow()
 
-                // Use unknown solver for integration test to avoid constructor issues
                 val solverStats = mapOf("solver" to "Test Solver")
 
                 val solution =
@@ -307,6 +349,10 @@ class SerdesTest :
                     testFilePath.toFile().exists() shouldBe true
                     val fileContent = testFilePath.toFile().readText()
                     fileContent.isNotBlank() shouldBe true
+                    fileContent shouldContain "\"optimal\":true"
+                    fileContent shouldContain "\"solverDuration\""
+                    fileContent shouldContain "PT12M"
+                    fileContent shouldContain "Sample Project Small"
                 } finally {
                     testFilePath.deleteIfExists()
                 }
@@ -351,6 +397,17 @@ class SerdesTest :
                 val result = history.solutionAndStats()
 
                 result shouldNotBe null
+                val jsonResult = result!!
+                val jsonString = jsonResult.toString()
+                jsonString shouldContain "TestModel"
+                jsonString shouldContain "COMPLETE"
+                jsonString shouldContain "\"solutions\":3"
+                jsonString shouldContain "\"objective\":150"
+                jsonString shouldContain "\"nodes\":75"
+                jsonString shouldContain "\"backtracks\":30"
+                jsonString shouldContain "\"fails\":15"
+                jsonString shouldContain "\"restarts\":5"
+                jsonString shouldContain "\"optimal\":true"
             }
         }
     })

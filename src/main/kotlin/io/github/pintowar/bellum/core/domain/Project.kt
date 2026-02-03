@@ -1,6 +1,5 @@
 package io.github.pintowar.bellum.core.domain
 
-import io.github.pintowar.bellum.core.util.Helper
 import io.konform.validation.Validation
 import io.konform.validation.andThen
 import kotlinx.datetime.Instant
@@ -8,19 +7,9 @@ import org.jgrapht.alg.cycle.CycleDetector
 import org.jgrapht.graph.DefaultDirectedGraph
 import org.jgrapht.graph.DefaultEdge
 import java.util.UUID
-import kotlin.sequences.map
 import kotlin.time.Duration
 
 enum class ProjectScheduled { NONE, PARTIAL, SCHEDULED }
-
-@JvmInline
-value class ProjectId(
-    private val value: UUID,
-) {
-    constructor() : this(Helper.uuidV7())
-
-    operator fun invoke() = value
-}
 
 class Project private constructor(
     val id: ProjectId,
@@ -63,13 +52,7 @@ class Project private constructor(
             kickOff: Instant,
             employees: Set<Employee>,
             tasks: Set<Task>,
-        ): Result<Project> =
-            runCatching {
-                Project(ProjectId(id), name, kickOff, employees, tasks).also {
-                    val res = initValidator.validate(it)
-                    if (!res.isValid) throw ValidationException(res.errors.toValidationErrorDetails())
-                }
-            }
+        ): Result<Project> = Project(ProjectId(id), name, kickOff, employees, tasks).validateAndWrap(initValidator)
 
         operator fun invoke(
             name: String,
