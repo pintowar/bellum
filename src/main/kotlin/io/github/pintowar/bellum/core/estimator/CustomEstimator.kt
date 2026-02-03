@@ -30,7 +30,7 @@ class CustomEstimator(
     override fun skillsEstimation(
         employeeSkills: Array<Int>,
         taskSkills: Array<Int>,
-    ): Result<Duration> = throw IllegalStateException("Custom estimator not implemented!")
+    ): Result<Duration> = Result.failure(IllegalStateException("Custom estimator not implemented!"))
 
     override fun estimate(
         employee: Employee,

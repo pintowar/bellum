@@ -100,8 +100,8 @@ sealed class SolverStats {
             stats.getValue("objective").toString().toLong(),
             stats.getValue("nodes").toString().toLong(),
             stats.getValue("backtracks").toString().toLong(),
-            stats.getValue("nodes").toString().toLong(),
-            stats.getValue("backtracks").toString().toLong(),
+            stats.getValue("fails").toString().toLong(),
+            stats.getValue("restarts").toString().toLong(),
         )
     }
 }
