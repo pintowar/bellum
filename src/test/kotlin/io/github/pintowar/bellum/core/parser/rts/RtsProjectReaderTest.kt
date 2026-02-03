@@ -1,10 +1,11 @@
 package io.github.pintowar.bellum.core.parser.rts
 
 import io.github.pintowar.bellum.core.parser.InvalidFileFormat
+import io.kotest.assertions.arrow.core.shouldBeLeft
+import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.core.spec.style.FunSpec
-import io.kotest.matchers.result.shouldBeFailure
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.types.shouldBeTypeOf
+import io.kotest.matchers.types.shouldBeInstanceOf
 
 class RtsProjectReaderTest :
     FunSpec({
@@ -25,11 +26,12 @@ class RtsProjectReaderTest :
                 5,Task 5,major,2,4,4,0,1,0,1,5,5,1,0
                 """.trimIndent()
 
-            val result = RtsProjectReader("Sample Project").readContent(content).getOrThrow()
-            result.allEmployees().size shouldBe 3
-            result.allTasks().size shouldBe 5
-            result.name shouldBe "Sample Project"
-            result.kickOff shouldBe result.kickOff
+            val result = RtsProjectReader("Sample Project").readContent(content)
+            val project = result.shouldBeRight()
+            project.allEmployees().size shouldBe 3
+            project.allTasks().size shouldBe 5
+            project.name shouldBe "Sample Project"
+            project.kickOff shouldBe project.kickOff
         }
 
         context("malformed content structure") {
@@ -43,23 +45,21 @@ class RtsProjectReaderTest :
                     """.trimIndent()
 
                 val result = RtsProjectReader("Test").readContent(content)
-                result.shouldBeFailure()
+                result.shouldBeLeft()
             }
 
             test("empty content should fail") {
                 val result = RtsProjectReader("Test").readContent("")
-                result.shouldBeFailure { ex ->
-                    ex.shouldBeTypeOf<InvalidFileFormat>()
-                    ex.message shouldBe "Empty project content."
-                }
+                val ex = result.shouldBeLeft()
+                ex.shouldBeInstanceOf<InvalidFileFormat>()
+                ex.message shouldBe "Empty project content."
             }
 
             test("whitespace only content should fail") {
                 val result = RtsProjectReader("Test").readContent("   ")
-                result.shouldBeFailure { ex ->
-                    ex.shouldBeTypeOf<InvalidFileFormat>()
-                    ex.message shouldBe "Empty project content."
-                }
+                val ex = result.shouldBeLeft()
+                ex.shouldBeInstanceOf<InvalidFileFormat>()
+                ex.message shouldBe "Empty project content."
             }
         }
 
@@ -75,7 +75,7 @@ class RtsProjectReaderTest :
                     """.trimIndent()
 
                 val result = RtsProjectReader("Test").readContent(content)
-                result.shouldBeFailure()
+                result.shouldBeLeft()
             }
 
             test("employee section with invalid skill values should fail") {
@@ -89,7 +89,7 @@ class RtsProjectReaderTest :
                     """.trimIndent()
 
                 val result = RtsProjectReader("Test").readContent(content)
-                result.shouldBeFailure()
+                result.shouldBeLeft()
             }
         }
 
@@ -105,7 +105,7 @@ class RtsProjectReaderTest :
                     """.trimIndent()
 
                 val result = RtsProjectReader("Test").readContent(content)
-                result.shouldBeFailure()
+                result.shouldBeLeft()
             }
 
             test("task section with invalid priority should fail") {
@@ -119,7 +119,7 @@ class RtsProjectReaderTest :
                     """.trimIndent()
 
                 val result = RtsProjectReader("Test").readContent(content)
-                result.shouldBeFailure()
+                result.shouldBeLeft()
             }
         }
 
@@ -132,9 +132,10 @@ class RtsProjectReaderTest :
                     1,Task 1,minor,-1,0,3
                     """.trimIndent()
 
-                val result = RtsProjectReader("Test").readContent(content).getOrThrow()
-                result.allEmployees().size shouldBe 0
-                result.allTasks().size shouldBe 1
+                val result = RtsProjectReader("Test").readContent(content)
+                val project = result.shouldBeRight()
+                project.allEmployees().size shouldBe 0
+                project.allTasks().size shouldBe 1
             }
 
             test("empty task section should succeed") {
@@ -145,16 +146,18 @@ class RtsProjectReaderTest :
                     ========================================
                     """.trimIndent()
 
-                val result = RtsProjectReader("Test").readContent(content).getOrThrow()
-                result.allEmployees().size shouldBe 1
-                result.allTasks().size shouldBe 0
+                val result = RtsProjectReader("Test").readContent(content)
+                val project = result.shouldBeRight()
+                project.allEmployees().size shouldBe 1
+                project.allTasks().size shouldBe 0
             }
 
             test("both sections empty should succeed") {
                 val content = "================================================="
-                val result = RtsProjectReader("Test").readContent(content).getOrThrow()
-                result.allEmployees().size shouldBe 0
-                result.allTasks().size shouldBe 0
+                val result = RtsProjectReader("Test").readContent(content)
+                val project = result.shouldBeRight()
+                project.allEmployees().size shouldBe 0
+                project.allTasks().size shouldBe 0
             }
         }
 
@@ -169,9 +172,10 @@ class RtsProjectReaderTest :
                     1,Task 1,minor,-1,0,3
                     """.trimIndent()
 
-                val result = RtsProjectReader("Test").readContent(content).getOrThrow()
-                result.allEmployees().size shouldBe 1
-                result.allTasks().size shouldBe 1
+                val result = RtsProjectReader("Test").readContent(content)
+                val project = result.shouldBeRight()
+                project.allEmployees().size shouldBe 1
+                project.allTasks().size shouldBe 1
             }
 
             test("separator with different characters should work") {
@@ -184,9 +188,10 @@ class RtsProjectReaderTest :
                     1,Task 1,minor,-1,0,3
                     """.trimIndent()
 
-                val result = RtsProjectReader("Test").readContent(content).getOrThrow()
-                result.allEmployees().size shouldBe 1
-                result.allTasks().size shouldBe 1
+                val result = RtsProjectReader("Test").readContent(content)
+                val project = result.shouldBeRight()
+                project.allEmployees().size shouldBe 1
+                project.allTasks().size shouldBe 1
             }
 
             test("separator line with spaces should work") {
@@ -199,9 +204,10 @@ class RtsProjectReaderTest :
                     1,Task 1,minor,-1,0,3
                     """.trimIndent()
 
-                val result = RtsProjectReader("Test").readContent(content).getOrThrow()
-                result.allEmployees().size shouldBe 1
-                result.allTasks().size shouldBe 1
+                val result = RtsProjectReader("Test").readContent(content)
+                val project = result.shouldBeRight()
+                project.allEmployees().size shouldBe 1
+                project.allTasks().size shouldBe 1
             }
         }
 
@@ -216,9 +222,10 @@ class RtsProjectReaderTest :
                     1,Task 1,minor,-1,0,3
                     """.trimIndent()
 
-                val result = RtsProjectReader("Test").readContent(content, "|").getOrThrow()
-                result.allEmployees().size shouldBe 1
-                result.allTasks().size shouldBe 1
+                val result = RtsProjectReader("Test").readContent(content, "|")
+                val project = result.shouldBeRight()
+                project.allEmployees().size shouldBe 1
+                project.allTasks().size shouldBe 1
             }
         }
 
@@ -240,12 +247,13 @@ class RtsProjectReaderTest :
                     5,Documentation,minor,3,0,0,0
                     """.trimIndent()
 
-                val result = RtsProjectReader("Complex Project").readContent(content).getOrThrow()
-                result.allEmployees().size shouldBe 4
-                result.allTasks().size shouldBe 5
-                result.name shouldBe "Complex Project"
+                val result = RtsProjectReader("Complex Project").readContent(content)
+                val project = result.shouldBeRight()
+                project.allEmployees().size shouldBe 4
+                project.allTasks().size shouldBe 5
+                project.name shouldBe "Complex Project"
 
-                val task2 = result.allTasks().find { it.description == "Frontend UI" }
+                val task2 = project.allTasks().find { it.description == "Frontend UI" }
                 task2?.dependsOn?.description shouldBe "Backend API"
             }
         }
@@ -255,12 +263,12 @@ class RtsProjectReaderTest :
                 // This test would need actual file system setup to be meaningful
                 // For now, we'll test the logic with an invalid URI that should trigger fallback
                 val result = RtsProjectReader.readContentFromPath("", "invalid-uri-format")
-                result.shouldBeFailure()
+                result.shouldBeLeft()
             }
 
             test("should handle malformed content in file fallback") {
                 val result = RtsProjectReader.readContentFromPath("", "invalid-malformed")
-                result.shouldBeFailure()
+                result.shouldBeLeft()
             }
         }
 
@@ -279,9 +287,10 @@ class RtsProjectReaderTest :
                     
                     """.trimIndent()
 
-                val result = RtsProjectReader("Test").readContent(content).getOrThrow()
-                result.allEmployees().size shouldBe 1
-                result.allTasks().size shouldBe 1
+                val result = RtsProjectReader("Test").readContent(content)
+                val project = result.shouldBeRight()
+                project.allEmployees().size shouldBe 1
+                project.allTasks().size shouldBe 1
             }
 
             test("content with extra newlines between sections should work") {
@@ -298,9 +307,10 @@ class RtsProjectReaderTest :
                     1,Task 1,minor,-1,0,3
                     """.trimIndent()
 
-                val result = RtsProjectReader("Test").readContent(content).getOrThrow()
-                result.allEmployees().size shouldBe 1
-                result.allTasks().size shouldBe 1
+                val result = RtsProjectReader("Test").readContent(content)
+                val project = result.shouldBeRight()
+                project.allEmployees().size shouldBe 1
+                project.allTasks().size shouldBe 1
             }
         }
 
@@ -318,12 +328,13 @@ class RtsProjectReaderTest :
                 val beforeTime =
                     kotlinx.datetime.Clock.System
                         .now()
-                val result = RtsProjectReader("My Test Project").readContent(content).getOrThrow()
+                val result = RtsProjectReader("My Test Project").readContent(content)
+                val project = result.shouldBeRight()
 
-                result.name shouldBe "My Test Project"
-                result.kickOff shouldBe result.kickOff // Check it's set
+                project.name shouldBe "My Test Project"
+                project.kickOff shouldBe project.kickOff // Check it's set
                 // Verify timestamp is reasonable (within a few seconds of now)
-                val timeDiff = kotlin.math.abs(result.kickOff.minus(beforeTime).inWholeMilliseconds)
+                val timeDiff = kotlin.math.abs(project.kickOff.minus(beforeTime).inWholeMilliseconds)
                 timeDiff.shouldBe(kotlin.math.max(timeDiff, 0)) // Should be non-negative
             }
         }

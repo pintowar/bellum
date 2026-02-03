@@ -1,11 +1,11 @@
 package io.github.pintowar.bellum.core.parser.rts
 
 import io.github.pintowar.bellum.core.parser.InvalidFileFormat
+import io.kotest.assertions.arrow.core.shouldBeLeft
+import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.core.spec.style.FunSpec
-import io.kotest.matchers.result.shouldBeFailure
-import io.kotest.matchers.result.shouldBeSuccess
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.types.shouldBeTypeOf
+import io.kotest.matchers.types.shouldBeInstanceOf
 
 class RtsEmployeeReaderTest :
     FunSpec({
@@ -19,15 +19,16 @@ class RtsEmployeeReaderTest :
                 3,Kim,3,2,0,3,0,0,4,4,0,0
                 """.trimIndent()
 
-            val result = RtsEmployeeReader.readContent(content).getOrThrow()
-            result.size shouldBe 3
+            val result = RtsEmployeeReader.readContent(content)
+            val employees = result.shouldBeRight()
+            employees.size shouldBe 3
 
-            val employee1 = result.first()
+            val employee1 = employees.first()
             employee1.name shouldBe "Thiago"
             employee1.skills.getValue("skill2")() shouldBe 3
             employee1.skills.getValue("skill4")() shouldBe 1
 
-            val employee3 = result.last()
+            val employee3 = employees.last()
             employee3.name shouldBe "Kim"
             employee3.skills.getValue("skill2")() shouldBe 2
             employee3.skills.getValue("skill4")() shouldBe 3
@@ -36,16 +37,15 @@ class RtsEmployeeReaderTest :
         context("empty content") {
             test("empty content should fail") {
                 val result = RtsEmployeeReader.readContent("")
-                result shouldBeFailure { ex ->
-                    ex.shouldBeTypeOf<InvalidFileFormat>()
-                    ex.message shouldBe "Empty employee content."
-                }
+                val ex = result.shouldBeLeft()
+                ex.shouldBeInstanceOf<InvalidFileFormat>()
+                ex.message shouldBe "Empty employee content."
             }
 
             test("only header should return empty list") {
                 val result = RtsEmployeeReader.readContent("id,content,skill1,skill2")
-                result.shouldBeSuccess()
-                result.getOrThrow() shouldBe emptyList()
+                val employees = result.shouldBeRight()
+                employees shouldBe emptyList()
             }
         }
 
@@ -57,7 +57,7 @@ class RtsEmployeeReaderTest :
                     2,Bruno,2,1,3,0
                     """.trimIndent()
                 val result = RtsEmployeeReader.readContent(content)
-                result.shouldBeFailure()
+                result.shouldBeLeft()
             }
 
             test("inconsistent column count should fail") {
@@ -68,11 +68,10 @@ class RtsEmployeeReaderTest :
                     2,Bruno,2,1
                     """.trimIndent()
                 val result = RtsEmployeeReader.readContent(content)
-                result shouldBeFailure { ex ->
-                    ex.shouldBeTypeOf<InvalidFileFormat>()
-                    ex.message shouldBe
-                        "Invalid employee content on line 1: num contents (5) values does not match headers (4)."
-                }
+                val ex = result.shouldBeLeft()
+                ex.shouldBeInstanceOf<InvalidFileFormat>()
+                ex.message shouldBe
+                    "Invalid employee content on line 1: num contents (5) values does not match headers (4)."
             }
 
             test("missing content field should fail") {
@@ -83,7 +82,7 @@ class RtsEmployeeReaderTest :
                     2,2,1
                     """.trimIndent()
                 val result = RtsEmployeeReader.readContent(content)
-                result.shouldBeFailure()
+                result.shouldBeLeft()
             }
 
             test("empty lines in middle should fail") {
@@ -95,7 +94,7 @@ class RtsEmployeeReaderTest :
                     2,Bruno,2,1
                     """.trimIndent()
                 val result = RtsEmployeeReader.readContent(content)
-                result.shouldBeFailure()
+                result.shouldBeLeft()
             }
         }
 
@@ -107,7 +106,7 @@ class RtsEmployeeReaderTest :
                     1,Thiago,0,10
                     """.trimIndent()
                 val result = RtsEmployeeReader.readContent(content)
-                result.shouldBeFailure()
+                result.shouldBeLeft()
             }
 
             test("skill value negative should fail") {
@@ -117,7 +116,7 @@ class RtsEmployeeReaderTest :
                     1,Thiago,-1,3
                     """.trimIndent()
                 val result = RtsEmployeeReader.readContent(content)
-                result.shouldBeFailure()
+                result.shouldBeLeft()
             }
 
             test("skill value non-numeric should fail") {
@@ -127,7 +126,7 @@ class RtsEmployeeReaderTest :
                     1,Thiago,abc,3
                     """.trimIndent()
                 val result = RtsEmployeeReader.readContent(content)
-                result.shouldBeFailure()
+                result.shouldBeLeft()
             }
 
             test("skill value decimal should fail") {
@@ -137,7 +136,7 @@ class RtsEmployeeReaderTest :
                     1,Thiago,2.5,3
                     """.trimIndent()
                 val result = RtsEmployeeReader.readContent(content)
-                result.shouldBeFailure()
+                result.shouldBeLeft()
             }
         }
 
@@ -149,7 +148,7 @@ class RtsEmployeeReaderTest :
                     1,,0,3
                     """.trimIndent()
                 val result = RtsEmployeeReader.readContent(content)
-                result.shouldBeFailure()
+                result.shouldBeLeft()
             }
 
             test("whitespace only name should fail") {
@@ -159,7 +158,7 @@ class RtsEmployeeReaderTest :
                     1,  ,0,3
                     """.trimIndent()
                 val result = RtsEmployeeReader.readContent(content)
-                result.shouldBeFailure()
+                result.shouldBeLeft()
             }
         }
 
@@ -171,10 +170,10 @@ class RtsEmployeeReaderTest :
                     1,Thiago
                     """.trimIndent()
                 val result = RtsEmployeeReader.readContent(content)
-                result.shouldBeSuccess()
-                result.getOrThrow().size shouldBe 1
-                result.getOrThrow().first().name shouldBe "Thiago"
-                result.getOrThrow().first().skills shouldBe emptyMap()
+                val employees = result.shouldBeRight()
+                employees.size shouldBe 1
+                employees.first().name shouldBe "Thiago"
+                employees.first().skills shouldBe emptyMap()
             }
 
             test("many skills columns should succeed") {
@@ -184,11 +183,8 @@ class RtsEmployeeReaderTest :
                     1,Thiago,0,3,0,1,4,0,3,0,0,0,1,2
                     """.trimIndent()
                 val result = RtsEmployeeReader.readContent(content)
-                result.shouldBeSuccess()
-                result
-                    .getOrThrow()
-                    .first()
-                    .skills.size shouldBe 12
+                val employees = result.shouldBeRight()
+                employees.first().skills.size shouldBe 12
             }
 
             test("missing skill columns should succeed") {
@@ -198,11 +194,8 @@ class RtsEmployeeReaderTest :
                     1,Thiago,5
                     """.trimIndent()
                 val result = RtsEmployeeReader.readContent(content)
-                result.shouldBeSuccess()
-                result
-                    .getOrThrow()
-                    .first()
-                    .skills.size shouldBe 1
+                val employees = result.shouldBeRight()
+                employees.first().skills.size shouldBe 1
             }
 
             test("skill column with different order should succeed") {
@@ -212,22 +205,10 @@ class RtsEmployeeReaderTest :
                     1,Thiago,1,0,3
                     """.trimIndent()
                 val result = RtsEmployeeReader.readContent(content)
-                result.shouldBeSuccess()
-                result
-                    .getOrThrow()
-                    .first()
-                    .skills
-                    .getValue("skill1")() shouldBe 0
-                result
-                    .getOrThrow()
-                    .first()
-                    .skills
-                    .getValue("skill2")() shouldBe 3
-                result
-                    .getOrThrow()
-                    .first()
-                    .skills
-                    .getValue("skill3")() shouldBe 1
+                val employees = result.shouldBeRight()
+                employees.first().skills.getValue("skill1")() shouldBe 0
+                employees.first().skills.getValue("skill2")() shouldBe 3
+                employees.first().skills.getValue("skill3")() shouldBe 1
             }
         }
 
@@ -240,8 +221,8 @@ class RtsEmployeeReaderTest :
                     2;Bruno;2;1
                     """.trimIndent()
                 val result = RtsEmployeeReader.readContent(content, ";")
-                result.shouldBeSuccess()
-                result.getOrThrow().size shouldBe 2
+                val employees = result.shouldBeRight()
+                employees.size shouldBe 2
             }
 
             test("tab separator should work") {
@@ -252,8 +233,8 @@ class RtsEmployeeReaderTest :
                     2	Bruno	2	1
                     """.trimIndent()
                 val result = RtsEmployeeReader.readContent(content, "\t")
-                result.shouldBeSuccess()
-                result.getOrThrow().size shouldBe 2
+                val employees = result.shouldBeRight()
+                employees.size shouldBe 2
             }
 
             test("custom separator should work") {
@@ -264,8 +245,8 @@ class RtsEmployeeReaderTest :
                     2|Bruno|2|1
                     """.trimIndent()
                 val result = RtsEmployeeReader.readContent(content, "|")
-                result.shouldBeSuccess()
-                result.getOrThrow().size shouldBe 2
+                val employees = result.shouldBeRight()
+                employees.size shouldBe 2
             }
         }
 
@@ -278,9 +259,9 @@ class RtsEmployeeReaderTest :
                     2,"Jane, Smith",2,1
                     """.trimIndent()
                 val result = RtsEmployeeReader.readContent(content)
-                result.shouldBeSuccess()
-                result.getOrThrow().first().name shouldBe "John Doe"
-                result.getOrThrow().last().name shouldBe "Jane, Smith"
+                val employees = result.shouldBeRight()
+                employees.first().name shouldBe "John Doe"
+                employees.last().name shouldBe "Jane, Smith"
             }
 
             test("special characters in name should work") {
@@ -291,9 +272,9 @@ class RtsEmployeeReaderTest :
                     2,Jean-Luc,2,1
                     """.trimIndent()
                 val result = RtsEmployeeReader.readContent(content)
-                result.shouldBeSuccess()
-                result.getOrThrow().first().name shouldBe "Mário José"
-                result.getOrThrow().last().name shouldBe "Jean-Luc"
+                val employees = result.shouldBeRight()
+                employees.first().name shouldBe "Mário José"
+                employees.last().name shouldBe "Jean-Luc"
             }
         }
     })

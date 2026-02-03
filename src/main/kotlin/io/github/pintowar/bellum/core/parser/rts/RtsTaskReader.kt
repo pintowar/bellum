@@ -1,5 +1,7 @@
 package io.github.pintowar.bellum.core.parser.rts
 
+import arrow.core.Either
+import arrow.core.getOrElse
 import io.github.pintowar.bellum.core.domain.SkillPoint
 import io.github.pintowar.bellum.core.domain.Task
 import io.github.pintowar.bellum.core.domain.TaskPriority
@@ -11,8 +13,8 @@ object RtsTaskReader : ContentReader<List<Task>> {
     override fun readContent(
         content: String,
         sep: String,
-    ): Result<List<Task>> =
-        runCatching {
+    ): Either<Throwable, List<Task>> =
+        Either.catch {
             if (content.isBlank()) throw InvalidFileFormat("Empty task content.")
             val lines = content.trim().lines()
 
@@ -25,7 +27,7 @@ object RtsTaskReader : ContentReader<List<Task>> {
                         )
                     }
                     val row = header.zip(line).toMap()
-                    val (id, content, priority, precedes) =
+                    val (id, taskContent, priority, precedes) =
                         listOf(
                             row.getValue("id"),
                             row.getValue("content"),
@@ -35,9 +37,13 @@ object RtsTaskReader : ContentReader<List<Task>> {
                     val skills =
                         row
                             .filterKeys { it.startsWith("skill") }
-                            .mapValues { SkillPoint(it.value.toInt()).getOrThrow() }
+                            .mapValues {
+                                SkillPoint(it.value.toInt()).getOrElse { throw it }
+                            }
 
-                    val task = UnassignedTask(content, TaskPriority.valueOf(priority.uppercase()), skills).getOrThrow()
+                    val task =
+                        UnassignedTask(taskContent, TaskPriority.valueOf(priority.uppercase()), skills)
+                            .getOrElse { throw it }
                     (id to precedes) to task
                 }
             val (table, tasks) = data.unzip()

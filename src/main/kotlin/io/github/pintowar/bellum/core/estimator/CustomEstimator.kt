@@ -1,5 +1,6 @@
 package io.github.pintowar.bellum.core.estimator
 
+import arrow.core.Either
 import io.github.pintowar.bellum.core.domain.Employee
 import io.github.pintowar.bellum.core.domain.EmployeeId
 import io.github.pintowar.bellum.core.domain.Project
@@ -30,13 +31,13 @@ class CustomEstimator(
     override fun skillsEstimation(
         employeeSkills: Array<Int>,
         taskSkills: Array<Int>,
-    ): Result<Duration> = Result.failure(IllegalStateException("Custom estimator not implemented!"))
+    ): Either<EstimatorIllegalArgument, Duration> = throw IllegalStateException("Custom estimator does not use skillsEstimation!")
 
     override fun estimate(
         employee: Employee,
         task: Task,
-    ): Result<Duration> =
-        runCatching {
+    ): Either<Throwable, Duration> =
+        Either.catch {
             matrix.getValue(employee.id).getValue(task.id)
         }
 }

@@ -1,5 +1,8 @@
 package io.github.pintowar.bellum.core.solver
 
+import arrow.core.Either
+import arrow.core.flatMap
+import arrow.core.left
 import io.github.pintowar.bellum.core.domain.Project
 import io.github.pintowar.bellum.core.estimator.TimeEstimator
 import java.util.concurrent.ConcurrentLinkedQueue
@@ -28,7 +31,7 @@ abstract class Scheduler {
         project: Project,
         timeLimit: Duration = 1.minutes,
         callback: (SchedulerSolution) -> Unit = {},
-    ): Result<SchedulerSolution>
+    ): Either<Throwable, SchedulerSolution>
 
     /**
      * Finds the optimal schedule for a given project within the specified time limit.
@@ -47,9 +50,9 @@ abstract class Scheduler {
         project: Project,
         timeLimit: Duration = 1.minutes,
         callback: (SchedulerSolution) -> Unit = {},
-    ): Result<SchedulerSolution> {
+    ): Either<Throwable, SchedulerSolution> {
         if (!isProcessing.compareAndSet(false, true)) {
-            return Result.failure(IllegalStateException("Scheduler is already processing."))
+            return IllegalStateException("Scheduler is already processing.").left()
         }
 
         val result = solveOptimizationProblem(project, timeLimit, callback)
@@ -73,13 +76,13 @@ abstract class Scheduler {
         project: Project,
         timeLimit: Duration = 1.minutes,
         callback: (SchedulerSolution) -> Unit = {},
-    ): Result<SolutionHistory> {
+    ): Either<Throwable, SolutionHistory> {
         val solutions = ConcurrentLinkedQueue<SchedulerSolution>()
         val finalSolution =
             findOptimalSchedule(project, timeLimit) {
                 callback(it)
                 solutions.add(it)
             }
-        return finalSolution.map { SolutionHistory(solutions + it) }
+        return finalSolution.flatMap { Either.Right(SolutionHistory(solutions + it)) }
     }
 }

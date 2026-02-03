@@ -1,5 +1,6 @@
 package io.github.pintowar.bellum.core.domain
 
+import arrow.core.Either
 import io.konform.validation.Validation
 import io.konform.validation.andThen
 import kotlinx.datetime.Instant
@@ -52,14 +53,14 @@ class Project private constructor(
             kickOff: Instant,
             employees: Set<Employee>,
             tasks: Set<Task>,
-        ): Result<Project> = Project(ProjectId(id), name, kickOff, employees, tasks).validateAndWrap(initValidator)
+        ): Either<ValidationException, Project> = Project(ProjectId(id), name, kickOff, employees, tasks).validateAndWrap(initValidator)
 
         operator fun invoke(
             name: String,
             kickOff: Instant,
             employees: Set<Employee>,
             tasks: Set<Task>,
-        ): Result<Project> = invoke(ProjectId()(), name, kickOff, employees, tasks)
+        ): Either<ValidationException, Project> = invoke(ProjectId()(), name, kickOff, employees, tasks)
     }
 
     fun allEmployees() = employees.toList()
@@ -88,7 +89,7 @@ class Project private constructor(
         kickOff: Instant? = null,
         employees: Set<Employee>? = null,
         tasks: Set<Task>? = null,
-    ): Result<Project> =
+    ): Either<ValidationException, Project> =
         invoke(
             id = id(),
             name = name ?: this.name,

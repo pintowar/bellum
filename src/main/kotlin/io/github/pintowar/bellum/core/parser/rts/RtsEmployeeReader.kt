@@ -1,5 +1,7 @@
 package io.github.pintowar.bellum.core.parser.rts
 
+import arrow.core.Either
+import arrow.core.getOrElse
 import io.github.pintowar.bellum.core.domain.Employee
 import io.github.pintowar.bellum.core.domain.SkillPoint
 import io.github.pintowar.bellum.core.parser.ContentReader
@@ -9,8 +11,8 @@ object RtsEmployeeReader : ContentReader<List<Employee>> {
     override fun readContent(
         content: String,
         sep: String,
-    ): Result<List<Employee>> =
-        runCatching {
+    ): Either<Throwable, List<Employee>> =
+        Either.catch {
             if (content.isBlank()) throw InvalidFileFormat("Empty employee content.")
             val lines = content.trim().lines()
 
@@ -22,13 +24,15 @@ object RtsEmployeeReader : ContentReader<List<Employee>> {
                     )
                 }
                 val row = header.zip(line).toMap()
-                val content = row.getValue("content")
+                val empContent = row.getValue("content")
                 val skills =
                     row
                         .filterKeys { it.startsWith("skill") }
-                        .mapValues { SkillPoint(it.value.toInt()).getOrThrow() }
+                        .mapValues {
+                            SkillPoint(it.value.toInt()).getOrElse { throw it }
+                        }
 
-                Employee(content, skills).getOrThrow()
+                Employee(empContent, skills).getOrElse { throw it }
             }
         }
 }

@@ -1,5 +1,7 @@
 package io.github.pintowar.bellum.core.domain
 
+import arrow.core.Either
+import arrow.core.getOrElse
 import io.konform.validation.Validation
 import io.konform.validation.constraints.notBlank
 import kotlinx.datetime.Instant
@@ -29,9 +31,9 @@ sealed interface Task {
         employee: Employee,
         startAt: Instant,
         duration: Duration,
-    ): Task = AssignedTask(id(), description, priority, requiredSkills, dependsOn, employee, startAt, duration).getOrThrow()
+    ): Task = AssignedTask(id(), description, priority, requiredSkills, dependsOn, employee, startAt, duration).getOrElse { throw it }
 
-    fun unassign(): Task = UnassignedTask(id(), description, priority, requiredSkills, dependsOn).getOrThrow()
+    fun unassign(): Task = UnassignedTask(id(), description, priority, requiredSkills, dependsOn).getOrElse { throw it }
 
     fun endsAt(): Instant? {
         if (this is AssignedTask) return endsAt
@@ -67,7 +69,7 @@ class UnassignedTask private constructor(
             priority: TaskPriority = TaskPriority.MINOR,
             skills: Map<String, SkillPoint> = emptyMap(),
             dependsOn: Task? = null,
-        ): Result<UnassignedTask> =
+        ): Either<ValidationException, UnassignedTask> =
             UnassignedTask(
                 TaskId(id),
                 description,
@@ -81,11 +83,11 @@ class UnassignedTask private constructor(
             priority: TaskPriority = TaskPriority.MINOR,
             skills: Map<String, SkillPoint> = emptyMap(),
             dependsOn: Task? = null,
-        ): Result<UnassignedTask> = invoke(TaskId()(), description, priority, skills, dependsOn)
+        ): Either<ValidationException, UnassignedTask> = invoke(TaskId()(), description, priority, skills, dependsOn)
     }
 
     override fun changeDependency(dependsOn: Task?): UnassignedTask =
-        invoke(id(), description, priority, requiredSkills, dependsOn).getOrThrow()
+        invoke(id(), description, priority, requiredSkills, dependsOn).getOrElse { throw it }
 }
 
 class AssignedTask private constructor(
@@ -115,7 +117,7 @@ class AssignedTask private constructor(
             employee: Employee,
             startAt: Instant,
             duration: Duration,
-        ): Result<AssignedTask> =
+        ): Either<ValidationException, AssignedTask> =
             AssignedTask(
                 TaskId(id),
                 description,
@@ -135,11 +137,12 @@ class AssignedTask private constructor(
             employee: Employee,
             startAt: Instant,
             duration: Duration,
-        ): Result<AssignedTask> = invoke(TaskId()(), description, priority, skills, dependsOn, employee, startAt, duration)
+        ): Either<ValidationException, AssignedTask> =
+            invoke(TaskId()(), description, priority, skills, dependsOn, employee, startAt, duration)
     }
 
     val endsAt: Instant = startAt + duration
 
     override fun changeDependency(dependsOn: Task?): AssignedTask =
-        invoke(id(), description, priority, requiredSkills, dependsOn, employee, startAt, duration).getOrThrow()
+        invoke(id(), description, priority, requiredSkills, dependsOn, employee, startAt, duration).getOrElse { throw it }
 }

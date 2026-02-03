@@ -1,5 +1,7 @@
 package io.github.pintowar.bellum.core.estimator
 
+import arrow.core.Either
+import arrow.core.getOrElse
 import io.github.pintowar.bellum.core.domain.Employee
 import io.github.pintowar.bellum.core.domain.Task
 import kotlin.time.Duration
@@ -22,31 +24,33 @@ abstract class TimeEstimator {
     internal abstract fun skillsEstimation(
         employeeSkills: Array<Int>,
         taskSkills: Array<Int>,
-    ): Result<Duration>
+    ): Either<EstimatorIllegalArgument, Duration>
 
     open fun estimate(
         employee: Employee,
         task: Task,
-    ): Result<Duration> =
-        runCatching {
+    ): Either<Throwable, Duration> =
+        Either.catch {
             val allSkills = employee.skills.keys + task.requiredSkills.keys
             val employeeSkills =
                 allSkills.map { employee.skills[it]?.let { s -> s() } ?: 0 }.toTypedArray()
             val taskSkills = allSkills.map { task.requiredSkills[it]?.let { s -> s() } ?: 0 }.toTypedArray()
 
-            validateSkillSets(employeeSkills, taskSkills).getOrThrow()
-            skillsEstimation(employeeSkills, taskSkills).getOrThrow()
+            validateSkillSets(employeeSkills, taskSkills).getOrElse { throw it }
+            skillsEstimation(employeeSkills, taskSkills).getOrElse { throw it }
         }
 
     fun validateSkillSets(
         employeeSkills: Array<Int>,
         taskSkills: Array<Int>,
-    ): Result<Unit> =
-        runCatching {
-            if (employeeSkills.size < 2) throw IllegalNumSkills("employee", employeeSkills.size)
-            if (taskSkills.size < 2) throw IllegalNumSkills("task", taskSkills.size)
-            if (employeeSkills.size != taskSkills.size) {
-                throw IllegalSkillSets(employeeSkills.size, taskSkills.size)
-            }
+    ): Either<EstimatorIllegalArgument, Unit> =
+        if (employeeSkills.size < 2) {
+            Either.Left(IllegalNumSkills("employee", employeeSkills.size))
+        } else if (taskSkills.size < 2) {
+            Either.Left(IllegalNumSkills("task", taskSkills.size))
+        } else if (employeeSkills.size != taskSkills.size) {
+            Either.Left(IllegalSkillSets(employeeSkills.size, taskSkills.size))
+        } else {
+            Either.Right(Unit)
         }
 }

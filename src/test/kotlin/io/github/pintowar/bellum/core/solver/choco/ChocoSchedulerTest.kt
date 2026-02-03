@@ -1,5 +1,6 @@
 package io.github.pintowar.bellum.core.solver.choco
 
+import arrow.core.getOrElse
 import io.github.pintowar.bellum.core.DataFixtures
 import io.github.pintowar.bellum.core.domain.ProjectScheduled
 import io.kotest.core.spec.style.FunSpec
@@ -14,7 +15,7 @@ class ChocoSchedulerTest :
 
             val solution = solver.findOptimalSchedule(DataFixtures.sampleProjectSmall)
 
-            val (scheduledProject, optimal) = solution.getOrThrow()
+            val (scheduledProject, optimal) = solution.getOrElse { throw it }
             scheduledProject.scheduledStatus() shouldBe ProjectScheduled.SCHEDULED
             scheduledProject.isValid() shouldBe true
             scheduledProject.endsAt() shouldBe Instant.parse("2022-01-01T01:00:00Z")

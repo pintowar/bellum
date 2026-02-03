@@ -1,5 +1,6 @@
 package io.github.pintowar.bellum.plotter
 
+import arrow.core.getOrElse
 import io.github.pintowar.bellum.core.DataFixtures
 import io.github.pintowar.bellum.core.domain.AssignedTask
 import io.github.pintowar.bellum.core.domain.Project
@@ -23,7 +24,7 @@ class CliPlotterTest :
                         kickOff = startTime,
                         employees = emptySet(),
                         tasks = emptySet(),
-                    ).getOrThrow()
+                    ).getOrElse { throw it }
 
                 val result = CliPlotter.generateCliPlot(emptyProject)
 
@@ -37,7 +38,7 @@ class CliPlotterTest :
                         kickOff = startTime,
                         employees = setOf(DataFixtures.employee1),
                         tasks = setOf(DataFixtures.task1, DataFixtures.task2),
-                    ).getOrThrow()
+                    ).getOrElse { throw it }
 
                 val result = CliPlotter.generateCliPlot(unassignedProject)
 
@@ -51,7 +52,7 @@ class CliPlotterTest :
                         employee = DataFixtures.employee1,
                         startAt = startTime,
                         duration = 0.minutes,
-                    ).getOrThrow()
+                    ).getOrElse { throw it }
 
                 val project =
                     Project(
@@ -59,7 +60,7 @@ class CliPlotterTest :
                         kickOff = startTime,
                         employees = setOf(DataFixtures.employee1),
                         tasks = setOf(task),
-                    ).getOrThrow()
+                    ).getOrElse { throw it }
 
                 val result = CliPlotter.generateCliPlot(project)
 
@@ -76,7 +77,7 @@ class CliPlotterTest :
                         employee = DataFixtures.employee1,
                         startAt = startTime,
                         duration = 60.minutes,
-                    ).getOrThrow()
+                    ).getOrElse { throw it }
 
                 val project =
                     Project(
@@ -84,7 +85,7 @@ class CliPlotterTest :
                         kickOff = startTime,
                         employees = setOf(DataFixtures.employee1),
                         tasks = setOf(task),
-                    ).getOrThrow()
+                    ).getOrElse { throw it }
 
                 val result = CliPlotter.generateCliPlot(project, width = 50)
 
@@ -101,7 +102,7 @@ class CliPlotterTest :
                         employee = DataFixtures.employee1,
                         startAt = startTime,
                         duration = 30.minutes,
-                    ).getOrThrow()
+                    ).getOrElse { throw it }
 
                 val task2 =
                     AssignedTask(
@@ -110,7 +111,7 @@ class CliPlotterTest :
                         employee = DataFixtures.employee2,
                         startAt = startTime + 30.minutes,
                         duration = 45.minutes,
-                    ).getOrThrow()
+                    ).getOrElse { throw it }
 
                 val task3 =
                     AssignedTask(
@@ -119,7 +120,7 @@ class CliPlotterTest :
                         employee = DataFixtures.employee3,
                         startAt = startTime,
                         duration = 60.minutes,
-                    ).getOrThrow()
+                    ).getOrElse { throw it }
 
                 val project =
                     Project(
@@ -127,7 +128,7 @@ class CliPlotterTest :
                         kickOff = startTime,
                         employees = setOf(DataFixtures.employee1, DataFixtures.employee2, DataFixtures.employee3),
                         tasks = setOf(task1, task2, task3),
-                    ).getOrThrow()
+                    ).getOrElse { throw it }
 
                 val result = CliPlotter.generateCliPlot(project, width = 80)
 
@@ -144,7 +145,7 @@ class CliPlotterTest :
                         employee = DataFixtures.employee1,
                         startAt = startTime,
                         duration = 30.minutes,
-                    ).getOrThrow()
+                    ).getOrElse { throw it }
 
                 val task2 =
                     AssignedTask(
@@ -152,7 +153,7 @@ class CliPlotterTest :
                         employee = DataFixtures.employee1,
                         startAt = startTime + 30.minutes,
                         duration = 45.minutes,
-                    ).getOrThrow()
+                    ).getOrElse { throw it }
 
                 val project =
                     Project(
@@ -160,7 +161,7 @@ class CliPlotterTest :
                         kickOff = startTime,
                         employees = setOf(DataFixtures.employee1),
                         tasks = setOf(task1, task2),
-                    ).getOrThrow()
+                    ).getOrElse { throw it }
 
                 val result = CliPlotter.generateCliPlot(project, width = 60)
 
@@ -178,7 +179,7 @@ class CliPlotterTest :
                         employee = DataFixtures.employee1,
                         startAt = startTime,
                         duration = 100.minutes,
-                    ).getOrThrow()
+                    ).getOrElse { throw it }
 
                 val project =
                     Project(
@@ -186,7 +187,7 @@ class CliPlotterTest :
                         kickOff = startTime,
                         employees = setOf(DataFixtures.employee1),
                         tasks = setOf(task),
-                    ).getOrThrow()
+                    ).getOrElse { throw it }
 
                 val result50 = CliPlotter.generateCliPlot(project, width = 50)
                 val result100 = CliPlotter.generateCliPlot(project, width = 100)
@@ -206,7 +207,7 @@ class CliPlotterTest :
                         employee = DataFixtures.employee1,
                         startAt = startTime,
                         duration = 10.minutes,
-                    ).getOrThrow()
+                    ).getOrElse { throw it }
 
                 val project =
                     Project(
@@ -214,7 +215,7 @@ class CliPlotterTest :
                         kickOff = startTime,
                         employees = setOf(DataFixtures.employee1),
                         tasks = setOf(task),
-                    ).getOrThrow()
+                    ).getOrElse { throw it }
 
                 val result = CliPlotter.generateCliPlot(project, width = 10)
 
@@ -233,7 +234,7 @@ class CliPlotterTest :
                         employee = DataFixtures.employee1,
                         startAt = startTime,
                         duration = 50.minutes,
-                    ).getOrThrow()
+                    ).getOrElse { throw it }
 
                 val smallProject =
                     Project(
@@ -241,7 +242,7 @@ class CliPlotterTest :
                         kickOff = startTime,
                         employees = setOf(DataFixtures.employee1),
                         tasks = setOf(smallTask),
-                    ).getOrThrow()
+                    ).getOrElse { throw it }
 
                 val smallResult = CliPlotter.generateCliPlot(smallProject, width = 50)
 
@@ -252,7 +253,7 @@ class CliPlotterTest :
                         employee = DataFixtures.employee1,
                         startAt = startTime,
                         duration = 200.minutes,
-                    ).getOrThrow()
+                    ).getOrElse { throw it }
 
                 val mediumProject =
                     Project(
@@ -260,7 +261,7 @@ class CliPlotterTest :
                         kickOff = startTime,
                         employees = setOf(DataFixtures.employee1),
                         tasks = setOf(mediumTask),
-                    ).getOrThrow()
+                    ).getOrElse { throw it }
 
                 val mediumResult = CliPlotter.generateCliPlot(mediumProject, width = 50)
 
@@ -271,7 +272,7 @@ class CliPlotterTest :
                         employee = DataFixtures.employee1,
                         startAt = startTime,
                         duration = 600.minutes,
-                    ).getOrThrow()
+                    ).getOrElse { throw it }
 
                 val largeProject =
                     Project(
@@ -279,7 +280,7 @@ class CliPlotterTest :
                         kickOff = startTime,
                         employees = setOf(DataFixtures.employee1),
                         tasks = setOf(largeTask),
-                    ).getOrThrow()
+                    ).getOrElse { throw it }
 
                 val largeResult = CliPlotter.generateCliPlot(largeProject, width = 50)
 
@@ -298,7 +299,7 @@ class CliPlotterTest :
                         employee = DataFixtures.employee1,
                         startAt = startTime,
                         duration = 30.minutes,
-                    ).getOrThrow()
+                    ).getOrElse { throw it }
 
                 val project =
                     Project(
@@ -306,7 +307,7 @@ class CliPlotterTest :
                         kickOff = startTime,
                         employees = setOf(DataFixtures.employee1),
                         tasks = setOf(longDescriptionTask),
-                    ).getOrThrow()
+                    ).getOrElse { throw it }
 
                 val result = CliPlotter.generateCliPlot(project, width = 40)
 
@@ -323,7 +324,7 @@ class CliPlotterTest :
                         employee = DataFixtures.employee1,
                         startAt = startTime,
                         duration = 1.minutes,
-                    ).getOrThrow()
+                    ).getOrElse { throw it }
 
                 val project =
                     Project(
@@ -331,7 +332,7 @@ class CliPlotterTest :
                         kickOff = startTime,
                         employees = setOf(DataFixtures.employee1),
                         tasks = setOf(shortTask),
-                    ).getOrThrow()
+                    ).getOrElse { throw it }
 
                 val result = CliPlotter.generateCliPlot(project, width = 100)
 
@@ -346,7 +347,7 @@ class CliPlotterTest :
                         employee = DataFixtures.employee1,
                         startAt = startTime,
                         duration = 30.minutes,
-                    ).getOrThrow()
+                    ).getOrElse { throw it }
 
                 val task2 =
                     AssignedTask(
@@ -354,7 +355,7 @@ class CliPlotterTest :
                         employee = DataFixtures.employee1,
                         startAt = startTime + 30.minutes,
                         duration = 30.minutes,
-                    ).getOrThrow()
+                    ).getOrElse { throw it }
 
                 val project =
                     Project(
@@ -362,7 +363,7 @@ class CliPlotterTest :
                         kickOff = startTime,
                         employees = setOf(DataFixtures.employee1),
                         tasks = setOf(task1, task2),
-                    ).getOrThrow()
+                    ).getOrElse { throw it }
 
                 val result = CliPlotter.generateCliPlot(project, width = 80)
 
@@ -380,7 +381,7 @@ class CliPlotterTest :
                         employee = DataFixtures.employee1,
                         startAt = startTime,
                         duration = 60.minutes,
-                    ).getOrThrow()
+                    ).getOrElse { throw it }
 
                 val project =
                     Project(
@@ -388,7 +389,7 @@ class CliPlotterTest :
                         kickOff = startTime,
                         employees = setOf(DataFixtures.employee1),
                         tasks = setOf(task),
-                    ).getOrThrow()
+                    ).getOrElse { throw it }
 
                 val result = project.cliGantt()
 
@@ -404,7 +405,7 @@ class CliPlotterTest :
                         employee = DataFixtures.employee1,
                         startAt = startTime,
                         duration = 60.minutes,
-                    ).getOrThrow()
+                    ).getOrElse { throw it }
 
                 val project =
                     Project(
@@ -412,7 +413,7 @@ class CliPlotterTest :
                         kickOff = startTime,
                         employees = setOf(DataFixtures.employee1),
                         tasks = setOf(task),
-                    ).getOrThrow()
+                    ).getOrElse { throw it }
 
                 val result = project.cliGantt(width = 30)
 
@@ -431,7 +432,7 @@ class CliPlotterTest :
                         employee = DataFixtures.employee1,
                         startAt = startTime,
                         duration = 30.minutes,
-                    ).getOrThrow()
+                    ).getOrElse { throw it }
 
                 val project =
                     Project(
@@ -439,7 +440,7 @@ class CliPlotterTest :
                         kickOff = startTime,
                         employees = setOf(DataFixtures.employee1),
                         tasks = setOf(criticalTask),
-                    ).getOrThrow()
+                    ).getOrElse { throw it }
 
                 val result = CliPlotter.generateCliPlot(project)
 
@@ -456,7 +457,7 @@ class CliPlotterTest :
                         employee = DataFixtures.employee1,
                         startAt = startTime,
                         duration = 30.minutes,
-                    ).getOrThrow()
+                    ).getOrElse { throw it }
 
                 val project =
                     Project(
@@ -464,7 +465,7 @@ class CliPlotterTest :
                         kickOff = startTime,
                         employees = setOf(DataFixtures.employee1),
                         tasks = setOf(task),
-                    ).getOrThrow()
+                    ).getOrElse { throw it }
 
                 val result = CliPlotter.generateCliPlot(project)
 

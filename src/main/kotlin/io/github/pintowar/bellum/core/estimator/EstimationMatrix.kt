@@ -1,5 +1,7 @@
 package io.github.pintowar.bellum.core.estimator
 
+import arrow.core.Either
+import arrow.core.getOrElse
 import io.github.pintowar.bellum.core.domain.Employee
 import io.github.pintowar.bellum.core.domain.EmployeeId
 import io.github.pintowar.bellum.core.domain.Project
@@ -28,12 +30,12 @@ class EstimationMatrix private constructor(
     fun duration(
         employeeId: EmployeeId,
         taskId: TaskId,
-    ): Result<Duration> =
-        runCatching {
+    ): Either<Throwable, Duration> =
+        Either.catch {
             val employee = employeeIds[employeeId] ?: throw IllegalArgumentException("Invalid employee id: $employeeId")
             val task = taskIds[taskId] ?: throw IllegalArgumentException("Invalid task id: $taskId")
             matrix.getOrPut(employeeId to taskId) {
-                estimator.estimate(employee, task).getOrThrow()
+                estimator.estimate(employee, task).getOrElse { throw it }
             }
         }
 }

@@ -1,10 +1,11 @@
 package io.github.pintowar.bellum.core.solver
 
+import arrow.core.right
 import io.github.pintowar.bellum.core.DataFixtures
+import io.kotest.assertions.arrow.core.shouldBeLeft
+import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldHaveSize
-import io.kotest.matchers.result.shouldBeFailure
-import io.kotest.matchers.result.shouldBeSuccess
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.coEvery
@@ -29,7 +30,7 @@ class SchedulerTest :
             // making the race condition more likely to appear if the code is flawed.
             coEvery { scheduler.solveOptimizationProblem(any(), any(), any()) } coAnswers {
                 delay(100) // Simulate work
-                Result.success(SchedulerSolution(DataFixtures.sampleProjectSmall, false, 100.milliseconds))
+                SchedulerSolution(DataFixtures.sampleProjectSmall, false, 100.milliseconds).right()
             }
 
             val concurrentJobs = 100 // Number of concurrent calls to simulate
@@ -46,22 +47,20 @@ class SchedulerTest :
                 }
 
             // 3. Assert
-            val successfulResults = results.filter { it.isSuccess }
-            val failedResults = results.filter { it.isFailure }
+            val successfulResults = results.filter { it.isRight() }
+            val failedResults = results.filter { it.isLeft() }
 
             // We expect exactly ONE successful call
             successfulResults.shouldHaveSize(1)
-            successfulResults.first().shouldBeSuccess {
-                it.project.name shouldBe "Sample Project Small"
-            }
+            val solution = successfulResults.first().shouldBeRight()
+            solution.project.name shouldBe "Sample Project Small"
 
             // And all other calls must have failed
             failedResults.shouldHaveSize(concurrentJobs - 1)
             failedResults.forEach { result ->
-                result.shouldBeFailure { exception ->
-                    exception.shouldBeInstanceOf<IllegalStateException>()
-                    exception.message shouldBe "Scheduler is already processing."
-                }
+                val exception = result.shouldBeLeft()
+                exception.shouldBeInstanceOf<IllegalStateException>()
+                exception.message shouldBe "Scheduler is already processing."
             }
 
             // Crucially, verify that the actual heavy work was only performed ONCE.
@@ -74,10 +73,14 @@ class SchedulerTest :
             val scheduler = spyk<Scheduler>()
             val dummyProject = DataFixtures.sampleProjectSmall
 
+            // Mock the behavior of solveOptimizationProblem
+            coEvery { scheduler.solveOptimizationProblem(any(), any(), any()) } returns
+                SchedulerSolution(DataFixtures.sampleProjectSmall, true, 100.milliseconds).right()
+
             // First call should succeed
-            scheduler.findOptimalSchedule(dummyProject).shouldBeSuccess()
+            scheduler.findOptimalSchedule(dummyProject).shouldBeRight()
 
             // The state should be reset to IDLE, so a second call should also succeed
-            scheduler.findOptimalSchedule(dummyProject).shouldBeSuccess()
+            scheduler.findOptimalSchedule(dummyProject).shouldBeRight()
         }
     })

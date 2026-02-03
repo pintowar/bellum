@@ -2,12 +2,12 @@ package io.github.pintowar.bellum.core.parser.rts
 
 import io.github.pintowar.bellum.core.domain.TaskPriority
 import io.github.pintowar.bellum.core.parser.InvalidFileFormat
+import io.kotest.assertions.arrow.core.shouldBeLeft
+import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.nulls.shouldBeNull
-import io.kotest.matchers.result.shouldBeFailure
-import io.kotest.matchers.result.shouldBeSuccess
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.types.shouldBeTypeOf
+import io.kotest.matchers.types.shouldBeInstanceOf
 
 class RtsTaskReaderTest :
     FunSpec({
@@ -23,17 +23,18 @@ class RtsTaskReaderTest :
                 5,Task 5,major,2,4,4,0,1,0,1,5,5,1,0
                 """.trimIndent()
 
-            val result = RtsTaskReader.readContent(content).getOrThrow()
-            result.size shouldBe 5
+            val result = RtsTaskReader.readContent(content)
+            val tasks = result.shouldBeRight()
+            tasks.size shouldBe 5
 
-            val task1 = result.first()
+            val task1 = tasks.first()
             task1.description shouldBe "Task 1"
             task1.priority shouldBe TaskPriority.MINOR
             task1.dependsOn.shouldBeNull()
             task1.requiredSkills.getValue("skill2")() shouldBe 5
             task1.requiredSkills.getValue("skill4")() shouldBe 0
 
-            val task5 = result.last()
+            val task5 = tasks.last()
             task5.description shouldBe "Task 5"
             task5.priority shouldBe TaskPriority.MAJOR
             task5.dependsOn?.description shouldBe "Task 2"
@@ -44,16 +45,15 @@ class RtsTaskReaderTest :
         context("empty content") {
             test("empty content should fail") {
                 val result = RtsTaskReader.readContent("")
-                result shouldBeFailure { ex ->
-                    ex.shouldBeTypeOf<InvalidFileFormat>()
-                    ex.message shouldBe "Empty task content."
-                }
+                val ex = result.shouldBeLeft()
+                ex.shouldBeInstanceOf<InvalidFileFormat>()
+                ex.message shouldBe "Empty task content."
             }
 
             test("only header should return empty list") {
                 val result = RtsTaskReader.readContent("id,content,priority,precedes,skill1,skill2")
-                result.shouldBeSuccess()
-                result.getOrThrow() shouldBe emptyList()
+                val tasks = result.shouldBeRight()
+                tasks shouldBe emptyList()
             }
         }
 
@@ -65,7 +65,7 @@ class RtsTaskReaderTest :
                     2,Task 2,major,3,2,1
                     """.trimIndent()
                 val result = RtsTaskReader.readContent(content)
-                result.shouldBeFailure()
+                result.shouldBeLeft()
             }
 
             test("inconsistent column count should fail") {
@@ -76,11 +76,10 @@ class RtsTaskReaderTest :
                     2,Task 2,major,3,2,1
                     """.trimIndent()
                 val result = RtsTaskReader.readContent(content)
-                result shouldBeFailure { ex ->
-                    ex.shouldBeTypeOf<InvalidFileFormat>()
-                    ex.message shouldBe
-                        "Invalid task content on line 1: num contents (7) values does not match headers (6)."
-                }
+                val ex = result.shouldBeLeft()
+                ex.shouldBeInstanceOf<InvalidFileFormat>()
+                ex.message shouldBe
+                    "Invalid task content on line 1: num contents (7) values does not match headers (6)."
             }
 
             test("missing content field should fail") {
@@ -91,7 +90,7 @@ class RtsTaskReaderTest :
                     2,major,3,2,1
                     """.trimIndent()
                 val result = RtsTaskReader.readContent(content)
-                result.shouldBeFailure()
+                result.shouldBeLeft()
             }
 
             test("empty lines in middle should fail") {
@@ -103,7 +102,7 @@ class RtsTaskReaderTest :
                     2,Task 2,major,3,2,1
                     """.trimIndent()
                 val result = RtsTaskReader.readContent(content)
-                result.shouldBeFailure()
+                result.shouldBeLeft()
             }
         }
 
@@ -115,7 +114,7 @@ class RtsTaskReaderTest :
                     1,Task 1,minor,-1,0,10
                     """.trimIndent()
                 val result = RtsTaskReader.readContent(content)
-                result.shouldBeFailure()
+                result.shouldBeLeft()
             }
 
             test("skill value negative should fail") {
@@ -125,7 +124,7 @@ class RtsTaskReaderTest :
                     1,Task 1,minor,-1,-1,3
                     """.trimIndent()
                 val result = RtsTaskReader.readContent(content)
-                result.shouldBeFailure()
+                result.shouldBeLeft()
             }
 
             test("skill value non-numeric should fail") {
@@ -135,7 +134,7 @@ class RtsTaskReaderTest :
                     1,Task 1,minor,-1,abc,3
                     """.trimIndent()
                 val result = RtsTaskReader.readContent(content)
-                result.shouldBeFailure()
+                result.shouldBeLeft()
             }
 
             test("skill value decimal should fail") {
@@ -145,7 +144,7 @@ class RtsTaskReaderTest :
                     1,Task 1,minor,-1,2.5,3
                     """.trimIndent()
                 val result = RtsTaskReader.readContent(content)
-                result.shouldBeFailure()
+                result.shouldBeLeft()
             }
         }
 
@@ -157,7 +156,7 @@ class RtsTaskReaderTest :
                     1,,minor,-1,0,3
                     """.trimIndent()
                 val result = RtsTaskReader.readContent(content)
-                result.shouldBeFailure()
+                result.shouldBeLeft()
             }
 
             test("whitespace only description should fail") {
@@ -167,7 +166,7 @@ class RtsTaskReaderTest :
                     1,  ,minor,-1,0,3
                     """.trimIndent()
                 val result = RtsTaskReader.readContent(content)
-                result.shouldBeFailure()
+                result.shouldBeLeft()
             }
         }
 
@@ -179,7 +178,7 @@ class RtsTaskReaderTest :
                     1,Task 1,invalid,-1,0,3
                     """.trimIndent()
                 val result = RtsTaskReader.readContent(content)
-                result.shouldBeFailure()
+                result.shouldBeLeft()
             }
 
             test("empty priority should fail") {
@@ -189,7 +188,7 @@ class RtsTaskReaderTest :
                     1,Task 1,, -1,0,3
                     """.trimIndent()
                 val result = RtsTaskReader.readContent(content)
-                result.shouldBeFailure()
+                result.shouldBeLeft()
             }
         }
 
@@ -202,10 +201,9 @@ class RtsTaskReaderTest :
                     2,Task 2,major,3,2,1
                     """.trimIndent()
                 val result = RtsTaskReader.readContent(content)
-                result shouldBeFailure { ex ->
-                    ex.shouldBeTypeOf<InvalidFileFormat>()
-                    ex.message shouldBe "Precedence (3) of task (2) not found."
-                }
+                val ex = result.shouldBeLeft()
+                ex.shouldBeInstanceOf<InvalidFileFormat>()
+                ex.message shouldBe "Precedence (3) of task (2) not found."
             }
         }
 
@@ -217,10 +215,10 @@ class RtsTaskReaderTest :
                     1,Task 1,minor,-1
                     """.trimIndent()
                 val result = RtsTaskReader.readContent(content)
-                result.shouldBeSuccess()
-                result.getOrThrow().size shouldBe 1
-                result.getOrThrow().first().description shouldBe "Task 1"
-                result.getOrThrow().first().requiredSkills shouldBe emptyMap()
+                val tasks = result.shouldBeRight()
+                tasks.size shouldBe 1
+                tasks.first().description shouldBe "Task 1"
+                tasks.first().requiredSkills shouldBe emptyMap()
             }
 
             test("many skills columns should succeed") {
@@ -230,11 +228,8 @@ class RtsTaskReaderTest :
                     1,Task 1,minor,-1,0,3,0,1,4,0,3,0,0,0,1,2
                     """.trimIndent()
                 val result = RtsTaskReader.readContent(content)
-                result.shouldBeSuccess()
-                result
-                    .getOrThrow()
-                    .first()
-                    .requiredSkills.size shouldBe 12
+                val tasks = result.shouldBeRight()
+                tasks.first().requiredSkills.size shouldBe 12
             }
 
             test("missing skill columns should succeed") {
@@ -244,11 +239,8 @@ class RtsTaskReaderTest :
                     1,Task 1,minor,-1,5
                     """.trimIndent()
                 val result = RtsTaskReader.readContent(content)
-                result.shouldBeSuccess()
-                result
-                    .getOrThrow()
-                    .first()
-                    .requiredSkills.size shouldBe 1
+                val tasks = result.shouldBeRight()
+                tasks.first().requiredSkills.size shouldBe 1
             }
 
             test("skill column with different order should succeed") {
@@ -258,22 +250,10 @@ class RtsTaskReaderTest :
                     1,Task 1,minor,-1,1,0,3
                     """.trimIndent()
                 val result = RtsTaskReader.readContent(content)
-                result.shouldBeSuccess()
-                result
-                    .getOrThrow()
-                    .first()
-                    .requiredSkills
-                    .getValue("skill1")() shouldBe 0
-                result
-                    .getOrThrow()
-                    .first()
-                    .requiredSkills
-                    .getValue("skill2")() shouldBe 3
-                result
-                    .getOrThrow()
-                    .first()
-                    .requiredSkills
-                    .getValue("skill3")() shouldBe 1
+                val tasks = result.shouldBeRight()
+                tasks.first().requiredSkills.getValue("skill1")() shouldBe 0
+                tasks.first().requiredSkills.getValue("skill2")() shouldBe 3
+                tasks.first().requiredSkills.getValue("skill3")() shouldBe 1
             }
 
             test("task with valid precedes should succeed") {
@@ -284,13 +264,9 @@ class RtsTaskReaderTest :
                     2,Task 2,major,1
                     """.trimIndent()
                 val result = RtsTaskReader.readContent(content)
-                result.shouldBeSuccess()
-                result.getOrThrow().size shouldBe 2
-                result
-                    .getOrThrow()
-                    .last()
-                    .dependsOn
-                    ?.description shouldBe "Task 1"
+                val tasks = result.shouldBeRight()
+                tasks.size shouldBe 2
+                tasks.last().dependsOn?.description shouldBe "Task 1"
             }
 
             test("task with invalid precedes should fail") {
@@ -301,7 +277,7 @@ class RtsTaskReaderTest :
                     2,Task 2,major,3
                     """.trimIndent()
                 val result = RtsTaskReader.readContent(content)
-                result.shouldBeFailure()
+                result.shouldBeLeft()
             }
         }
 
@@ -314,8 +290,8 @@ class RtsTaskReaderTest :
                     2;Task 2;major;1;2;1
                     """.trimIndent()
                 val result = RtsTaskReader.readContent(content, ";")
-                result.shouldBeSuccess()
-                result.getOrThrow().size shouldBe 2
+                val tasks = result.shouldBeRight()
+                tasks.size shouldBe 2
             }
 
             test("tab separator should work") {
@@ -326,8 +302,8 @@ class RtsTaskReaderTest :
                     2	Task 2	major	1	2	1
                     """.trimIndent()
                 val result = RtsTaskReader.readContent(content, "	")
-                result.shouldBeSuccess()
-                result.getOrThrow().size shouldBe 2
+                val tasks = result.shouldBeRight()
+                tasks.size shouldBe 2
             }
 
             test("custom separator should work") {
@@ -338,8 +314,8 @@ class RtsTaskReaderTest :
                     2|Task 2|major|1|2|1
                     """.trimIndent()
                 val result = RtsTaskReader.readContent(content, "|")
-                result.shouldBeSuccess()
-                result.getOrThrow().size shouldBe 2
+                val tasks = result.shouldBeRight()
+                tasks.size shouldBe 2
             }
         }
 
@@ -352,9 +328,9 @@ class RtsTaskReaderTest :
                     2,"Task, Two",major,1,2,1
                     """.trimIndent()
                 val result = RtsTaskReader.readContent(content)
-                result.shouldBeSuccess()
-                result.getOrThrow().first().description shouldBe "Task One"
-                result.getOrThrow().last().description shouldBe "Task, Two"
+                val tasks = result.shouldBeRight()
+                tasks.first().description shouldBe "Task One"
+                tasks.last().description shouldBe "Task, Two"
             }
 
             test("special characters in description should work") {
@@ -365,9 +341,9 @@ class RtsTaskReaderTest :
                     2,Tâche Deux,major,1,2,1
                     """.trimIndent()
                 val result = RtsTaskReader.readContent(content)
-                result.shouldBeSuccess()
-                result.getOrThrow().first().description shouldBe "Tarefa Um"
-                result.getOrThrow().last().description shouldBe "Tâche Deux"
+                val tasks = result.shouldBeRight()
+                tasks.first().description shouldBe "Tarefa Um"
+                tasks.last().description shouldBe "Tâche Deux"
             }
         }
     })

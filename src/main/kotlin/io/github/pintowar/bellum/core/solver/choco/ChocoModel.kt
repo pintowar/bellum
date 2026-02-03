@@ -1,5 +1,7 @@
 package io.github.pintowar.bellum.core.solver.choco
 
+import arrow.core.Either
+import arrow.core.getOrElse
 import io.github.pintowar.bellum.core.domain.Employee
 import io.github.pintowar.bellum.core.domain.Project
 import io.github.pintowar.bellum.core.domain.Task
@@ -68,7 +70,7 @@ internal class ChocoModel(
      * A 2D matrix where `taskDurationMatrix[e][t]` holds the estimated time (in minutes)
      * for employee `e` to complete task `t`.
      */
-    private val taskDurationMatrix = createDurationMatrix(employees, tasks, estimator).getOrThrow()
+    private val taskDurationMatrix = createDurationMatrix(employees, tasks, estimator).getOrElse { throw it }
 
     /**
      * An array containing the priority value for each task.
@@ -168,30 +170,29 @@ internal class ChocoModel(
      * @param solution The solution found by the Choco solver.
      * @param currentDuration The time taken by the solver to find this solution.
      * @param optimal A flag indicating whether the solution is proven to be optimal.
-     * @return A [Result] containing the decoded [SchedulerSolution] or an error if decoding fails.
+     * @return A [Either] containing the decoded [SchedulerSolution] or an error if decoding fails.
      */
     fun decode(
         solution: Solution,
         currentDuration: Duration,
         optimal: Boolean = false,
-    ): Result<SchedulerSolution> =
-        runCatching {
-            val emps = taskAssignee.map { employees[solution.getIntVal(it)] }
-            val inits = taskStartTime.map { project.kickOff + unitDuration(solution.getIntVal(it)) }
-            val durs = taskDuration.map { unitDuration(solution.getIntVal(it)) }
-            val assigneds = tasks.mapIndexed { idx, tsk -> tsk.assign(emps[idx], inits[idx], durs[idx]) }
+    ): Either<Throwable, SchedulerSolution> {
+        val emps = taskAssignee.map { employees[solution.getIntVal(it)] }
+        val inits = taskStartTime.map { project.kickOff + unitDuration(solution.getIntVal(it)) }
+        val durs = taskDuration.map { unitDuration(solution.getIntVal(it)) }
+        val assigneds = tasks.mapIndexed { idx, tsk -> tsk.assign(emps[idx], inits[idx], durs[idx]) }
 
-            return project
-                .replace(tasks = assigneds.toSet())
-                .map { newProject ->
-                    SchedulerSolution(
-                        newProject,
-                        optimal,
-                        currentDuration,
-                        solverStatistics(model.solver),
-                    )
-                }
-        }
+        return project
+            .replace(tasks = assigneds.toSet())
+            .map { newProject ->
+                SchedulerSolution(
+                    newProject,
+                    optimal,
+                    currentDuration,
+                    solverStatistics(model.solver),
+                )
+            }
+    }
 
     /**
      * Extracts and formats solver statistics from a Choco Solver instance.
@@ -417,11 +418,11 @@ internal class ChocoModel(
         employees: List<Employee>,
         tasks: List<Task>,
         estimator: TimeEstimator,
-    ): Result<Array<IntArray>> =
-        runCatching {
+    ): Either<Throwable, Array<IntArray>> =
+        Either.catch {
             employees
                 .map { emp ->
-                    tasks.map { tsk -> durationUnit(estimator.estimate(emp, tsk).getOrThrow()) }.toIntArray()
+                    tasks.map { tsk -> durationUnit(estimator.estimate(emp, tsk).getOrElse { throw it }) }.toIntArray()
                 }.toTypedArray()
         }
 

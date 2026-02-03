@@ -1,5 +1,7 @@
 package io.github.pintowar.bellum.core.solver.choco
 
+import arrow.core.Either
+import arrow.core.getOrElse
 import io.github.pintowar.bellum.core.domain.Project
 import io.github.pintowar.bellum.core.estimator.TimeEstimator
 import io.github.pintowar.bellum.core.solver.Scheduler
@@ -15,8 +17,8 @@ class ChocoScheduler(
         project: Project,
         timeLimit: Duration,
         callback: (SchedulerSolution) -> Unit,
-    ): Result<SchedulerSolution> =
-        runCatching {
+    ): Either<Throwable, SchedulerSolution> =
+        Either.catch {
             val model = ChocoModel(project, estimator, withLexicalConstraint)
             val solver = model.solver(timeLimit)
 
@@ -25,10 +27,10 @@ class ChocoScheduler(
             while (solver.solve()) {
                 solution.record()
                 val currentDuration = (Clock.System.now() - initSolving)
-                model.decode(solution, currentDuration, false).onSuccess(callback)
+                model.decode(solution, currentDuration, false).getOrElse { null }?.let(callback)
             }
 
             val currentDuration = Clock.System.now() - initSolving
-            return model.decode(solution, currentDuration, !solver.isStopCriterionMet)
+            model.decode(solution, currentDuration, !solver.isStopCriterionMet).getOrElse { throw it }
         }
 }

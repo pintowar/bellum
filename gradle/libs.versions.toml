@@ -8,6 +8,7 @@ jreleaser = "1.22.0"
 release = "3.1.0"
 picocli = "4.7.5"
 konform = "0.11.1"
+arrow = "2.2.1.1"
 choco-solver = "4.10.18"
 uuid-generator = "5.1.1"
 jgrapht = "1.5.2"
@@ -24,6 +25,7 @@ sl4j = "2.0.17"
 picocli = { module = "info.picocli:picocli", version.ref = "picocli" }
 picocli-codegen = { module = "info.picocli:picocli-codegen", version.ref = "picocli" }
 konform-jvm = { module = "io.konform:konform-jvm", version.ref = "konform" }
+arrow-core = { module = "io.arrow-kt:arrow-core", version.ref = "arrow" }
 choco-solver = { module = "org.choco-solver:choco-solver", version.ref = "choco-solver" }
 uuid-generator = { module = "com.fasterxml.uuid:java-uuid-generator", version.ref = "uuid-generator" }
 jgrapht-core = { module = "org.jgrapht:jgrapht-core", version.ref = "jgrapht" }
@@ -39,6 +41,7 @@ mockk-jvm = { module = "io.mockk:mockk-jvm", version.ref = "mockk" }
 kotest-runner-junit5 = { module = "io.kotest:kotest-runner-junit5", version.ref = "kotest" }
 kotest-assertions-core = { module = "io.kotest:kotest-assertions-core", version.ref = "kotest" }
 kotest-assertions-konform-jvm = { module = "io.kotest:kotest-assertions-konform-jvm", version.ref = "kotest" }
+kotest-assertions-arrow = { module = "io.kotest.extensions:kotest-assertions-arrow", version = "2.0.0" }
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
@@ -52,4 +55,4 @@ jreleaser = { id = "org.jreleaser", version.ref = "jreleaser" }
 release = { id = "net.researchgate.release", version.ref = "release" }
 
 [bundles]
-kotest = ["kotest-runner-junit5", "kotest-assertions-core", "kotest-assertions-konform-jvm"]
+kotest = ["kotest-runner-junit5", "kotest-assertions-core", "kotest-assertions-konform-jvm", "kotest-assertions-arrow"]

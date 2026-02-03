@@ -1,5 +1,6 @@
 package io.github.pintowar.bellum.serdes
 
+import arrow.core.getOrElse
 import io.github.pintowar.bellum.core.DataFixtures
 import io.github.pintowar.bellum.core.solver.SchedulerSolution
 import io.github.pintowar.bellum.core.solver.SolutionHistory
@@ -91,7 +92,7 @@ class SerdesTest :
                         .replace(
                             employees = setOf(employee1),
                             tasks = setOf(assignedTask, task2),
-                        ).getOrThrow()
+                        ).getOrElse { throw it }
 
                 val solverStats =
                     mapOf(
@@ -142,7 +143,7 @@ class SerdesTest :
                         .replace(
                             employees = setOf(employee1),
                             tasks = setOf(assignedTask, task2),
-                        ).getOrThrow()
+                        ).getOrElse { throw it }
 
                 val solverStats =
                     mapOf(
@@ -182,7 +183,7 @@ class SerdesTest :
                         .replace(
                             employees = setOf(employee1),
                             tasks = setOf(assignedTask1),
-                        ).getOrThrow()
+                        ).getOrElse { throw it }
 
                 val assignedTask2 = task1.assign(employee1, start + dur, dur)
                 val project2 =
@@ -190,7 +191,7 @@ class SerdesTest :
                         .replace(
                             employees = setOf(employee1),
                             tasks = setOf(assignedTask2),
-                        ).getOrThrow()
+                        ).getOrElse { throw it }
 
                 val solverStats = mapOf("solver" to "Unknown Solver")
 
@@ -325,7 +326,7 @@ class SerdesTest :
                         .replace(
                             employees = setOf(employee1),
                             tasks = setOf(assignedTask),
-                        ).getOrThrow()
+                        ).getOrElse { throw it }
 
                 val solverStats = mapOf("solver" to "Test Solver")
 
@@ -370,7 +371,7 @@ class SerdesTest :
                 val project =
                     DataFixtures.sampleProjectSmall
                         .replace(employees = setOf(employee1), tasks = setOf(assignedTask))
-                        .getOrThrow()
+                        .getOrElse { throw it }
 
                 val solverStats =
                     mapOf(

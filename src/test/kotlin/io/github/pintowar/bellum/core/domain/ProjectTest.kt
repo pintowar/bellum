@@ -1,11 +1,12 @@
 package io.github.pintowar.bellum.core.domain
 
+import arrow.core.getOrElse
 import io.github.pintowar.bellum.core.DataFixtures
 import io.github.pintowar.bellum.core.DataFixtures.sampleProjectSmall
 import io.github.pintowar.bellum.core.domain.messagesAtPath
+import io.kotest.assertions.arrow.core.shouldBeLeft
+import io.kotest.assertions.arrow.core.shouldBeRight
 import io.kotest.core.spec.style.FunSpec
-import io.kotest.matchers.result.shouldBeFailure
-import io.kotest.matchers.result.shouldBeSuccess
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
@@ -19,7 +20,7 @@ class ProjectTest :
             val dur = 5.minutes
 
             test("empty project with no tasks") {
-                val project = sampleProjectSmall.replace(employees = emptySet(), tasks = emptySet()).getOrThrow()
+                val project = sampleProjectSmall.replace(employees = emptySet(), tasks = emptySet()).getOrElse { throw it }
                 val description = project.describe()
 
                 description shouldContain "Project: Sample Project Small (starting at 2022-01-01T00:00:00Z). Max duration: null."
@@ -32,7 +33,7 @@ class ProjectTest :
                         .replace(
                             employees = setOf(DataFixtures.employee1, DataFixtures.employee2),
                             tasks = setOf(DataFixtures.task1, DataFixtures.task2, DataFixtures.task3),
-                        ).getOrThrow()
+                        ).getOrElse { throw it }
                 val description = project.describe()
 
                 description shouldContain "Project: Sample Project Small (starting at 2022-01-01T00:00:00Z). Max duration: null."
@@ -46,7 +47,7 @@ class ProjectTest :
                         .replace(
                             employees = setOf(DataFixtures.employee1),
                             tasks = setOf(task1, DataFixtures.task2, DataFixtures.task3),
-                        ).getOrThrow()
+                        ).getOrElse { throw it }
                 val description = project.describe()
 
                 description shouldContain "Project: Sample Project Small (starting at 2022-01-01T00:00:00Z). Max duration: 5m."
@@ -62,7 +63,7 @@ class ProjectTest :
                         .replace(
                             employees = setOf(DataFixtures.employee1),
                             tasks = setOf(task1, task2),
-                        ).getOrThrow()
+                        ).getOrElse { throw it }
                 val description = project.describe()
 
                 description shouldContain "Project: Sample Project Small (starting at 2022-01-01T00:00:00Z). Max duration: 10m."
@@ -79,7 +80,7 @@ class ProjectTest :
                         .replace(
                             employees = setOf(DataFixtures.employee1, DataFixtures.employee2, DataFixtures.employee3),
                             tasks = setOf(task1, task2, task3),
-                        ).getOrThrow()
+                        ).getOrElse { throw it }
                 val description = project.describe()
 
                 description shouldContain "Project: Sample Project Small (starting at 2022-01-01T00:00:00Z). Max duration: 5m."
@@ -91,14 +92,18 @@ class ProjectTest :
 
             test("project with different task priorities") {
                 val task1 = DataFixtures.task1.assign(DataFixtures.employee1, start, dur)
-                val taskWithDifferentPriority = UnassignedTask("Task with CRITICAL priority", priority = TaskPriority.CRITICAL).getOrThrow()
+                val taskWithDifferentPriority =
+                    UnassignedTask(
+                        "Task with CRITICAL priority",
+                        priority = TaskPriority.CRITICAL,
+                    ).getOrElse { throw it }
                 val task2 = taskWithDifferentPriority.assign(DataFixtures.employee1, start + dur, dur)
                 val project =
                     sampleProjectSmall
                         .replace(
                             employees = setOf(DataFixtures.employee1),
                             tasks = setOf(task1, task2),
-                        ).getOrThrow()
+                        ).getOrElse { throw it }
                 val description = project.describe()
 
                 description shouldContain "Employee 1: [Task 1 (MINOR) - 5m, Task with CRITICAL priority (CRITICAL) - 5m]"
@@ -112,7 +117,7 @@ class ProjectTest :
                         .replace(
                             employees = setOf(DataFixtures.employee1),
                             tasks = setOf(task1, task2),
-                        ).getOrThrow()
+                        ).getOrElse { throw it }
                 val description = project.describe()
 
                 description shouldContain "Employee 1: [Task 1 (MINOR) - 5m, Task 2 (MINOR) - 15m]"
@@ -127,7 +132,7 @@ class ProjectTest :
                         .replace(
                             employees = setOf(DataFixtures.employee1, DataFixtures.employee2),
                             tasks = setOf(task1, task3),
-                        ).getOrThrow()
+                        ).getOrElse { throw it }
                 val description = project.describe()
 
                 description shouldContain "-------"
@@ -136,8 +141,8 @@ class ProjectTest :
             }
 
             test("project with special characters in names") {
-                val taskWithSpecialChars = UnassignedTask("Task with \"quotes\" & <tags>").getOrThrow()
-                val employeeWithSpecialChars = Employee("Employee with 'apostrophe'").getOrThrow()
+                val taskWithSpecialChars = UnassignedTask("Task with \"quotes\" & <tags>").getOrElse { throw it }
+                val employeeWithSpecialChars = Employee("Employee with 'apostrophe'").getOrElse { throw it }
                 val task1 = taskWithSpecialChars.assign(employeeWithSpecialChars, start, dur)
                 val project =
                     Project(
@@ -145,7 +150,7 @@ class ProjectTest :
                         kickOff = start,
                         employees = setOf(employeeWithSpecialChars),
                         tasks = setOf(task1),
-                    ).getOrThrow()
+                    ).getOrElse { throw it }
                 val description = project.describe()
 
                 description shouldContain
@@ -158,7 +163,7 @@ class ProjectTest :
                 val tasks =
                     (1..10).map { i ->
                         UnassignedTask("Task $i")
-                            .getOrThrow()
+                            .getOrElse { throw it }
                             .assign(DataFixtures.employee1, start + ((i - 1) * 5).minutes, dur)
                     }
                 val project =
@@ -166,7 +171,7 @@ class ProjectTest :
                         .replace(
                             employees = setOf(DataFixtures.employee1),
                             tasks = tasks.toSet(),
-                        ).getOrThrow()
+                        ).getOrElse { throw it }
                 val description = project.describe()
 
                 description shouldContain
@@ -179,7 +184,7 @@ class ProjectTest :
                         .replace(
                             employees = setOf(DataFixtures.employee1, DataFixtures.employee2),
                             tasks = setOf(DataFixtures.task1, DataFixtures.task2),
-                        ).getOrThrow()
+                        ).getOrElse { throw it }
                 val description = project.describe()
 
                 description shouldContain "Max duration: null."
@@ -193,7 +198,7 @@ class ProjectTest :
                         .replace(
                             employees = setOf(DataFixtures.employee1, DataFixtures.employee2),
                             tasks = setOf(task1, task2),
-                        ).getOrThrow()
+                        ).getOrElse { throw it }
                 val description = project.describe()
 
                 // Check basic format structure
@@ -211,7 +216,7 @@ class ProjectTest :
                         .replace(
                             employees = setOf(DataFixtures.employee1),
                             tasks = setOf(task1, DataFixtures.task2, DataFixtures.task3),
-                        ).getOrThrow()
+                        ).getOrElse { throw it }
                 val description = project.describe()
 
                 description shouldContain "Employee 1: [Task 1 (MINOR) - 5m]"
@@ -226,9 +231,8 @@ class ProjectTest :
 
             test("scheduledStatus returns NONE when no tasks") {
                 val project = sampleProjectSmall.replace(employees = emptySet(), tasks = emptySet())
-                project shouldBeSuccess {
-                    it.scheduledStatus() shouldBe ProjectScheduled.NONE
-                }
+                val p = project.shouldBeRight()
+                p.scheduledStatus() shouldBe ProjectScheduled.NONE
             }
 
             test("scheduledStatus returns SCHEDULED when all tasks are assigned") {
@@ -239,34 +243,30 @@ class ProjectTest :
                         employees = setOf(DataFixtures.employee1, DataFixtures.employee2),
                         tasks = setOf(task1, task2),
                     )
-                project shouldBeSuccess {
-                    it.scheduledStatus() shouldBe ProjectScheduled.SCHEDULED
-                }
+                val p = project.shouldBeRight()
+                p.scheduledStatus() shouldBe ProjectScheduled.SCHEDULED
             }
 
             test("scheduledStatus returns PARTIAL when some tasks are assigned") {
                 val task1 = DataFixtures.task1.assign(DataFixtures.employee1, start, dur)
                 val task2 = DataFixtures.task2
                 val project = sampleProjectSmall.replace(employees = setOf(DataFixtures.employee1), tasks = setOf(task1, task2))
-                project shouldBeSuccess {
-                    it.scheduledStatus() shouldBe ProjectScheduled.PARTIAL
-                }
+                val p = project.shouldBeRight()
+                p.scheduledStatus() shouldBe ProjectScheduled.PARTIAL
             }
 
             test("scheduledStatus handles empty tasks") {
                 val project = sampleProjectSmall.replace(employees = emptySet(), tasks = emptySet())
-                project shouldBeSuccess {
-                    it.scheduledStatus() shouldBe ProjectScheduled.NONE
-                }
+                val p = project.shouldBeRight()
+                p.scheduledStatus() shouldBe ProjectScheduled.NONE
             }
 
             test("scheduledStatus handles all tasks unassigned") {
                 val task1 = DataFixtures.task1
                 val task2 = DataFixtures.task2
                 val project = sampleProjectSmall.replace(employees = emptySet(), tasks = setOf(task1, task2))
-                project shouldBeSuccess {
-                    it.scheduledStatus() shouldBe ProjectScheduled.NONE
-                }
+                val p = project.shouldBeRight()
+                p.scheduledStatus() shouldBe ProjectScheduled.NONE
             }
         }
 
@@ -282,7 +282,12 @@ class ProjectTest :
                             DataFixtures.task1.assign(DataFixtures.employee1, start, dur1),
                             DataFixtures.task2.assign(DataFixtures.employee1, start, dur2),
                         )
-                    val project = sampleProjectSmall.replace(employees = setOf(DataFixtures.employee1), tasks = tasks).getOrThrow()
+                    val project =
+                        sampleProjectSmall
+                            .replace(
+                                employees = setOf(DataFixtures.employee1),
+                                tasks = tasks,
+                            ).getOrElse { throw it }
 
                     project.isValid() shouldBe false
                     val vals = project.validate()
@@ -296,7 +301,12 @@ class ProjectTest :
                             DataFixtures.task1.assign(DataFixtures.employee1, start, dur1),
                             DataFixtures.task2.assign(DataFixtures.employee1, start + dur1, dur2),
                         )
-                    val project = sampleProjectSmall.replace(employees = setOf(DataFixtures.employee1), tasks = tasks).getOrThrow()
+                    val project =
+                        sampleProjectSmall
+                            .replace(
+                                employees = setOf(DataFixtures.employee1),
+                                tasks = tasks,
+                            ).getOrElse { throw it }
 
                     project.isValid() shouldBe true
                     val vals = project.validate()
@@ -322,7 +332,7 @@ class ProjectTest :
                             .replace(
                                 employees = setOf(DataFixtures.employee1, DataFixtures.employee2),
                                 tasks = tasks,
-                            ).getOrThrow()
+                            ).getOrElse { throw it }
 
                     project.isValid() shouldBe false
                     val vals = project.validate()
@@ -344,7 +354,7 @@ class ProjectTest :
                             .replace(
                                 employees = setOf(DataFixtures.employee1, DataFixtures.employee2),
                                 tasks = tasks,
-                            ).getOrThrow()
+                            ).getOrElse { throw it }
 
                     project.isValid() shouldBe true
                     val vals = project.validate()
@@ -360,19 +370,21 @@ class ProjectTest :
                     val tasks = setOf(task1Deps, DataFixtures.task2, DataFixtures.task3, DataFixtures.task4, task5Deps)
                     val project = sampleProjectSmall.replace(employees = setOf(DataFixtures.employee1), tasks = tasks)
 
-                    project.shouldBeFailure<ValidationException>()
-                    if (project.isFailure) {
-                        val ex = project.exceptionOrNull() as ValidationException
-                        val msg = "Circular task dependency found Task 1 - Task 3 - Task 5 - Task 1."
-                        ex.errors.size shouldBe 1
-                        ex.errors.messagesAtPath(Project::hasCircularTaskDependency) shouldBe listOf(msg)
-                    }
+                    val ex = project.shouldBeLeft()
+                    val msg = "Circular task dependency found Task 1 - Task 3 - Task 5 - Task 1."
+                    ex.errors.size shouldBe 1
+                    ex.errors.messagesAtPath(Project::hasCircularTaskDependency) shouldBe listOf(msg)
                 }
 
                 test("must pass in case a circular dependencies is not found") {
                     val tasks =
                         setOf(DataFixtures.task1, DataFixtures.task2, DataFixtures.task3, DataFixtures.task4, task5Deps)
-                    val project = sampleProjectSmall.replace(employees = setOf(DataFixtures.employee1), tasks = tasks).getOrThrow()
+                    val project =
+                        sampleProjectSmall
+                            .replace(
+                                employees = setOf(DataFixtures.employee1),
+                                tasks = tasks,
+                            ).getOrElse { throw it }
 
                     project.isValid() shouldBe true
                     val vals = project.validate()
@@ -389,13 +401,10 @@ class ProjectTest :
                     val tasks = setOf(task1, DataFixtures.task2, DataFixtures.task3)
                     val project = sampleProjectSmall.replace(employees = setOf(DataFixtures.employee2), tasks = tasks)
 
-                    project.shouldBeFailure<ValidationException>()
-                    if (project.isFailure) {
-                        val ex = project.exceptionOrNull() as ValidationException
-                        val msg = "Some tasks are assigned to employees out of the project: [Employee 1]."
-                        ex.errors.size shouldBe 1
-                        ex.errors.messagesAtPath(Project::hasUnknownEmployees) shouldBe listOf(msg)
-                    }
+                    val ex = project.shouldBeLeft()
+                    val msg = "Some tasks are assigned to employees out of the project: [Employee 1]."
+                    ex.errors.size shouldBe 1
+                    ex.errors.messagesAtPath(Project::hasUnknownEmployees) shouldBe listOf(msg)
                 }
 
                 test("must pass while initializing in case a invalid employee is not found") {
@@ -406,7 +415,7 @@ class ProjectTest :
                             .replace(
                                 employees = setOf(DataFixtures.employee1, DataFixtures.employee2),
                                 tasks = tasks,
-                            ).getOrThrow()
+                            ).getOrElse { throw it }
 
                     project.isValid() shouldBe true
                     val vals = project.validate()
@@ -422,18 +431,20 @@ class ProjectTest :
                     val tasks = setOf(DataFixtures.task2, DataFixtures.task3, DataFixtures.task4)
                     val project = sampleProjectSmall.replace(employees = setOf(DataFixtures.employee2), tasks = tasks)
 
-                    project.shouldBeFailure<ValidationException>()
-                    if (project.isFailure) {
-                        val ex = project.exceptionOrNull() as ValidationException
-                        val msg = "Following task dependencies were not found: Task 1."
-                        ex.errors.size shouldBe 1
-                        ex.errors.messagesAtPath(Project::hasMissingTaskDependencies) shouldBe listOf(msg)
-                    }
+                    val ex = project.shouldBeLeft()
+                    val msg = "Following task dependencies were not found: Task 1."
+                    ex.errors.size shouldBe 1
+                    ex.errors.messagesAtPath(Project::hasMissingTaskDependencies) shouldBe listOf(msg)
                 }
 
                 test("must pass while initializing in case a missing task dependency is not found") {
                     val tasks = setOf(DataFixtures.task1, DataFixtures.task2, DataFixtures.task3)
-                    val project = sampleProjectSmall.replace(employees = setOf(DataFixtures.employee2), tasks = tasks).getOrThrow()
+                    val project =
+                        sampleProjectSmall
+                            .replace(
+                                employees = setOf(DataFixtures.employee2),
+                                tasks = tasks,
+                            ).getOrElse { throw it }
 
                     project.isValid() shouldBe true
                     val vals = project.validate()

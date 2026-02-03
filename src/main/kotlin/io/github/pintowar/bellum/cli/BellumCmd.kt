@@ -1,5 +1,8 @@
 package io.github.pintowar.bellum.cli
 
+import arrow.core.Either
+import arrow.core.flatMap
+import arrow.core.getOrElse
 import io.github.pintowar.bellum.core.domain.ProjectScheduled
 import io.github.pintowar.bellum.core.estimator.PearsonEstimator
 import io.github.pintowar.bellum.core.parser.rts.RtsProjectReader
@@ -66,20 +69,18 @@ class BellumCmd(
         stdOutput.println(desc)
     }
 
-    private fun readAndSolveProject(currentDir: String): Result<SolutionHistory> =
-        runCatching {
-            val estimator = PearsonEstimator()
-            val scheduler = ChocoScheduler(estimator)
+    private fun readAndSolveProject(currentDir: String): Either<Throwable, SolutionHistory> {
+        val estimator = PearsonEstimator()
+        val scheduler = ChocoScheduler(estimator)
 
-            return RtsProjectReader
-                .readContentFromPath(currentDir, path)
-                .mapCatching {
-                    scheduler
-                        .collectAllOptimalSchedules(it, timeLimit.seconds) { sol ->
-                            describe(sol)
-                        }.getOrThrow()
+        return RtsProjectReader
+            .readContentFromPath(currentDir, path)
+            .flatMap {
+                scheduler.collectAllOptimalSchedules(it, timeLimit.seconds) { sol ->
+                    describe(sol)
                 }
-        }
+            }
+    }
 
     private fun writeOutput(
         currentDir: String,
@@ -96,7 +97,7 @@ class BellumCmd(
         val cliWidth = spec.usageMessage().width()
         val currentDir = System.getProperty("user.dir")
         try {
-            val result = readAndSolveProject(currentDir).getOrThrow()
+            val result = readAndSolveProject(currentDir).getOrElse { throw it }
             writeOutput(currentDir, result)
 
             stdOutput.println()

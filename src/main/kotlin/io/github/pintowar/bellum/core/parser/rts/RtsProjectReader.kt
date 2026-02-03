@@ -1,5 +1,9 @@
 package io.github.pintowar.bellum.core.parser.rts
 
+import arrow.core.Either
+import arrow.core.getOrElse
+import arrow.core.raise.either
+import arrow.core.raise.ensure
 import io.github.pintowar.bellum.core.domain.Project
 import io.github.pintowar.bellum.core.parser.ContentReader
 import io.github.pintowar.bellum.core.parser.InvalidFileFormat
@@ -10,31 +14,41 @@ class RtsProjectReader(
     private val name: String,
 ) : ContentReader<Project> {
     companion object {
-        private fun content(uri: String) = URI(uri).toURL().readText()
+        private fun content(uri: String): String = URI(uri).toURL().readText()
 
         fun readContentFromPath(
             base: String,
             uri: String,
-        ): Result<Project> =
-            Result
-                .success(uri)
-                .mapCatching { content(it) }
-                .recoverCatching { content("file://$base/$uri") }
-                .recoverCatching { content("file://$uri") }
-                .mapCatching {
-                    RtsProjectReader("Sample input").readContent(it).getOrThrow()
+        ): Either<Throwable, Project> =
+            Either.catch {
+                val contentText =
+                    try {
+                        content(uri)
+                    } catch (_: Exception) {
+                        try {
+                            content("file://$base/$uri")
+                        } catch (_: Exception) {
+                            try {
+                                content("file://$uri")
+                            } catch (e: Exception) {
+                                throw InvalidFileFormat("Could not read content from URI: ${e.message}")
+                            }
+                        }
+                    }
+                if (contentText.isBlank()) {
+                    throw InvalidFileFormat("Empty project content.")
                 }
+                RtsProjectReader("Sample input").readContent(contentText).getOrElse { throw it }
+            }
     }
 
     override fun readContent(
         content: String,
         sep: String,
-    ): Result<Project> =
-        runCatching {
+    ): Either<Throwable, Project> =
+        either {
             val trimmedContent = content.trim()
-            if (trimmedContent.isBlank()) {
-                throw InvalidFileFormat("Empty project content.")
-            }
+            ensure(trimmedContent.isNotBlank()) { InvalidFileFormat("Empty project content.") }
 
             val lines = trimmedContent.lines()
             val idx =
@@ -42,9 +56,7 @@ class RtsProjectReader(
                     line.isNotBlank() && line.all { it == '=' || it == '-' || it == '_' || it == ' ' }
                 }
 
-            if (idx == -1) {
-                throw InvalidFileFormat("Missing separator line.")
-            }
+            ensure(idx != -1) { InvalidFileFormat("Missing separator line.") }
 
             val (employeeLines, taskLines) = lines.take(idx) to lines.drop(idx + 1)
             val employeeContent = employeeLines.joinToString("\n")
@@ -54,16 +66,16 @@ class RtsProjectReader(
                 if (employeeContent.isBlank()) {
                     emptyList()
                 } else {
-                    RtsEmployeeReader.readContent(employeeContent).getOrThrow()
+                    RtsEmployeeReader.readContent(employeeContent).bind()
                 }
 
             val tasks =
                 if (taskContent.isBlank()) {
                     emptyList()
                 } else {
-                    RtsTaskReader.readContent(taskContent).getOrThrow()
+                    RtsTaskReader.readContent(taskContent).bind()
                 }
 
-            return Project(name, Clock.System.now(), employees.toSet(), tasks.toSet())
+            Project(name, Clock.System.now(), employees.toSet(), tasks.toSet()).bind()
         }
 }

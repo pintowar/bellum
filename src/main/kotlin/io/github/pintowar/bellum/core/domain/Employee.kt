@@ -1,5 +1,6 @@
 package io.github.pintowar.bellum.core.domain
 
+import arrow.core.Either
 import io.konform.validation.Validation
 import io.konform.validation.constraints.notBlank
 import java.util.UUID
@@ -21,11 +22,11 @@ class Employee private constructor(
             id: UUID,
             name: String,
             skills: Map<String, SkillPoint> = emptyMap(),
-        ): Result<Employee> = Employee(EmployeeId(id), name, skills).validateAndWrap(validator)
+        ): Either<ValidationException, Employee> = Employee(EmployeeId(id), name, skills).validateAndWrap(validator)
 
         operator fun invoke(
             name: String,
             skills: Map<String, SkillPoint> = emptyMap(),
-        ): Result<Employee> = invoke(EmployeeId()(), name, skills)
+        ): Either<ValidationException, Employee> = invoke(EmployeeId()(), name, skills)
     }
 }

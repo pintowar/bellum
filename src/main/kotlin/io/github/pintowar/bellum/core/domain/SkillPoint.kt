@@ -1,5 +1,8 @@
 package io.github.pintowar.bellum.core.domain
 
+import arrow.core.Either
+import arrow.core.left
+import arrow.core.right
 import io.konform.validation.Validation
 import io.konform.validation.constraints.maximum
 import io.konform.validation.constraints.minimum
@@ -18,12 +21,14 @@ import io.konform.validation.constraints.minimum
                 }
             }
 
-        operator fun invoke(points: Int): Result<SkillPoint> =
-            runCatching {
-                SkillPoint(points).also {
-                    val res = validator.validate(it)
-                    if (!res.isValid) throw ValidationException(res.errors.toValidationErrorDetails())
-                }
+        operator fun invoke(points: Int): Either<ValidationException, SkillPoint> {
+            val sp = SkillPoint(points)
+            val res = validator.validate(sp)
+            return if (res.isValid) {
+                sp.right()
+            } else {
+                ValidationException(res.errors.toValidationErrorDetails()).left()
             }
+        }
     }
 }

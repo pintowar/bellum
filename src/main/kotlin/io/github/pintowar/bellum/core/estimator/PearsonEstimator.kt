@@ -1,5 +1,6 @@
 package io.github.pintowar.bellum.core.estimator
 
+import arrow.core.Either
 import org.apache.commons.math3.stat.correlation.PearsonsCorrelation
 import kotlin.math.roundToLong
 import kotlin.time.Duration
@@ -9,7 +10,7 @@ class PearsonEstimator : TimeEstimator() {
     override fun skillsEstimation(
         employeeSkills: Array<Int>,
         taskSkills: Array<Int>,
-    ): Result<Duration> =
+    ): Either<EstimatorIllegalArgument, Duration> =
         validateSkillSets(employeeSkills, taskSkills).map {
             val pearson = PearsonsCorrelation()
             val correlation =
