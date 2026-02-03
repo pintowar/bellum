@@ -1,21 +1,24 @@
+import net.researchgate.release.ReleaseExtension
 import org.apache.tools.ant.filters.ReplaceTokens
 
 plugins {
-    kotlin("jvm") version "2.2.21"
-    kotlin("kapt") version "2.2.21"
-    id("org.jreleaser") version "1.20.0"
-    id("org.jlleitschuh.gradle.ktlint") version "13.1.0"
-    id("org.graalvm.buildtools.native") version "0.11.2"
-    id("org.jetbrains.kotlinx.kover") version "0.9.3"
-    id("org.sonarqube") version "7.0.1.6134"
+    alias(libs.plugins.kotlin.jvm)
+    alias(libs.plugins.kotlin.kapt)
+    alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.ktlint)
+    alias(libs.plugins.graalvm.native)
+    alias(libs.plugins.kotlinx.kover)
+    alias(libs.plugins.sonarqube)
+    alias(libs.plugins.jreleaser)
+    alias(libs.plugins.release)
     id("idea")
     application
 }
 
 group = "io.github.pintowar"
 
-val javaLangVersion = JavaLanguageVersion.of(21)
-val javaVendor = JvmVendorSpec.GRAAL_VM
+val javaLangVersion: JavaLanguageVersion = JavaLanguageVersion.of(25)
+val javaVendor: JvmVendorSpec = JvmVendorSpec.GRAAL_VM
 
 java {
     toolchain {
@@ -36,22 +39,23 @@ repositories {
 }
 
 dependencies {
-    // Picocli for command-line parsing
-    implementation("info.picocli:picocli:4.7.5")
-    kapt("info.picocli:picocli-codegen:4.7.5") // Annotation processor for GraalVM
+    implementation(libs.picocli)
+    kapt(libs.picocli.codegen)
 
-    implementation("io.konform:konform-jvm:0.11.0")
-    implementation("org.choco-solver:choco-solver:4.10.18")
-    implementation("com.fasterxml.uuid:java-uuid-generator:5.1.1")
-    implementation("org.jgrapht:jgrapht-core:1.5.2")
-    implementation("org.apache.commons:commons-math3:3.6.1")
+    implementation(libs.konform.jvm)
+    implementation(libs.choco.solver)
+    implementation(libs.uuid.generator)
+    implementation(libs.jgrapht.core)
+    implementation(libs.commons.math3)
 
-    implementation("org.jetbrains.lets-plot:lets-plot-kotlin-jvm:4.11.2")
+    implementation(libs.lets.plot.kotlin.jvm)
+    implementation(libs.lets.plot.image.export)
+    implementation(libs.kotlinx.datetime)
+    implementation(libs.kotlinx.serialization.json)
+    implementation(libs.slf4j.nop)
 
-    testImplementation("io.mockk:mockk:1.14.6")
-    testImplementation("io.kotest:kotest-runner-junit5:6.0.4")
-    testImplementation("io.kotest:kotest-assertions-core:6.0.4")
-    testImplementation("io.kotest:kotest-assertions-konform-jvm:6.0.4")
+    testImplementation(libs.mockk.jvm)
+    testImplementation(libs.bundles.kotest)
 }
 
 application {
@@ -65,10 +69,12 @@ kapt {
 }
 
 graalvmNative {
+    toolchainDetection.set(true)
     binaries {
         named("main") {
             buildArgs.add("-H:IncludeResources=application\\.properties")
             buildArgs.add("--enable-url-protocols=https")
+            buildArgs.add("--rerun-class-initialization-at-runtime=kotlin.DeprecationLevel")
         }
         named("test") {
             buildArgs.add("-H:IncludeResources=application\\.properties")
@@ -90,6 +96,30 @@ tasks {
 
     named("sonar") {
         dependsOn(koverXmlReport)
+    }
+
+    register<JavaExec>("runWithNativeImageAgent") {
+        group = "native"
+        description = "Run the app on the JVM with native-image agent to generate config for native-image"
+        classpath = sourceSets["main"].runtimeClasspath
+        mainClass.set(application.mainClass)
+
+        // the agent writes configs into the path you choose. This matches the files referenced above.
+        jvmArgs = listOf("-agentlib:native-image-agent=config-output-dir=src/main/resources/META-INF/native-image")
+        standardInput = System.`in`
+
+        // Add these lines to process command-line arguments
+        if (project.hasProperty("args")) {
+            // Splits the single string of arguments into a list
+            args((project.property("args") as String).split(" "))
+        }
+    }
+}
+
+configure<ReleaseExtension> {
+    tagTemplate.set("v\$version")
+    with(git) {
+        requireBranch.set("master")
     }
 }
 

@@ -10,9 +10,7 @@ class PearsonEstimator : TimeEstimator() {
         employeeSkills: Array<Int>,
         taskSkills: Array<Int>,
     ): Result<Duration> =
-        runCatching {
-            check(employeeSkills, taskSkills)
-
+        validateSkillSets(employeeSkills, taskSkills).map {
             val pearson = PearsonsCorrelation()
             val correlation =
                 pearson.correlation(

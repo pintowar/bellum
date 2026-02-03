@@ -1,7 +1,5 @@
 package io.github.pintowar.bellum.core.domain
 
-import io.github.pintowar.bellum.core.domain.Task.Companion.validator
-import io.github.pintowar.bellum.core.util.Helper
 import io.konform.validation.Validation
 import io.konform.validation.constraints.notBlank
 import kotlinx.datetime.Instant
@@ -16,14 +14,6 @@ enum class TaskPriority(
     MINOR(2),
 }
 
-@JvmInline value class TaskId(
-    private val value: UUID,
-) {
-    constructor() : this(Helper.uuidV7())
-
-    operator fun invoke() = value
-}
-
 sealed interface Task {
     val id: TaskId
     val description: String
@@ -31,16 +21,7 @@ sealed interface Task {
     val requiredSkills: Map<String, SkillPoint>
     val dependsOn: Task?
 
-    companion object {
-        val validator =
-            Validation<Task> {
-                Task::description {
-                    notBlank()
-                }
-            }
-    }
-
-    fun changeDependency(dependsOn: Task): Task
+    fun changeDependency(dependsOn: Task? = null): Task
 
     fun isAssigned(): Boolean = this is AssignedTask
 
@@ -73,6 +54,13 @@ class UnassignedTask private constructor(
     override val dependsOn: Task? = null,
 ) : Task {
     companion object {
+        private val validator =
+            Validation {
+                Task::description {
+                    notBlank()
+                }
+            }
+
         operator fun invoke(
             id: UUID,
             description: String,
@@ -80,12 +68,13 @@ class UnassignedTask private constructor(
             skills: Map<String, SkillPoint> = emptyMap(),
             dependsOn: Task? = null,
         ): Result<UnassignedTask> =
-            runCatching {
-                UnassignedTask(TaskId(id), description, priority, skills, dependsOn).also {
-                    val res = validator.validate(it)
-                    if (!res.isValid) throw ValidationException(res.errors)
-                }
-            }
+            UnassignedTask(
+                TaskId(id),
+                description,
+                priority,
+                skills,
+                dependsOn,
+            ).validateAndWrap(validator)
 
         operator fun invoke(
             description: String,
@@ -95,7 +84,7 @@ class UnassignedTask private constructor(
         ): Result<UnassignedTask> = invoke(TaskId()(), description, priority, skills, dependsOn)
     }
 
-    override fun changeDependency(dependsOn: Task): UnassignedTask =
+    override fun changeDependency(dependsOn: Task?): UnassignedTask =
         invoke(id(), description, priority, requiredSkills, dependsOn).getOrThrow()
 }
 
@@ -110,6 +99,13 @@ class AssignedTask private constructor(
     val duration: Duration,
 ) : Task {
     companion object {
+        private val validator =
+            Validation {
+                Task::description {
+                    notBlank()
+                }
+            }
+
         operator fun invoke(
             id: UUID,
             description: String,
@@ -120,12 +116,16 @@ class AssignedTask private constructor(
             startAt: Instant,
             duration: Duration,
         ): Result<AssignedTask> =
-            runCatching {
-                AssignedTask(TaskId(id), description, priority, skills, dependsOn, employee, startAt, duration).also {
-                    val res = validator.validate(it)
-                    if (!res.isValid) throw ValidationException(res.errors)
-                }
-            }
+            AssignedTask(
+                TaskId(id),
+                description,
+                priority,
+                skills,
+                dependsOn,
+                employee,
+                startAt,
+                duration,
+            ).validateAndWrap(validator)
 
         operator fun invoke(
             description: String,
@@ -140,6 +140,6 @@ class AssignedTask private constructor(
 
     val endsAt: Instant = startAt + duration
 
-    override fun changeDependency(dependsOn: Task): AssignedTask =
+    override fun changeDependency(dependsOn: Task?): AssignedTask =
         invoke(id(), description, priority, requiredSkills, dependsOn, employee, startAt, duration).getOrThrow()
 }

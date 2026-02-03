@@ -6,7 +6,7 @@ on:
       - 'develop'
 
 env:
-  JAVA_VERSION: '21'
+  JAVA_VERSION: '25'
   JAVA_DISTRO: 'graalvm'
 
 jobs:
@@ -37,6 +37,6 @@ jobs:
       - name: Running gradle task
         run: |
           ./gradlew clean ktlintCheck
-          ./gradlew koverXmlReport sonar
+          ./gradlew sonar
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

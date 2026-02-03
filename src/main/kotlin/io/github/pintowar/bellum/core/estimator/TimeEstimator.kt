@@ -30,19 +30,23 @@ abstract class TimeEstimator {
     ): Result<Duration> =
         runCatching {
             val allSkills = employee.skills.keys + task.requiredSkills.keys
-            val employeeSkills = allSkills.map { employee.skills[it]?.let { s -> s() } ?: 0 }.toTypedArray()
+            val employeeSkills =
+                allSkills.map { employee.skills[it]?.let { s -> s() } ?: 0 }.toTypedArray()
             val taskSkills = allSkills.map { task.requiredSkills[it]?.let { s -> s() } ?: 0 }.toTypedArray()
 
-            check(employeeSkills, taskSkills)
-            return skillsEstimation(employeeSkills, taskSkills)
+            validateSkillSets(employeeSkills, taskSkills).getOrThrow()
+            skillsEstimation(employeeSkills, taskSkills).getOrThrow()
         }
 
-    fun check(
+    fun validateSkillSets(
         employeeSkills: Array<Int>,
         taskSkills: Array<Int>,
-    ) {
-        if (employeeSkills.size < 2) throw IllegalNumSkills("employee", employeeSkills.size)
-        if (taskSkills.size < 2) throw IllegalNumSkills("task", taskSkills.size)
-        if (employeeSkills.size != taskSkills.size) throw IllegalSkillSets(employeeSkills.size, taskSkills.size)
-    }
+    ): Result<Unit> =
+        runCatching {
+            if (employeeSkills.size < 2) throw IllegalNumSkills("employee", employeeSkills.size)
+            if (taskSkills.size < 2) throw IllegalNumSkills("task", taskSkills.size)
+            if (employeeSkills.size != taskSkills.size) {
+                throw IllegalSkillSets(employeeSkills.size, taskSkills.size)
+            }
+        }
 }

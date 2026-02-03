@@ -12,7 +12,7 @@ class ChocoSchedulerTest :
         test("successful solve") {
             val solver = ChocoScheduler(DataFixtures.smallTimeEstimator)
 
-            val solution = solver.solve(DataFixtures.sampleProjectSmall)
+            val solution = solver.findOptimalSchedule(DataFixtures.sampleProjectSmall)
 
             val (scheduledProject, optimal) = solution.getOrThrow()
             scheduledProject.scheduledStatus() shouldBe ProjectScheduled.SCHEDULED
