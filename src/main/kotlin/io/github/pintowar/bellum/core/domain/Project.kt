@@ -1,6 +1,5 @@
 package io.github.pintowar.bellum.core.domain
 
-import io.github.pintowar.bellum.core.domain.toDomain
 import io.github.pintowar.bellum.core.util.Helper
 import io.konform.validation.Validation
 import io.konform.validation.andThen
@@ -120,7 +119,7 @@ class Project private constructor(
             .asSequence()
             .filter { it.isAssigned() }
             .map { it as AssignedTask }
-            .groupBy({ it.employee })
+            .groupBy { it.employee }
 
     fun describe(): String =
         """
