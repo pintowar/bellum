@@ -95,21 +95,19 @@ class BellumCmd(
         spec.usageMessage().autoWidth(true)
         val cliWidth = spec.usageMessage().width()
         val currentDir = System.getProperty("user.dir")
-        try {
-            val result = readAndSolveProject(currentDir)
-            result.fold(
-                ifLeft = { throw it },
-                ifRight = { solution ->
-                    writeOutput(currentDir, solution)
 
-                    stdOutput.println()
-                    stdOutput.println(solution.lastProject()?.cliGantt(cliWidth))
-                },
-            )
-            return CommandLine.ExitCode.OK
-        } catch (e: Exception) {
-            stdError.println(Ansi.AUTO.string("@|bold,red ${e.message}|@"))
-            return CommandLine.ExitCode.SOFTWARE
-        }
+        val result = readAndSolveProject(currentDir)
+        return result.fold(
+            ifLeft = { error ->
+                stdError.println(Ansi.AUTO.string("@|bold,red ${error.message}|@"))
+                CommandLine.ExitCode.SOFTWARE
+            },
+            ifRight = { solution ->
+                writeOutput(currentDir, solution)
+                stdOutput.println()
+                stdOutput.println(solution.lastProject()?.cliGantt(cliWidth))
+                CommandLine.ExitCode.OK
+            },
+        )
     }
 }

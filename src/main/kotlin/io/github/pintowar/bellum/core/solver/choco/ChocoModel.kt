@@ -2,6 +2,7 @@ package io.github.pintowar.bellum.core.solver.choco
 
 import arrow.core.Either
 import arrow.core.getOrElse
+import arrow.core.raise.either
 import io.github.pintowar.bellum.core.domain.Employee
 import io.github.pintowar.bellum.core.domain.Project
 import io.github.pintowar.bellum.core.domain.Task
@@ -71,7 +72,13 @@ internal class ChocoModel(
      * for employee `e` to complete task `t`.
      */
     private val taskDurationMatrix: Array<IntArray> by lazy {
-        createDurationMatrix(employees, tasks, estimator).getOrElse { throw it }
+        createDurationMatrix(employees, tasks, estimator)
+            .getOrElse { error ->
+                throw IllegalStateException(
+                    "Failed to compute task duration matrix for project '${project.name}': ${error.message}",
+                    error,
+                )
+            }
     }
 
     /**
@@ -421,15 +428,13 @@ internal class ChocoModel(
         tasks: List<Task>,
         estimator: TimeEstimator,
     ): Either<Throwable, Array<IntArray>> =
-        Either.catch {
+        either {
             employees
                 .map { emp ->
                     tasks
                         .map { tsk ->
-                            estimator.estimate(emp, tsk).fold(
-                                ifLeft = { throw it },
-                                ifRight = { durationUnit(it) },
-                            )
+                            val duration = estimator.estimate(emp, tsk).bind()
+                            durationUnit(duration)
                         }.toIntArray()
                 }.toTypedArray()
         }

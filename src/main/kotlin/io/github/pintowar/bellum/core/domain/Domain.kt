@@ -1,8 +1,8 @@
 package io.github.pintowar.bellum.core.domain
 
 import arrow.core.Either
-import arrow.core.left
-import arrow.core.right
+import arrow.core.raise.either
+import arrow.core.raise.ensure
 import io.konform.validation.Validation
 import io.konform.validation.ValidationError
 import io.konform.validation.ValidationResult as KValidationResult
@@ -26,12 +26,10 @@ data class ValidationResult(
 fun KValidationResult<*>.toDomain(): ValidationResult = ValidationResult(isValid, errors.toValidationErrorDetails())
 
 fun <T> T.validateAndWrap(validator: Validation<T>): Either<ValidationException, T> =
-    validator.validate(this).let { res ->
-        if (res.isValid) {
-            this.right()
-        } else {
-            ValidationException(res.errors.toValidationErrorDetails()).left()
-        }
+    either {
+        val res = validator.validate(this@validateAndWrap)
+        ensure(res.isValid) { ValidationException(res.errors.toValidationErrorDetails()) }
+        this@validateAndWrap
     }
 
 fun List<AssignedTask>.hasOverlappingIntervals(): Boolean {

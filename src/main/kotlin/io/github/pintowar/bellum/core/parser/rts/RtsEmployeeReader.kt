@@ -1,7 +1,9 @@
 package io.github.pintowar.bellum.core.parser.rts
 
 import arrow.core.Either
-import arrow.core.getOrElse
+import arrow.core.raise.either
+import arrow.core.raise.ensure
+import arrow.core.raise.ensureNotNull
 import io.github.pintowar.bellum.core.domain.Employee
 import io.github.pintowar.bellum.core.domain.SkillPoint
 import io.github.pintowar.bellum.core.parser.ContentReader
@@ -12,27 +14,44 @@ object RtsEmployeeReader : ContentReader<List<Employee>> {
         content: String,
         sep: String,
     ): Either<Throwable, List<Employee>> =
-        Either.catch {
-            if (content.isBlank()) throw InvalidFileFormat("Empty employee content.")
+        either {
+            ensure(content.isNotBlank()) { InvalidFileFormat("Empty employee content.") }
             val lines = content.trim().lines()
 
-            val (header, body) = lines.first().split(sep) to lines.drop(1).map { it.split(sep) }
+            val headerLine = lines.firstOrNull()
+            ensureNotNull(headerLine) { InvalidFileFormat("No header line found in employee content.") }
+
+            val header = headerLine.split(sep)
+            val body = lines.drop(1).map { it.split(sep) }
+
             body.mapIndexed { idx, line ->
-                if (header.size != line.size) {
-                    throw InvalidFileFormat(
+                ensure(header.size == line.size) {
+                    InvalidFileFormat(
                         "Invalid employee content on line ${idx + 1}: num contents (${line.size}) values does not match headers (${header.size}).",
                     )
                 }
+
                 val row = header.zip(line).toMap()
-                val empContent = row.getValue("content")
+                val empContent = ensureNotNull(row["content"]) { InvalidFileFormat("Missing 'content' field in employee row.") }
+
                 val skills =
                     row
                         .filterKeys { it.startsWith("skill") }
-                        .mapValues {
-                            SkillPoint(it.value.toInt()).getOrElse { throw it }
+                        .mapValues { entry ->
+                            either {
+                                val points =
+                                    Either
+                                        .catch { entry.value.toInt() }
+                                        .mapLeft { e -> InvalidFileFormat("Invalid skill value '${entry.value}': ${e.message}") }
+                                        .bind()
+                                SkillPoint(points)
+                                    .mapLeft { e ->
+                                        InvalidFileFormat("Invalid skill value '${entry.value}': ${e.message}")
+                                    }.bind()
+                            }.bind()
                         }
 
-                Employee(empContent, skills).getOrElse { throw it }
+                Employee(empContent, skills).mapLeft { it }.bind()
             }
         }
 }

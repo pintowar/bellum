@@ -1,6 +1,8 @@
 package io.github.pintowar.bellum.core.estimator
 
 import arrow.core.Either
+import arrow.core.raise.either
+import arrow.core.raise.ensureNotNull
 import io.github.pintowar.bellum.core.domain.Employee
 import io.github.pintowar.bellum.core.domain.EmployeeId
 import io.github.pintowar.bellum.core.domain.Project
@@ -37,7 +39,8 @@ class CustomEstimator(
         employee: Employee,
         task: Task,
     ): Either<Throwable, Duration> =
-        Either.catch {
-            matrix.getValue(employee.id).getValue(task.id)
+        either {
+            val taskDuration = ensureNotNull(matrix[employee.id]) { NoSuchElementException() }
+            ensureNotNull(taskDuration[task.id]) { NoSuchElementException() }
         }
 }

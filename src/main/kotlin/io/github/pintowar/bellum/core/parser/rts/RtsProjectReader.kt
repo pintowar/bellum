@@ -3,6 +3,7 @@ package io.github.pintowar.bellum.core.parser.rts
 import arrow.core.Either
 import arrow.core.raise.either
 import arrow.core.raise.ensure
+import arrow.core.raise.recover
 import io.github.pintowar.bellum.core.domain.Project
 import io.github.pintowar.bellum.core.parser.ContentReader
 import io.github.pintowar.bellum.core.parser.InvalidFileFormat
@@ -19,30 +20,26 @@ class RtsProjectReader(
             base: String,
             uri: String,
         ): Either<Throwable, Project> =
-            Either.catch {
+            either {
                 val contentText =
-                    try {
-                        content(uri)
-                    } catch (_: Exception) {
-                        try {
-                            content("file://$base/$uri")
-                        } catch (_: Exception) {
-                            try {
-                                content("file://$uri")
-                            } catch (e: Exception) {
-                                throw InvalidFileFormat("Could not read content from URI: ${e.message}")
+                    recover({
+                        Either.catch { content(uri) }.bind()
+                    }) { _: Throwable ->
+                        recover({
+                            Either.catch { content("file://$base/$uri") }.bind()
+                        }) { _: Throwable ->
+                            recover({
+                                Either.catch { content("file://$uri") }.bind()
+                            }) { e: Throwable ->
+                                raise(InvalidFileFormat("Could not read content from URI: ${e.message}"))
                             }
                         }
                     }
-                if (contentText.isBlank()) {
-                    throw InvalidFileFormat("Empty project content.")
-                }
-                RtsProjectReader("Sample input")
-                    .readContent(contentText)
-                    .fold(
-                        ifLeft = { throw it },
-                        ifRight = { it },
-                    )
+
+                ensure(contentText.isNotBlank()) { InvalidFileFormat("Empty project content.") }
+
+                val reader = RtsProjectReader("Sample input")
+                reader.readContent(contentText).bind()
             }
     }
 
