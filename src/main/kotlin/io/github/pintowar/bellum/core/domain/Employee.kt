@@ -1,17 +1,8 @@
 package io.github.pintowar.bellum.core.domain
 
-import io.github.pintowar.bellum.core.util.Helper
 import io.konform.validation.Validation
 import io.konform.validation.constraints.notBlank
 import java.util.UUID
-
-@JvmInline value class EmployeeId(
-    private val value: UUID,
-) {
-    constructor() : this(Helper.uuidV7())
-
-    operator fun invoke() = value
-}
 
 class Employee private constructor(
     val id: EmployeeId,
@@ -30,13 +21,7 @@ class Employee private constructor(
             id: UUID,
             name: String,
             skills: Map<String, SkillPoint> = emptyMap(),
-        ): Result<Employee> =
-            runCatching {
-                Employee(EmployeeId(id), name, skills).also {
-                    val res = validator.validate(it)
-                    if (!res.isValid) throw ValidationException(res.errors)
-                }
-            }
+        ): Result<Employee> = Employee(EmployeeId(id), name, skills).validateAndWrap(validator)
 
         operator fun invoke(
             name: String,

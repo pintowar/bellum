@@ -1,10 +1,33 @@
 package io.github.pintowar.bellum.core.domain
 
+import io.konform.validation.Validation
 import io.konform.validation.ValidationError
+import io.konform.validation.ValidationResult as KValidationResult
+
+data class ValidationErrorDetail(
+    val dataPath: String,
+    val message: String,
+)
 
 class ValidationException(
-    val errors: List<ValidationError>,
+    val errors: List<ValidationErrorDetail>,
 ) : Throwable()
+
+fun List<ValidationError>.toValidationErrorDetails(): List<ValidationErrorDetail> = map { ValidationErrorDetail(it.dataPath, it.message) }
+
+data class ValidationResult(
+    val isValid: Boolean,
+    val errors: List<ValidationErrorDetail>,
+)
+
+fun KValidationResult<*>.toDomain(): ValidationResult = ValidationResult(isValid, errors.toValidationErrorDetails())
+
+fun <T> T.validateAndWrap(validator: Validation<T>): Result<T> =
+    runCatching {
+        val res = validator.validate(this)
+        if (!res.isValid) throw ValidationException(res.errors.toValidationErrorDetails())
+        this
+    }
 
 fun List<AssignedTask>.hasOverlappingIntervals(): Boolean {
     // An empty list or a list with a single interval cannot have overlaps.
