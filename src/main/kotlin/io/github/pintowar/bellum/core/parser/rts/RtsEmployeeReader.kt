@@ -1,6 +1,8 @@
 package io.github.pintowar.bellum.core.parser.rts
 
 import arrow.core.Either
+import arrow.core.flatMap
+import arrow.core.raise.context.bind
 import arrow.core.raise.either
 import arrow.core.raise.ensure
 import arrow.core.raise.ensureNotNull
@@ -38,20 +40,14 @@ object RtsEmployeeReader : ContentReader<List<Employee>> {
                     row
                         .filterKeys { it.startsWith("skill") }
                         .mapValues { entry ->
-                            either {
-                                val points =
-                                    Either
-                                        .catch { entry.value.toInt() }
-                                        .mapLeft { e -> InvalidFileFormat("Invalid skill value '${entry.value}': ${e.message}") }
-                                        .bind()
-                                SkillPoint(points)
-                                    .mapLeft { e ->
-                                        InvalidFileFormat("Invalid skill value '${entry.value}': ${e.message}")
-                                    }.bind()
-                            }.bind()
+                            Either
+                                .catch { entry.value.toInt() }
+                                .mapLeft { e -> InvalidFileFormat("Invalid skill value '${entry.value}': ${e.message}") }
+                                .flatMap { SkillPoint(it) }
+                                .bind()
                         }
 
-                Employee(empContent, skills).mapLeft { it }.bind()
+                Employee(empContent, skills).bind()
             }
         }
 }

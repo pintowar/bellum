@@ -1,9 +1,11 @@
 package io.github.pintowar.bellum.core.parser.rts
 
 import arrow.core.Either
+import arrow.core.flatMap
 import arrow.core.raise.either
 import arrow.core.raise.ensure
 import arrow.core.raise.ensureNotNull
+import arrow.core.right
 import io.github.pintowar.bellum.core.domain.SkillPoint
 import io.github.pintowar.bellum.core.domain.Task
 import io.github.pintowar.bellum.core.domain.TaskPriority
@@ -47,7 +49,7 @@ object RtsTaskReader : ContentReader<List<Task>> {
                         row
                             .filterKeys { it.startsWith("skill") }
                             .mapValues { entry ->
-                                parseSkill(entry.key, entry.value).bind()
+                                parseSkill(entry.value).bind()
                             }
 
                     val taskPriority = parseTaskPriority(priority).bind()
@@ -61,17 +63,13 @@ object RtsTaskReader : ContentReader<List<Task>> {
         }
 
     private fun parseSkill(
-        key: String,
         value: String,
     ): Either<InvalidFileFormat, SkillPoint> =
-        either {
-            val points =
-                Either
-                    .catch { value.toInt() }
-                    .mapLeft { e -> InvalidFileFormat("Invalid skill value '$value': ${e.message}") }
-                    .bind()
-            SkillPoint(points).mapLeft { e -> InvalidFileFormat("Invalid skill value '$value': ${e.message}") }.bind()
-        }
+        Either
+            .catch { value.toInt() }
+            .mapLeft { e -> InvalidFileFormat("Invalid skill value '$value': ${e.message}") }
+            .flatMap { SkillPoint(it) }
+            .mapLeft { e -> InvalidFileFormat("Invalid skill value '$value': ${e.message}") }
 
     private fun parseTaskPriority(priority: String): Either<InvalidFileFormat, TaskPriority> =
         Either
@@ -91,8 +89,9 @@ object RtsTaskReader : ContentReader<List<Task>> {
                     .filter { (_, id) -> id != "-1" }
                     .associate { (idx, id) ->
                         val precedenceTask =
-                            taskByKey[id]
-                                ?: raise(InvalidFileFormat("Precedence ($id) of task (${ids[idx]}) not found."))
+                            ensureNotNull(taskByKey[id]) {
+                                InvalidFileFormat("Precedence ($id) of task (${ids[idx]}) not found.")
+                            }
                         val taskWithDep = taskByKey.getValue(ids[idx]).changeDependency(precedenceTask)
                         taskWithDep.id to taskWithDep
                     }
