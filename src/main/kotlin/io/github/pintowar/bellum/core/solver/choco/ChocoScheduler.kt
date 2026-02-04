@@ -18,7 +18,7 @@ class ChocoScheduler(
         timeLimit: Duration,
         callback: (SchedulerSolution) -> Unit,
     ): Either<Throwable, SchedulerSolution> =
-        Either.catch {
+        try {
             val model = ChocoModel(project, estimator, withLexicalConstraint)
             val solver = model.solver(timeLimit)
 
@@ -31,6 +31,8 @@ class ChocoScheduler(
             }
 
             val currentDuration = Clock.System.now() - initSolving
-            model.decode(solution, currentDuration, !solver.isStopCriterionMet).getOrElse { throw it }
+            model.decode(solution, currentDuration, !solver.isStopCriterionMet)
+        } catch (e: Exception) {
+            Either.Left(e)
         }
 }

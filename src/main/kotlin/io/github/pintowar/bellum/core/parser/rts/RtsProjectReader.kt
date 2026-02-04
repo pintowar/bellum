@@ -1,7 +1,6 @@
 package io.github.pintowar.bellum.core.parser.rts
 
 import arrow.core.Either
-import arrow.core.getOrElse
 import arrow.core.raise.either
 import arrow.core.raise.ensure
 import io.github.pintowar.bellum.core.domain.Project
@@ -38,7 +37,12 @@ class RtsProjectReader(
                 if (contentText.isBlank()) {
                     throw InvalidFileFormat("Empty project content.")
                 }
-                RtsProjectReader("Sample input").readContent(contentText).getOrElse { throw it }
+                RtsProjectReader("Sample input")
+                    .readContent(contentText)
+                    .fold(
+                        ifLeft = { throw it },
+                        ifRight = { it },
+                    )
             }
     }
 

@@ -70,7 +70,9 @@ internal class ChocoModel(
      * A 2D matrix where `taskDurationMatrix[e][t]` holds the estimated time (in minutes)
      * for employee `e` to complete task `t`.
      */
-    private val taskDurationMatrix = createDurationMatrix(employees, tasks, estimator).getOrElse { throw it }
+    private val taskDurationMatrix: Array<IntArray> by lazy {
+        createDurationMatrix(employees, tasks, estimator).getOrElse { throw it }
+    }
 
     /**
      * An array containing the priority value for each task.
@@ -422,7 +424,13 @@ internal class ChocoModel(
         Either.catch {
             employees
                 .map { emp ->
-                    tasks.map { tsk -> durationUnit(estimator.estimate(emp, tsk).getOrElse { throw it }) }.toIntArray()
+                    tasks
+                        .map { tsk ->
+                            estimator.estimate(emp, tsk).fold(
+                                ifLeft = { throw it },
+                                ifRight = { durationUnit(it) },
+                            )
+                        }.toIntArray()
                 }.toTypedArray()
         }
 

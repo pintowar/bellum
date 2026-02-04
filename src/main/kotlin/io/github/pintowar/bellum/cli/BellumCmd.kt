@@ -2,7 +2,6 @@ package io.github.pintowar.bellum.cli
 
 import arrow.core.Either
 import arrow.core.flatMap
-import arrow.core.getOrElse
 import io.github.pintowar.bellum.core.domain.ProjectScheduled
 import io.github.pintowar.bellum.core.estimator.PearsonEstimator
 import io.github.pintowar.bellum.core.parser.rts.RtsProjectReader
@@ -97,11 +96,16 @@ class BellumCmd(
         val cliWidth = spec.usageMessage().width()
         val currentDir = System.getProperty("user.dir")
         try {
-            val result = readAndSolveProject(currentDir).getOrElse { throw it }
-            writeOutput(currentDir, result)
+            val result = readAndSolveProject(currentDir)
+            result.fold(
+                ifLeft = { throw it },
+                ifRight = { solution ->
+                    writeOutput(currentDir, solution)
 
-            stdOutput.println()
-            stdOutput.println(result.lastProject()?.cliGantt(cliWidth))
+                    stdOutput.println()
+                    stdOutput.println(solution.lastProject()?.cliGantt(cliWidth))
+                },
+            )
             return CommandLine.ExitCode.OK
         } catch (e: Exception) {
             stdError.println(Ansi.AUTO.string("@|bold,red ${e.message}|@"))

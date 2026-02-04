@@ -1,7 +1,7 @@
 package io.github.pintowar.bellum.core.domain
 
 import arrow.core.Either
-import arrow.core.getOrElse
+import arrow.core.fold
 import io.konform.validation.Validation
 import io.konform.validation.constraints.notBlank
 import kotlinx.datetime.Instant
@@ -31,9 +31,21 @@ sealed interface Task {
         employee: Employee,
         startAt: Instant,
         duration: Duration,
-    ): Task = AssignedTask(id(), description, priority, requiredSkills, dependsOn, employee, startAt, duration).getOrElse { throw it }
+    ): Task {
+        val result = AssignedTask(id(), description, priority, requiredSkills, dependsOn, employee, startAt, duration)
+        return result.fold(
+            ifLeft = { throw IllegalStateException("Task assignment failed: ${it.message}", it) },
+            ifRight = { it },
+        )
+    }
 
-    fun unassign(): Task = UnassignedTask(id(), description, priority, requiredSkills, dependsOn).getOrElse { throw it }
+    fun unassign(): Task {
+        val result = UnassignedTask(id(), description, priority, requiredSkills, dependsOn)
+        return result.fold(
+            ifLeft = { throw IllegalStateException("Task unassignment failed: ${it.message}", it) },
+            ifRight = { it },
+        )
+    }
 
     fun endsAt(): Instant? {
         if (this is AssignedTask) return endsAt
@@ -86,8 +98,13 @@ class UnassignedTask private constructor(
         ): Either<ValidationException, UnassignedTask> = invoke(TaskId()(), description, priority, skills, dependsOn)
     }
 
-    override fun changeDependency(dependsOn: Task?): UnassignedTask =
-        invoke(id(), description, priority, requiredSkills, dependsOn).getOrElse { throw it }
+    override fun changeDependency(dependsOn: Task?): Task {
+        val result = invoke(id(), description, priority, requiredSkills, dependsOn)
+        return result.fold(
+            ifLeft = { throw IllegalStateException("Dependency change failed: ${it.message}", it) },
+            ifRight = { it },
+        )
+    }
 }
 
 class AssignedTask private constructor(
@@ -143,6 +160,11 @@ class AssignedTask private constructor(
 
     val endsAt: Instant = startAt + duration
 
-    override fun changeDependency(dependsOn: Task?): AssignedTask =
-        invoke(id(), description, priority, requiredSkills, dependsOn, employee, startAt, duration).getOrElse { throw it }
+    override fun changeDependency(dependsOn: Task?): Task {
+        val result = invoke(id(), description, priority, requiredSkills, dependsOn, employee, startAt, duration)
+        return result.fold(
+            ifLeft = { throw IllegalStateException("Dependency change failed: ${it.message}", it) },
+            ifRight = { it },
+        )
+    }
 }
