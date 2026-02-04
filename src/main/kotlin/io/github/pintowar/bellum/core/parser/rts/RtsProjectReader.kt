@@ -12,6 +12,13 @@ class RtsProjectReader(
     companion object {
         private fun content(uri: String) = URI(uri).toURL().readText()
 
+        /**
+         * Reads project content from a file path, trying multiple URI formats.
+         * First tries the URI as-is, then file://base/uri, then file://uri.
+         * @param base The base directory path
+         * @param uri The file path relative to base or absolute
+         * @return Result containing the parsed Project or an error
+         */
         fun readContentFromPath(
             base: String,
             uri: String,
@@ -26,6 +33,13 @@ class RtsProjectReader(
                 }
     }
 
+    /**
+     * Parses the project content string into a Project domain object.
+     * Expects a format with employees above a separator line and tasks below.
+     * @param content The raw content string to parse
+     * @param sep The delimiter used within employee and task sections
+     * @return Result containing the parsed Project or an error
+     */
     override fun readContent(
         content: String,
         sep: String,

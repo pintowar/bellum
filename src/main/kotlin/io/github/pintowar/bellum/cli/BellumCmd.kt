@@ -58,7 +58,7 @@ class BellumCmd(
         val desc =
             listOf(
                 "[${formatDuration(sol.duration)}]:",
-                "${sol.project.name}",
+                sol.project.name,
                 "- ${formatDuration(sol.project.totalDuration())}",
                 "| $isValid, $status, $isOptimal",
             ).joinToString(" ").let(Ansi.AUTO::string)
