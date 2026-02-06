@@ -133,6 +133,15 @@ jreleaser {
             homepage.set("https://github.com/pintowar/bellum")
         }
     }
+    release {
+        github {
+            changelog {
+                enabled.set(false)
+            }
+            branch.set("master")
+            releaseName.set("v$version")
+        }
+    }
     distributions {
         create("bellum") {
             distributionType.set(org.jreleaser.model.Distribution.DistributionType.BINARY)
