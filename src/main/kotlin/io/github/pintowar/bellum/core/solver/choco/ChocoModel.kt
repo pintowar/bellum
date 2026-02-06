@@ -1,7 +1,9 @@
 package io.github.pintowar.bellum.core.solver.choco
 
+import io.github.pintowar.bellum.core.domain.AssignedTask
 import io.github.pintowar.bellum.core.domain.Employee
 import io.github.pintowar.bellum.core.domain.Project
+import io.github.pintowar.bellum.core.domain.ProjectScheduled
 import io.github.pintowar.bellum.core.domain.Task
 import io.github.pintowar.bellum.core.estimator.TimeEstimator
 import io.github.pintowar.bellum.core.solver.SchedulerSolution
@@ -23,13 +25,10 @@ import kotlin.time.Duration.Companion.minutes
  *
  * @param project The project containing the tasks and employees to be scheduled.
  * @param estimator A [TimeEstimator] used to determine the duration of a task for a given employee.
- * @param withLexicalConstraint A flag to enable a symmetry-breaking constraint, which can improve performance
- *                              when the project has groups of identical employees.
  */
 internal class ChocoModel(
     private val project: Project,
     estimator: TimeEstimator,
-    withLexicalConstraint: Boolean = false,
 ) {
     /**
      * The main Choco Solver model instance.
@@ -133,8 +132,12 @@ internal class ChocoModel(
     private val priorityCost = createPriorityCostObjective()
 
     init {
+        // Set initial values for already assigned tasks when project is in PARTIAL status
+        if (project.scheduledStatus() == ProjectScheduled.PARTIAL) {
+            setInitialValuesForAssignedTasks()
+        }
+
         // Add constraints to the model
-        if (withLexicalConstraint) addSymmetryBreakingConstraints()
         addTaskDurationConstraint()
         addEmployeeWorkloadConstraint()
         addPrecedenceConstraints()
@@ -241,43 +244,6 @@ internal class ChocoModel(
     }
 
     /**
-     * Adds a lexicographic chain constraint to break symmetries between identical employees.
-     *
-     * This constraint is applied to tasks that have no predecessors (root tasks).
-     * It forces an ordering on the assignment of these tasks to employees who are interchangeable
-     * (i.e., have the same skill set and efficiency). This can significantly reduce the search space
-     * and improve solver performance.
-     */
-    private fun addSymmetryBreakingConstraints() {
-        val rootTaskIndices =
-            (0 until numTasks)
-                .filter { t -> precedenceConstraints.none { it[1] == t } }
-                .sorted()
-
-        if (rootTaskIndices.isNotEmpty()) {
-            val identicalEmployeeGroups =
-                (0 until numEmployees)
-                    .groupBy { e -> taskDurationMatrix[e].toList() }
-                    .values
-                    .filter { it.size > 1 }
-
-            for (group in identicalEmployeeGroups) {
-                val groupSize = group.size
-                val numRootTasks = rootTaskIndices.size
-                val employeeToRootTasks =
-                    Array(groupSize) { i ->
-                        val e = group[i]
-                        Array(numRootTasks) { tIdx ->
-                            val t = rootTaskIndices[tIdx]
-                            model.arithm(taskAssignee[t], "=", e).reify()
-                        }
-                    }
-                model.lexChainLessEq(*employeeToRootTasks).post()
-            }
-        }
-    }
-
-    /**
      * Adds a constraint to link the duration of each task to the estimated time of the employee assigned to it.
      * It uses an `element` constraint, which is equivalent to:
      * `taskDuration[t] = taskDurationMatrix[taskAssignee[t]][t]`
@@ -341,6 +307,40 @@ internal class ChocoModel(
     private fun addNoOverlapConstraint() {
         val taskHeights = Array(numTasks) { model.intVar(1) } // Each task uses 1 employee "unit"
         model.diffN(taskStartTime, taskAssignee, taskDuration, taskHeights, false).post()
+    }
+
+    /**
+     * Sets initial values for already assigned tasks when the project is in PARTIAL status.
+     *
+     * For each task that is already assigned in the current project state, this method:
+     * - Fixes the employee assignment to the currently assigned employee
+     * - Fixes the start time to the current scheduled start time (relative to project kickoff)
+     * - Fixes the duration to the current scheduled duration
+     *
+     * This helps the solver by providing good starting points and reducing the search space.
+     */
+    private fun setInitialValuesForAssignedTasks() {
+        val employeeIndexMap = employees.withIndex().associate { it.value.id to it.index }
+
+        for (t in 0 until numTasks) {
+            val task = tasks[t]
+            if (task.isAssigned()) {
+                val assignedTask = task as AssignedTask
+
+                // Fix the employee assignment
+                employeeIndexMap[assignedTask.employee.id]?.also { empIdx ->
+                    model.arithm(taskAssignee[t], "=", empIdx).post()
+                }
+
+                // Fix the start time (relative to project kickoff)
+                val startOffset = durationUnit(assignedTask.startAt - project.kickOff)
+                model.arithm(taskStartTime[t], "=", startOffset).post()
+
+                // Fix the duration
+                val dur = durationUnit(assignedTask.duration)
+                model.arithm(taskDuration[t], "=", dur).post()
+            }
+        }
     }
 
     /**

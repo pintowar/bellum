@@ -9,7 +9,6 @@ import kotlin.time.Duration
 
 class ChocoScheduler(
     override val estimator: TimeEstimator,
-    private val withLexicalConstraint: Boolean = true,
 ) : Scheduler() {
     override fun solveOptimizationProblem(
         project: Project,
@@ -17,7 +16,7 @@ class ChocoScheduler(
         callback: (SchedulerSolution) -> Unit,
     ): Result<SchedulerSolution> =
         runCatching {
-            val model = ChocoModel(project, estimator, withLexicalConstraint)
+            val model = ChocoModel(project, estimator)
             val solver = model.solver(timeLimit)
 
             val solution = model.solution()
