@@ -71,7 +71,22 @@ def main():
         2: 'green'
     }
     
+    # Precedence data
+    precedence = data.get('P_out', [])
+    
+    # Map each task to its predecessors
+    task_predecessors = {}
+    for pred, succ in precedence:
+        if succ not in task_predecessors:
+            task_predecessors[succ] = []
+        task_predecessors[succ].append(pred)
+
     fig, ax = plt.subplots(figsize=(12, 6))
+
+    # Pre-calculate coordinates for all tasks to draw lines
+    task_coords = {}
+    for i, (emp, start, dur) in enumerate(zip(assignments, start_times, durations)):
+        task_coords[i] = (start, start + dur, emp)
 
     for i, (emp, start, dur) in enumerate(zip(assignments, start_times, durations)):
         # Determine color based on priority if available
@@ -84,8 +99,25 @@ def main():
         # Bar chart: (start, duration)
         ax.barh(emp, dur, left=start, height=0.5, align='center', color=color, edgecolor='black', alpha=0.8)
         
+        # Determine Label
+        label = f'T{i}'
+        preds = task_predecessors.get(i, [])
+        if preds:
+            pred_str = ",".join([f"T{p}" for p in preds])
+            label = f"{pred_str} -> {label}"
+            
+            # Draw lines from predecessors
+            for p_idx in preds:
+                if p_idx in task_coords:
+                    p_start, p_end, p_emp = task_coords[p_idx]
+                    # Draw arrow from end of predecessor to start of current task
+                    ax.annotate("",
+                                xy=(start, emp), xycoords='data',
+                                xytext=(p_end, p_emp), textcoords='data',
+                                arrowprops=dict(arrowstyle="->", color="purple", lw=1.5))
+
         # Add text label
-        ax.text(start + dur/2, emp, f'T{i}', ha='center', va='center', color='white', fontweight='bold', fontsize=8)
+        ax.text(start + dur/2, emp, label, ha='center', va='center', color='white', fontweight='bold', fontsize=8)
 
     # Formatting the plot
     ax.set_yticks(employees)

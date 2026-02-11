@@ -37,6 +37,10 @@ array[T] of var 0..M: end_t = array1d(T, [s[t] + dur[t] | t in T]);
 array[T] of var int: task_priority; 
 constraint forall(t in T)(task_priority[t] = p[t]); % Expose priority for JSON output
 
+% EXPOSE P_raw for visualization
+array[index_set_1of2(P_raw), 1..2] of var int: P_out;
+constraint forall(i in index_set_1of2(P_raw), j in 1..2)(P_out[i,j] = P_raw[i,j]);
+
 % ----------------------------------------------------------
 % 3. Constraints
 % ----------------------------------------------------------
