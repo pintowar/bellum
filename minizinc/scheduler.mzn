@@ -34,6 +34,8 @@ var 0..n*n: c_p;
 
 % Coerce comprehension to T (0..n-1)
 array[T] of var 0..M: end_t = array1d(T, [s[t] + dur[t] | t in T]);
+array[T] of var int: task_priority; 
+constraint forall(t in T)(task_priority[t] = p[t]); % Expose priority for JSON output
 
 % ----------------------------------------------------------
 % 3. Constraints
