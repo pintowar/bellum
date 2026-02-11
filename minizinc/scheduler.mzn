@@ -1,109 +1,93 @@
-% ==========================================================
-% Project Scheduling Constraint Programming Model
-% ==========================================================
-
 include "globals.mzn";
 
 % ----------------------------------------------------------
 % 1. Indices and Parameters
 % ----------------------------------------------------------
-
-% Number of tasks (n) and employees (m)
 int: n;
 int: m;
 
-% Sets T and E (0-indexed as per spec)
 set of int: T = 0..n-1;
 set of int: E = 0..m-1;
 
-% Parameters
-array[E, T] of int: d;     % Duration matrix (Employee x Task)
-array[T] of int: p;        % Priority values (lower = higher priority)
-array[int, 1..2] of int: P; % Precedence constraints (Set P)
+% Coerce data to 0-based indexing
+array[int, int] of int: d_raw; 
+array[E, T] of int: d = array2d(E, T, d_raw);
 
-% Upper bound M calculation (as per spec)
-% M = min_e sum_t d_et (Time for the fastest single employee to do everything)
+array[int] of int: p_raw;
+array[T] of int: p = array1d(T, p_raw);
+
+array[int, 1..2] of int: P_raw;
+array[int, 1..2] of int: P = P_raw;
+
 int: M = min([sum(t in T)(d[e,t]) | e in E]);
-
-% Maximum task duration D_max
 int: D_max = max([d[e,t] | e in E, t in T]);
 
 % ----------------------------------------------------------
 % 2. Decision Variables
 % ----------------------------------------------------------
+array[T] of var E: a;                
+array[T] of var 0..M: s;             
+array[T] of var 0..D_max: dur;       
+array[E] of var 0..M: w;             
+var 0..M: C_max;                     
+var 0..n*n: c_p;                     
 
-array[T] of var E: a;                % Employee assigned to task t
-array[T] of var 0..M: s;             % Start time of task t
-array[T] of var 0..D_max: dur;       % Actual duration of task t
-array[E] of var 0..M: w;             % Total workload of employee e
-var 0..M: C_max;                     % Makespan
-var 0..n*n: c_p;                     % Priority inversion cost
-
-% Derived Variable: End times
-% Included for convenience in constraints
-array[T] of var 0..M: end_t = [s[t] + dur[t] | t in T];
+% Coerce comprehension to T (0..n-1)
+array[T] of var 0..M: end_t = array1d(T, [s[t] + dur[t] | t in T]);
 
 % ----------------------------------------------------------
 % 3. Constraints
 % ----------------------------------------------------------
 
-% Constraint 1: Task Duration Constraint
-% dur_t depends on the employee assigned (Element constraint)
+% Constraint 1: Task Duration 
 constraint forall(t in T) (
     dur[t] = d[a[t], t]
 );
 
-% Constraint 2: Precedence Constraints
-% end_t1 <= s_t2 for all dependencies
+% Constraint 2: Precedence
 constraint forall(i in index_set_1of2(P)) (
-    let { 
-        int: t1 = P[i, 1]; 
-        int: t2 = P[i, 2]; 
-    } in
-    end_t[t1] <= s[t2]
+    end_t[P[i, 1]] <= s[P[i, 2]]
 );
 
-% Constraint 3: No-Overlap Constraint
-% If assigned to same employee, time intervals cannot overlap
-constraint forall(t1, t2 in T where t1 < t2) (
-    (a[t1] == a[t2]) -> 
-    (end_t[t1] <= s[t2] \/ end_t[t2] <= s[t1])
+% Constraint 3: No-Overlap 
+% FIX: Ensure the resource array matches the index set T of s and dur
+constraint forall(e in E) (
+    cumulative(s, dur, array1d(T, [bool2int(a[t] == e) | t in T]), 1)
 );
+% constraint forall(t1, t2 in T where t1 < t2) (
+%     (a[t1] == a[t2]) -> 
+%     (end_t[t1] <= s[t2] \/ end_t[t2] <= s[t1])
+% );
 
-% Constraint 4: Employee Workload Constraint
+% Constraint 4: Employee Workload
 constraint forall(e in E) (
     w[e] = sum(t in T) ( bool2int(a[t] == e) * dur[t] )
 );
 
-% Constraint 5: Makespan Definition
+% Constraint 5: Makespan
 constraint C_max = max(t in T)(end_t[t]);
 
-% Constraint 6: Priority Cost Definition
-% Penalize if a lower priority task (higher p value) starts before a higher priority task
+% Constraint 6: Priority Cost
 constraint c_p = sum(t1, t2 in T where t1 < t2) (
-    if p[t1] > p[t2] then       % t2 is higher priority
-        bool2int(s[t1] < s[t2]) % Penalty if t1 starts first
-    else if p[t2] > p[t1] then  % t1 is higher priority
-        bool2int(s[t2] < s[t1]) % Penalty if t2 starts first
+    if p[t1] > p[t2] then       
+        bool2int(s[t1] < s[t2]) 
+    else if p[t2] > p[t1] then  
+        bool2int(s[t2] < s[t1]) 
     else 
         0 
     endif endif
 );
 
 % ----------------------------------------------------------
-% 4. Objective Function
+% 4. Objective and Output
 % ----------------------------------------------------------
-
 solve minimize 100 * C_max + c_p;
 
-% ----------------------------------------------------------
-% Output
-% ----------------------------------------------------------
 output [
     "Makespan: \(C_max)\n",
     "Priority Cost: \(c_p)\n",
-    "Assignments (Task: Employee, Start-End):\n"
+    "Assignments:\n"
 ] ++
 [
-    "T\(t): E\(a[t]) [\(s[t]) - \(end_t[t])]\n" | t in T
+    "T\(t) (p:\(p[t])): E\(a[t]) [\(s[t]) - \(end_t[t])]\n" | t in T
 ];
