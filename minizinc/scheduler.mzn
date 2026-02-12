@@ -84,7 +84,6 @@ constraint forall(e in E) (
 constraint C_max = max(t in T)(end_t[t]);
 
 % Constraint 6: Priority Cost
-% Constraint 6: Priority Cost
 constraint c_p = sum(t1, t2 in T where t1 < t2) (
     if p[t1] > p[t2] then       
         bool2int(s[t1] < s[t2]) 
@@ -99,7 +98,8 @@ constraint c_p = sum(t1, t2 in T where t1 < t2) (
 % For tasks with same priority, assigned to same employee, and NOT involved in precedence:
 % Force an arbitrary order (based on task index) to reduce search space.
 constraint forall(t1, t2 in T where t1 < t2) (
-    if (p[t1] == p[t2] /\ not is_constrained[t1] /\ not is_constrained[t2]) then
+    if (p[t1] == p[t2] /\ not is_constrained[t1] /\ not is_constrained[t2] /\
+        forall(e in E)(d[e, t1] == d[e, t2])) then
         (a[t1] == a[t2]) -> (s[t1] <= s[t2])
     else
         true
