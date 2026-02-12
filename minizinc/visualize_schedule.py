@@ -1,6 +1,13 @@
+# /// script
+# dependencies = [
+#   "matplotlib",
+#   "tk",
+# ]
+# ///
 
 import sys
 import json
+import matplotlib
 import matplotlib.pyplot as plt
 import argparse
 import random
@@ -133,6 +140,7 @@ def main():
         plt.savefig(args.save)
         print(f"Plot saved to {args.save}")
     else:
+        # matplotlib.use('TkAgg') 
         plt.show()
 
 if __name__ == "__main__":
