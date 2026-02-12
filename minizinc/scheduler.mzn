@@ -19,6 +19,10 @@ array[T] of int: p = array1d(T, p_raw);
 array[int, 1..2] of int: P_raw;
 array[int, 1..2] of int: P = P_raw;
 
+% Precomputed per-task minimum duration across all employees
+array[T] of int: min_dur = array1d(T, [min(e in E)(d[e,t]) | t in T]);
+
+% Tighter upper bound: minimum total work across employees
 int: M = min([sum(t in T)(d[e,t]) | e in E]);
 int: D_max = max([d[e,t] | e in E, t in T]);
 
@@ -65,15 +69,19 @@ constraint forall(i in index_set_1of2(P)) (
     end_t[P[i, 1]] <= s[P[i, 2]]
 );
 
-% Constraint 3: No-Overlap 
-% FIX: Ensure the resource array matches the index set T of s and dur
+% Constraint 3: No-Overlap using diffn
+% Each task is a rectangle: x=start_time, y=employee, dx=duration, dy=1
+constraint diffn(
+    array1d(T, [s[t] | t in T]),     % x positions (start times)
+    array1d(T, [a[t] | t in T]),     % y positions (employee assignment)
+    array1d(T, [dur[t] | t in T]),   % x sizes (durations)
+    array1d(T, [1 | t in T])         % y sizes (each task occupies 1 employee)
+);
+
+% Constraint 3b: Redundant per-employee cumulative
 constraint forall(e in E) (
     cumulative(s, dur, array1d(T, [bool2int(a[t] == e) | t in T]), 1)
 );
-% constraint forall(t1, t2 in T where t1 < t2) (
-%     (a[t1] == a[t2]) -> 
-%     (end_t[t1] <= s[t2] \/ end_t[t2] <= s[t1])
-% );
 
 % Constraint 4: Employee Workload
 constraint forall(e in E) (
@@ -82,6 +90,10 @@ constraint forall(e in E) (
 
 % Constraint 5: Makespan
 constraint C_max = max(t in T)(end_t[t]);
+
+% Redundant Constraint: Lower Bound on C_max
+constraint C_max >= sum(t in T)(min_dur[t]) div m;
+constraint C_max >= max(t in T)(min_dur[t]);
 
 % Constraint 6: Priority Cost
 constraint c_p = sum(t1, t2 in T where t1 < t2) (
@@ -109,7 +121,12 @@ constraint forall(t1, t2 in T where t1 < t2) (
 % ----------------------------------------------------------
 % 4. Objective and Output
 % ----------------------------------------------------------
-solve minimize 100 * C_max + c_p;
+solve 
+:: seq_search([
+    int_search(a, first_fail, indomain_min),
+    int_search(s, smallest, indomain_min)
+])
+minimize 100 * C_max + c_p;
 
 output [
     "Makespan: \(C_max)\n",
