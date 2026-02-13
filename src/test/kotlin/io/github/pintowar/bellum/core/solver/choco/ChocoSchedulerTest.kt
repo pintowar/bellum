@@ -28,6 +28,18 @@ class ChocoSchedulerTest :
 
             val solution = solver.findOptimalSchedule(DataFixtures.samplePartialProjectSmall)
 
+            val (scheduledProject, optimal) = solution.getOrThrow()
+            scheduledProject.scheduledStatus() shouldBe ProjectScheduled.SCHEDULED
+            scheduledProject.isValid() shouldBe true
+            scheduledProject.endsAt() shouldBe Instant.parse("2022-01-01T01:00:00Z")
+            optimal shouldBe true
+        }
+
+        test("partial pinned project should preserve assigned tasks") {
+            val solver = ChocoScheduler(DataFixtures.smallTimeEstimator)
+
+            val solution = solver.findOptimalSchedule(DataFixtures.samplePartialPinnedProjectSmall)
+
             val (scheduledProject, _) = solution.getOrThrow()
             scheduledProject.scheduledStatus() shouldBe ProjectScheduled.SCHEDULED
             scheduledProject.isValid() shouldBe true

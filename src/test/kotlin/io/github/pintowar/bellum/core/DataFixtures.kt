@@ -33,6 +33,17 @@ object DataFixtures {
             tasks = setOf(task1, task2, task3, task4, task5),
         ).getOrThrow()
 
+    val samplePartialPinnedProjectSmall: Project
+        get() {
+
+            return Project(
+                name = "Partial Pinned Project",
+                kickOff = Instant.parse("2022-01-01T00:00:00Z"),
+                employees = setOf(employee1, employee2, employee3),
+                tasks = setOf(assignedTask1.pin(), assignedTask2.pin(), task3, task4, task5),
+            ).getOrThrow()
+        }
+
     val samplePartialProjectSmall: Project
         get() {
 
