@@ -90,12 +90,6 @@ internal class ChocoModel(
     private val maxPossibleTime = taskDurationMatrix.minOf { it.sum() }
 
     /**
-     * The maximum possible duration for any single task across all employees.
-     * This is used to set the upper bound for the `taskDuration` variables.
-     */
-    private val maxPossibleDuration = taskDurationMatrix.maxOf { it.max() }
-
-    /**
      * An array of variables where `employeeWorkload[e]` represents the total time (in minutes)
      * that employee `e` is busy with assigned tasks.
      */
@@ -111,7 +105,11 @@ internal class ChocoModel(
      * An array of variables where `taskDuration[t]` represents the duration (in minutes) of task `t`.
      * This value depends on which employee is assigned to the task.
      */
-    private val taskDuration = model.intVarArray("duration", numTasks, 0, maxPossibleDuration)
+    private val taskDuration =
+        Array(numTasks) { t ->
+            val maxDur = (0 until numEmployees).maxOf { e -> taskDurationMatrix[e][t] }
+            model.intVar("duration_$t", 0, maxDur)
+        }
 
     /**
      * An array of variables representing the end time of each task, calculated as `taskStartTime[t] + taskDuration[t]`.
@@ -132,10 +130,8 @@ internal class ChocoModel(
     private val priorityCost = createPriorityCostObjective()
 
     init {
-        // Set initial values for already assigned tasks when project is in PARTIAL status
-        if (project.scheduledStatus() == ProjectScheduled.PARTIAL) {
-            setInitialValuesForAssignedTasks()
-        }
+        // Set initial values for already assigned tasks
+        setInitialValuesForAssignedTasks()
 
         // Add constraints to the model
         addTaskDurationConstraint()
@@ -240,7 +236,8 @@ internal class ChocoModel(
                     else -> v
                 }
             }
-        return mapOf("solver" to "Choco Solver", "model name" to solver.modelName) + stats
+        val modelStats = mapOf("vars" to "${model.nbVars} (${model.nbBoolVar} bools)", "cstrs" to "${model.nbCstrs}")
+        return mapOf("solver" to "Choco Solver", "model name" to solver.modelName) + modelStats + stats
     }
 
     /**
@@ -320,25 +317,25 @@ internal class ChocoModel(
      * This helps the solver by providing good starting points and reducing the search space.
      */
     private fun setInitialValuesForAssignedTasks() {
+        if (project.scheduledStatus() != ProjectScheduled.PARTIAL) return
         val employeeIndexMap = employees.withIndex().associate { it.value.id to it.index }
 
         for (t in 0 until numTasks) {
             val task = tasks[t]
-            if (task.isAssigned()) {
-                val assignedTask = task as AssignedTask
+            if (task is AssignedTask) {
+                val empIdx = employeeIndexMap[task.employee.id] ?: continue
+                val startOffset = durationUnit(task.startAt - project.kickOff)
+                val dur = durationUnit(task.duration)
 
-                // Fix the employee assignment
-                employeeIndexMap[assignedTask.employee.id]?.also { empIdx ->
+                if (task.pinned) {
                     model.arithm(taskAssignee[t], "=", empIdx).post()
+                    model.arithm(taskStartTime[t], "=", startOffset).post()
+                    model.arithm(taskDuration[t], "=", dur).post()
+                } else {
+                    model.solver.addHint(taskAssignee[t], empIdx)
+                    model.solver.addHint(taskStartTime[t], startOffset)
+                    model.solver.addHint(taskDuration[t], dur)
                 }
-
-                // Fix the start time (relative to project kickoff)
-                val startOffset = durationUnit(assignedTask.startAt - project.kickOff)
-                model.arithm(taskStartTime[t], "=", startOffset).post()
-
-                // Fix the duration
-                val dur = durationUnit(assignedTask.duration)
-                model.arithm(taskDuration[t], "=", dur).post()
             }
         }
     }
