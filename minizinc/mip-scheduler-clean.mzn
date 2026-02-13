@@ -133,9 +133,21 @@ constraint forall(t1 in T, t2 in T where t1 < t2)(
 % constraint x[0, min(T)] == 1;
 
 % Break start-time symmetry: order tasks with same duration and priority
-constraint forall(t1 in T, t2 in T where t1 < t2)(
-    if p[t1] == p[t2] /\ min_dur[t1] == min_dur[t2] /\ max_dur[t1] == max_dur[t2] /\
-       not has_pred[t1] /\ not has_pred[t2] /\ not has_succ[t1] /\ not has_succ[t2] then
+% constraint forall(t1 in T, t2 in T where t1 < t2)(
+%     if p[t1] == p[t2] /\ min_dur[t1] == min_dur[t2] /\ max_dur[t1] == max_dur[t2] /\
+%        not has_pred[t1] /\ not has_pred[t2] /\ not has_succ[t1] /\ not has_succ[t2] then
+%         s[t1] <= s[t2]
+%     else
+%         true
+%     endif
+% );
+
+% Break start-time symmetry: order tasks with identical durations and priority
+constraint forall(t1, t2 in T where t1 < t2) (
+    if p[t1] == p[t2] /\ 
+       forall(e in E)(d[e, t1] == d[e, t2]) /\ % Tasks are fully identical
+       not has_pred[t1] /\ not has_pred[t2] /\ 
+       not has_succ[t1] /\ not has_succ[t2] then
         s[t1] <= s[t2]
     else
         true
