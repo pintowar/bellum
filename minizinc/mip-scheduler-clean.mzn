@@ -109,14 +109,15 @@ constraint forall(t in T)(C_max >= s[t] + dur[t]);
 % ----------------------------------------------------------
 
 % For each pair, define inversion based on priority comparison
+% Lower priority values (0, 1) should be scheduled first
 constraint forall(t1 in T, t2 in T where t1 < t2)(
-    if p[t1] > p[t2] then
-        % t1 has higher priority - should start at or before t2
+    if p[t1] < p[t2] then
+        % t1 has lower priority number - should start at or before t2
         % No inversion if s[t1] <= s[t2]
         s[t1] <= s[t2] + BigM_sep[t1,t2] * is_inv[t1,t2] /\
         s[t1] >= s[t2] + 1 - BigM_sep[t1,t2] * (1 - is_inv[t1,t2])
-    elseif p[t2] > p[t1] then
-        % t2 has higher priority - should start at or before t1
+    elseif p[t2] < p[t1] then
+        % t2 has lower priority number - should start at or before t1
         % No inversion if s[t2] <= s[t1]
         s[t2] <= s[t1] + BigM_sep[t2,t1] * is_inv[t1,t2] /\
         s[t2] >= s[t1] + 1 - BigM_sep[t2,t1] * (1 - is_inv[t1,t2])
@@ -161,6 +162,13 @@ constraint forall(t1, t2 in T where t1 < t2) (
 solve minimize 100 * C_max + c_p;
 
 output [
-    "Makespan: ", show(C_max), "\n",
-    "Priority Cost: ", show(c_p), "\n"
+    "{",
+    "\"x\": [", join(",", ["[" ++ join(",", [show(x[e,t]) | t in T]) ++ "]" | e in E]), "],",
+    "\"s\": ", show(s), ",",
+    "\"dur\": ", show(dur), ",",
+    "\"C_max\": ", show(C_max), ",",
+    "\"c_p\": ", show(c_p), ",",
+    "\"p\": ", show(p), ",",
+    "\"P_raw\": ", show(P_raw),
+    "}\n"
 ];
