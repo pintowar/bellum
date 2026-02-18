@@ -146,22 +146,22 @@ jreleaser {
         create("bellum") {
             distributionType.set(org.jreleaser.model.Distribution.DistributionType.BINARY)
             artifact {
-                path.set(file("$rootDir/build/native/nativeCompile/bellum"))
+                path.set(file("$rootDir/build/native/nativeCompile/bellum-linux-x86_64"))
                 platform.set("linux-x86_64")
                 extraProperties.put("graalVMNativeImage", true)
             }
             artifact {
-                path.set(file("$rootDir/build/native/nativeCompile/bellum"))
+                path.set(file("$rootDir/build/native/nativeCompile/bellum-osx-aarch64"))
                 platform.set("osx-aarch64")
                 extraProperties.put("graalVMNativeImage", true)
             }
             artifact {
-                path.set(file("$rootDir/build/native/nativeCompile/bellum"))
+                path.set(file("$rootDir/build/native/nativeCompile/bellum-osx-x86_64"))
                 platform.set("osx-x86_64")
                 extraProperties.put("graalVMNativeImage", true)
             }
             artifact {
-                path.set(file("$rootDir/build/native/nativeCompile/bellum.exe"))
+                path.set(file("$rootDir/build/native/nativeCompile/bellum-windows-x86_64.exe"))
                 platform.set("windows-x86_64")
                 extraProperties.put("graalVMNativeImage", true)
             }
