@@ -11,14 +11,62 @@ env:
   JAVA_DISTRO: 'graalvm'
 
 jobs:
-  gradle_master_build:
-    name: Gradle Release Task
+  build-native:
+    name: Build Native - ${{ matrix.platform }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            platform: linux-x86_64
+            artifact_name: bellum
+          - os: macos-latest
+            platform: osx-aarch64
+            artifact_name: bellum
+          - os: macos-13
+            platform: osx-x86_64
+            artifact_name: bellum
+          - os: windows-latest
+            platform: windows-x86_64
+            artifact_name: bellum.exe
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.tag }}
+          fetch-depth: 0
+
+      - name: Setup GraalVM
+        uses: graalvm/setup-graalvm@v1
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: ${{ env.JAVA_DISTRO }}
+          cache: 'gradle'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build native executable
+        run: ./gradlew clean nativeCompile
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.platform }}
+          path: build/native/nativeCompile/${{ matrix.artifact_name }}
+          retention-days: 1
+
+  release:
+    name: Create Release
+    needs: build-native
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.inputs.tag }} # This checks out the specific tag that triggered the workflow
+          ref: ${{ github.event.inputs.tag }}
           fetch-depth: 0
 
       - uses: n1hility/cancel-previous-runs@v3
@@ -32,10 +80,39 @@ jobs:
           distribution: ${{ env.JAVA_DISTRO }}
           cache: 'gradle'
 
-      - name: Running gradle task
+      - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Running gradle task
-        run: ./gradlew clean nativeCompile jreleaserRelease
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: build/native/nativeCompile/
+
+      - name: Organize artifacts for JReleaser
+        run: |
+          echo "=== Downloaded artifacts ==="
+          ls -la build/native/nativeCompile/
+          
+          # Move artifacts from platform directories to nativeCompile root
+          for platform in linux-x86_64 osx-aarch64 osx-x86_64 windows-x86_64; do
+            if [ -d "build/native/nativeCompile/$platform" ]; then
+              echo "Processing $platform..."
+              ls -la "build/native/nativeCompile/$platform/"
+              
+              # Move the file to the appropriate name
+              if [ "$platform" = "windows-x86_64" ]; then
+                mv "build/native/nativeCompile/$platform/bellum.exe" build/native/nativeCompile/bellum.exe 2>/dev/null || true
+              else
+                mv "build/native/nativeCompile/$platform/bellum" build/native/nativeCompile/bellum 2>/dev/null || true
+              fi
+            fi
+          done
+          
+          echo ""
+          echo "=== Final artifacts ==="
+          ls -la build/native/nativeCompile/
+
+      - name: Create GitHub Release
+        run: ./gradlew jreleaserRelease
         env:
           JRELEASER_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
