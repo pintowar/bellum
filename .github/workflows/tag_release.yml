@@ -24,7 +24,7 @@ jobs:
           - os: macos-latest
             platform: osx-aarch64
             artifact_name: bellum
-          - os: macos-latest
+          - os: macos-13
             platform: osx-x86_64
             artifact_name: bellum
           - os: windows-latest
