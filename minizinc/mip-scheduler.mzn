@@ -1,5 +1,4 @@
-% MIP-Adapted Scheduling Model
-% Optimized for Mixed Integer Programming solvers (HiGHS, CBC, Gurobi, CPLEX)
+% Reduced variables, tightened bounds, symmetry breaking
 
 % ----------------------------------------------------------
 % 1. Indices and Parameters
@@ -20,70 +19,71 @@ array[T] of int: p = array1d(T, p_raw);
 array[int, 1..2] of int: P_raw;
 array[int, 1..2] of int: P = P_raw;
 
-% Precomputed per-task minimum duration across all employees
+% Precomputed bounds
 array[T] of int: min_dur = array1d(T, [min(e in E)(d[e,t]) | t in T]);
+array[T] of int: max_dur = array1d(T, [max(e in E)(d[e,t]) | t in T]);
+int: D_max = max(max_dur);
+int: LB_C_max = max(ceil(sum(t in T)(min_dur[t]) / m), max(t in T)(min_dur[t]));
+int: UB_C_max = max(e in E)(sum(t in T)(max_dur[t]));
 
-% Tighter upper bound: minimum total work across employees
-int: M = min([sum(t in T)(d[e,t]) | e in E]);
-int: D_max = max([d[e,t] | e in E, t in T]);
-int: BigM = M + D_max;  % Big-M constant for linearization
+% Tight Big-M values per task pair
+array[T, T] of int: BigM_sep = array2d(T, T, [UB_C_max + max_dur[t1] | t1 in T, t2 in T]);
+
+% Identify precedence-constrained tasks
+array[T] of bool: has_pred = array1d(T, [exists(i in index_set_1of2(P))(P[i,2] == t) | t in T]);
+array[T] of bool: has_succ = array1d(T, [exists(i in index_set_1of2(P))(P[i,1] == t) | t in T]);
+
+% Pairs with different priorities (for optimization)
+set of int: PriorityPairs = {i | i in 1..(n*n)};  % Will filter in constraints
 
 % ----------------------------------------------------------
 % 2. Decision Variables
 % ----------------------------------------------------------
 
-% Binary assignment: x[e,t] = 1 if task t assigned to employee e
+% Binary assignment
 array[E, T] of var 0..1: x;
 
-% Start times
-array[T] of var 0..M: s;
+% Start times with tight bounds
+array[T] of var 0..UB_C_max: s;
 
-% Duration (determined by assignment)
-array[T] of var 0..D_max: dur;
+% Duration as expression
+array[T] of var int: dur;
 
-% Employee workload
-array[E] of var 0..M: w;
+% Makespan with tight bounds
+var LB_C_max..UB_C_max: C_max;
 
-% Makespan
-var 0..M: C_max;
-
-% End times
-array[T] of var 0..(M + D_max): end_t;
-
-% Priority cost
-var 0..(n*n): c_p;
+% Priority inversion indicator for each comparable pair
+array[T, T] of var 0..1: is_inv;
 
 % Binary variables for ordering on same employee: y[e,t1,t2] = 1 if t1 before t2
 array[E, T, T] of var 0..1: y;
 
-% Binary variables for start time ordering: z[t1,t2] = 1 if s[t1] <= s[t2]
-array[T, T] of var 0..1: z;
+% Priority cost
+var 0..(n*n): c_p = sum(t1 in T, t2 in T where t1 < t2)(is_inv[t1,t2]);
+
+% Expose priority for output
+array[T] of var int: task_priority;
+constraint forall(t in T)(task_priority[t] = p[t]);
 
 % ----------------------------------------------------------
-% 3. Constraints
+% 3. Core Constraints
 % ----------------------------------------------------------
 
-% Constraint 1: Each task assigned to exactly one employee
-constraint forall(t in T) (
-    sum(e in E) (x[e, t]) = 1
+% Assignment
+constraint forall(t in T)(sum(e in E)(x[e,t]) == 1);
+
+% Duration channeling
+constraint forall(t in T)(dur[t] == sum(e in E)(x[e,t] * d[e,t]));
+
+% Precedence (direct, no intermediate end variables)
+constraint forall(i in index_set_1of2(P))(
+    s[P[i,1]] + sum(e in E)(x[e,P[i,1]] * d[e,P[i,1]]) <= s[P[i,2]]
 );
 
-% Constraint 2: Task duration based on assignment
-constraint forall(t in T) (
-    dur[t] = sum(e in E) (x[e, t] * d[e, t])
-);
+% ----------------------------------------------------------
+% 4. No-Overlap: Optimized Formulation
+% ----------------------------------------------------------
 
-% Constraint 3: End time definition
-constraint forall(t in T) (
-    end_t[t] = s[t] + dur[t]
-);
-
-% Constraint 4: Precedence constraints
-constraint forall(i in index_set_1of2(P)) (
-    end_t[P[i, 1]] <= s[P[i, 2]]
-);
-
-% Constraint 5: No-overlap using big-M formulation
 % For each employee and each pair of tasks, enforce disjunction if both assigned
 constraint forall(e in E, t1 in T, t2 in T where t1 < t2) (
     % y[e,t1,t2] can only be 1 if both tasks assigned to e
@@ -96,55 +96,83 @@ constraint forall(e in E, t1 in T, t2 in T where t1 < t2) (
     x[e, t1] + x[e, t2] - 1 <= y[e, t1, t2] + y[e, t2, t1]
 );
 
-% Disjunctive constraints using big-M
+% Disjunctive constraints using Big-M
 constraint forall(e in E, t1 in T, t2 in T where t1 < t2) (
-    end_t[t1] <= s[t2] + BigM * (1 - y[e, t1, t2]) /\
-    end_t[t2] <= s[t1] + BigM * (1 - y[e, t2, t1])
+    s[t1] + sum(ee in E)(x[ee,t1] * d[ee,t1]) <= s[t2] + BigM_sep[t1,t2] * (1 - y[e, t1, t2]) /\
+    s[t2] + sum(ee in E)(x[ee,t2] * d[ee,t2]) <= s[t1] + BigM_sep[t2,t1] * (1 - y[e, t2, t1])
 );
 
-% Constraint 6: Employee workload
-constraint forall(e in E) (
-    w[e] = sum(t in T) (x[e, t] * d[e, t])
-);
+% ----------------------------------------------------------
+% 5. Makespan
+% ----------------------------------------------------------
 
-% Constraint 7: Makespan
-constraint forall(t in T) (
-    C_max >= end_t[t]
-);
+constraint forall(t in T)(C_max >= s[t] + dur[t]);
 
-% Constraint 8: Lower bounds on makespan
-constraint C_max >= sum(t in T)(min_dur[t]) div m;
-constraint C_max >= max(t in T)(min_dur[t]);
+% ----------------------------------------------------------
+% 6. Priority Cost (Fully Linear)
+% ----------------------------------------------------------
 
-% Constraint 9: Linearized start time ordering variables
-constraint forall(t1 in T, t2 in T where t1 != t2) (
-    s[t1] <= s[t2] + BigM * (1 - z[t1, t2]) /\
-    s[t2] <= s[t1] + BigM * z[t1, t2]
-);
-
-constraint forall(t in T) (
-    z[t, t] = 0
-);
-
-% Constraint 10: Priority cost - count priority inversions linearly
-constraint c_p = sum(t1 in T, t2 in T where t1 < t2) (
-    if p[t1] > p[t2] then
-        % p[t1] > p[t2], t1 should be first - cost if s[t1] > s[t2], i.e., z[t2,t1] = 1
-        z[t2, t1]
-    elseif p[t2] > p[t1] then
-        % p[t2] > p[t1], t2 should be first - cost if s[t2] > s[t1], i.e., z[t1,t2] = 1  
-        z[t1, t2]
+% For each pair, define inversion based on priority comparison
+% Lower priority values (0, 1) should be scheduled first
+constraint forall(t1 in T, t2 in T where t1 < t2)(
+    if p[t1] < p[t2] then
+        % t1 has lower priority number - should start at or before t2
+        % No inversion if s[t1] <= s[t2]
+        s[t1] <= s[t2] + BigM_sep[t1,t2] * is_inv[t1,t2] /\
+        s[t1] >= s[t2] + 1 - BigM_sep[t1,t2] * (1 - is_inv[t1,t2])
+    elseif p[t2] < p[t1] then
+        % t2 has lower priority number - should start at or before t1
+        % No inversion if s[t2] <= s[t1]
+        s[t2] <= s[t1] + BigM_sep[t2,t1] * is_inv[t1,t2] /\
+        s[t2] >= s[t1] + 1 - BigM_sep[t2,t1] * (1 - is_inv[t1,t2])
     else
-        0
+        is_inv[t1,t2] == 0
     endif
 );
 
 % ----------------------------------------------------------
-% 4. Objective and Output
+% 7. Symmetry Breaking
 % ----------------------------------------------------------
+
+% Break employee symmetry: assign first task to employee 0
+% constraint x[0, min(T)] == 1;
+
+% Break start-time symmetry: order tasks with same duration and priority
+% constraint forall(t1 in T, t2 in T where t1 < t2)(
+%     if p[t1] == p[t2] /\ min_dur[t1] == min_dur[t2] /\ max_dur[t1] == max_dur[t2] /\
+%        not has_pred[t1] /\ not has_pred[t2] /\ not has_succ[t1] /\ not has_succ[t2] then
+%         s[t1] <= s[t2]
+%     else
+%         true
+%     endif
+% );
+
+% Break start-time symmetry: order tasks with identical durations and priority
+constraint forall(t1, t2 in T where t1 < t2) (
+    if p[t1] == p[t2] /\ 
+       forall(e in E)(d[e, t1] == d[e, t2]) /\ % Tasks are fully identical
+       not has_pred[t1] /\ not has_pred[t2] /\ 
+       not has_succ[t1] /\ not has_succ[t2] then
+        s[t1] <= s[t2]
+    else
+        true
+    endif
+);
+
+% ----------------------------------------------------------
+% 8. Objective
+% ----------------------------------------------------------
+
 solve minimize 100 * C_max + c_p;
 
 output [
-    "Makespan: ", show(C_max), "\n",
-    "Priority Cost: ", show(c_p), "\n"
+    "{",
+    "\"x\": [", join(",", ["[" ++ join(",", [show(x[e,t]) | t in T]) ++ "]" | e in E]), "],",
+    "\"s\": ", show(s), ",",
+    "\"dur\": ", show(dur), ",",
+    "\"C_max\": ", show(C_max), ",",
+    "\"c_p\": ", show(c_p), ",",
+    "\"p\": ", show(p), ",",
+    "\"P_raw\": ", show(P_raw),
+    "}\n"
 ];
