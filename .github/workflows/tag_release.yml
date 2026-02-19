@@ -96,9 +96,12 @@ jobs:
               echo "Processing $platform..."
               ls -la "build/native/nativeCompile/$platform/"
               
-              # Move the file with platform-specific name
+              # Determine the output filename based on platform
+              # Use JReleaser-compatible naming (aarch_64 instead of aarch64)
               if [ "$platform" = "windows-x86_64" ]; then
                 mv "build/native/nativeCompile/$platform/bellum.exe" "build/native/nativeCompile/bellum-$platform.exe" 2>/dev/null || true
+              elif [ "$platform" = "osx-aarch64" ]; then
+                mv "build/native/nativeCompile/$platform/bellum" "build/native/nativeCompile/bellum-osx-aarch_64" 2>/dev/null || true
               else
                 mv "build/native/nativeCompile/$platform/bellum" "build/native/nativeCompile/bellum-$platform" 2>/dev/null || true
               fi

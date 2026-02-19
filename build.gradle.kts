@@ -151,8 +151,8 @@ jreleaser {
                 extraProperties.put("graalVMNativeImage", true)
             }
             artifact {
-                path.set(file("$rootDir/build/native/nativeCompile/bellum-osx-aarch64"))
-                platform.set("osx-aarch64")
+                path.set(file("$rootDir/build/native/nativeCompile/bellum-osx-aarch_64"))
+                platform.set("osx-aarch_64")
                 extraProperties.put("graalVMNativeImage", true)
             }
             artifact {
