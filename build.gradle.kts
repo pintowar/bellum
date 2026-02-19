@@ -133,11 +133,31 @@ jreleaser {
             homepage.set("https://github.com/pintowar/bellum")
         }
     }
+    release {
+        github {
+            changelog {
+                enabled.set(false)
+            }
+            branch.set("master")
+            releaseName.set("v$version")
+        }
+    }
     distributions {
         create("bellum") {
             distributionType.set(org.jreleaser.model.Distribution.DistributionType.BINARY)
             artifact {
-                path.set(file("$rootDir/build/native/nativeCompile/bellum"))
+                path.set(file("$rootDir/build/native/nativeCompile/bellum-linux-x86_64"))
+                platform.set("linux-x86_64")
+                extraProperties.put("graalVMNativeImage", true)
+            }
+            artifact {
+                path.set(file("$rootDir/build/native/nativeCompile/bellum-osx-aarch_64"))
+                platform.set("osx-aarch_64")
+                extraProperties.put("graalVMNativeImage", true)
+            }
+            artifact {
+                path.set(file("$rootDir/build/native/nativeCompile/bellum-windows-x86_64.exe"))
+                platform.set("windows-x86_64")
                 extraProperties.put("graalVMNativeImage", true)
             }
         }
