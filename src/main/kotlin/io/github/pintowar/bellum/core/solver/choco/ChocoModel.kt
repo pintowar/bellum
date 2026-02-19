@@ -12,6 +12,10 @@ import org.chocosolver.solver.ResolutionPolicy
 import org.chocosolver.solver.Solution
 import org.chocosolver.solver.Solver
 import org.chocosolver.solver.search.SearchState
+import org.chocosolver.solver.search.strategy.Search
+import org.chocosolver.solver.search.strategy.selectors.values.IntDomainMin
+import org.chocosolver.solver.search.strategy.selectors.variables.FirstFail
+import org.chocosolver.solver.search.strategy.selectors.variables.Smallest
 import org.chocosolver.solver.variables.IntVar
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
@@ -90,6 +94,19 @@ internal class ChocoModel(
     private val maxPossibleTime = taskDurationMatrix.minOf { it.sum() }
 
     /**
+     * An array containing the minimum possible duration for each task.
+     * For each task `t`, this is the shortest duration achievable across all employees.
+     * Used to calculate a tighter lower bound for the makespan objective.
+     */
+    private val minPossibleTime = IntArray(numTasks) { t -> (0 until numEmployees).minOf { e -> taskDurationMatrix[e][t] } }
+
+    /**
+     * The maximum possible duration for any single task across all employees.
+     * This is used to set the upper bound for the `taskDuration` variables.
+     */
+    private val maxPossibleDuration = taskDurationMatrix.maxOf { it.max() }
+
+    /**
      * An array of variables where `employeeWorkload[e]` represents the total time (in minutes)
      * that employee `e` is busy with assigned tasks.
      */
@@ -138,10 +155,13 @@ internal class ChocoModel(
         addEmployeeWorkloadConstraint()
         addPrecedenceConstraints()
         addNoOverlapConstraint()
+        addSymmetryBreakingConstraints()
 
         // Set the multi-objective function to minimize.
         // The makespan is given a much higher weight (100) to prioritize it over the priority cost.
         model.setObjective(Model.MINIMIZE, makespan.mul(100).add(priorityCost).intVar())
+
+        configureSearchStrategy()
     }
 
     /**
@@ -236,8 +256,44 @@ internal class ChocoModel(
                     else -> v
                 }
             }
-        val modelStats = mapOf("vars" to "${model.nbVars} (${model.nbBoolVar} bools)", "cstrs" to "${model.nbCstrs}")
-        return mapOf("solver" to "Choco Solver", "model name" to solver.modelName) + modelStats + stats
+        return mapOf("solver" to "Choco Solver", "model name" to solver.modelName) + stats
+    }
+
+    /**
+     * Adds symmetry breaking constraints to improve solver performance.
+     *
+     * When multiple employees have identical task duration profiles, assigning root tasks
+     * (tasks with no predecessors) to any of them produces equivalent solutions. This method
+     * breaks these symmetries by enforcing a lexicographic ordering on root task assignments
+     * within groups of identical employees, reducing the search space without affecting solution quality.
+     */
+    private fun addSymmetryBreakingConstraints() {
+        val rootTaskIndices =
+            (0 until numTasks)
+                .filter { t -> precedenceConstraints.none { it[1] == t } }
+                .sorted()
+
+        if (rootTaskIndices.isNotEmpty()) {
+            val identicalEmployeeGroups =
+                (0 until numEmployees)
+                    .groupBy { e -> taskDurationMatrix[e].toList() }
+                    .values
+                    .filter { it.size > 1 }
+
+            for (group in identicalEmployeeGroups) {
+                val groupSize = group.size
+                val numRootTasks = rootTaskIndices.size
+                val employeeToRootTasks =
+                    Array(groupSize) { i ->
+                        val e = group[i]
+                        Array(numRootTasks) { tIdx ->
+                            val t = rootTaskIndices[tIdx]
+                            model.arithm(taskAssignee[t], "=", e).reify()
+                        }
+                    }
+                model.lexChainLessEq(*employeeToRootTasks).post()
+            }
+        }
     }
 
     /**
@@ -287,8 +343,7 @@ internal class ChocoModel(
      */
     private fun addPrecedenceConstraints() {
         for (precedence in precedenceConstraints) {
-            val predecessor = precedence[0]
-            val successor = precedence[1]
+            val (predecessor, successor) = precedence
             // The predecessor task must end before the successor task can start
             model.arithm(taskEndTime[predecessor], "<=", taskStartTime[successor]).post()
         }
@@ -303,7 +358,7 @@ internal class ChocoModel(
      */
     private fun addNoOverlapConstraint() {
         val taskHeights = Array(numTasks) { model.intVar(1) } // Each task uses 1 employee "unit"
-        model.diffN(taskStartTime, taskAssignee, taskDuration, taskHeights, false).post()
+        model.diffN(taskStartTime, taskAssignee, taskDuration, taskHeights, true).post()
     }
 
     /**
@@ -341,6 +396,20 @@ internal class ChocoModel(
     }
 
     /**
+     * Configures a custom search strategy optimized for scheduling problems.
+     */
+    private fun configureSearchStrategy() {
+        val firstFail = FirstFail(model)
+        val smallest = Smallest()
+        val intDomainMin = IntDomainMin()
+
+        model.solver.setSearch(
+            Search.intVarSearch(firstFail, intDomainMin, *taskAssignee),
+            Search.intVarSearch(smallest, intDomainMin, *taskStartTime),
+        )
+    }
+
+    /**
      * Creates the makespan objective variable.
      * The makespan is defined as the maximum end time among all tasks.
      * The model will try to minimize this value.
@@ -349,7 +418,12 @@ internal class ChocoModel(
      * @return The [IntVar] representing the project's makespan.
      */
     private fun createMakespanObjective(): IntVar {
-        val makespan = model.intVar("makespan", 0, maxPossibleTime)
+        val totalMinDur = minPossibleTime.sum()
+        val lowerBound1 = totalMinDur / numEmployees
+        val lowerBound2 = minPossibleTime.maxOrNull() ?: 0
+        val lowerBound = lowerBound1.coerceAtLeast(lowerBound2)
+
+        val makespan = model.intVar("makespan", lowerBound, maxPossibleTime)
         model.max(makespan, taskEndTime).post()
         return makespan
     }
@@ -369,8 +443,7 @@ internal class ChocoModel(
         // Iterate over all unique pairs of tasks
         for (t1 in 0 until numTasks) {
             for (t2 in t1 + 1 until numTasks) {
-                val p1 = taskPriorities[t1]
-                val p2 = taskPriorities[t2]
+                val (p1, p2) = taskPriorities[t1] to taskPriorities[t2]
 
                 // Case 1: Task 1 has lower priority than Task 2 (p1 > p2 means lower priority).
                 // Penalize if Task 1 starts before Task 2.
