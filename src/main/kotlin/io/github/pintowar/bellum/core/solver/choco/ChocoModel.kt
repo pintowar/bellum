@@ -8,6 +8,7 @@ import io.github.pintowar.bellum.core.domain.Task
 import io.github.pintowar.bellum.core.estimator.TimeEstimator
 import io.github.pintowar.bellum.core.solver.SchedulerSolution
 import org.chocosolver.solver.Model
+import org.chocosolver.solver.ParallelPortfolio
 import org.chocosolver.solver.ResolutionPolicy
 import org.chocosolver.solver.Solution
 import org.chocosolver.solver.Solver
@@ -36,10 +37,31 @@ internal class ChocoModel(
     estimator: TimeEstimator,
     idx: Int = 0,
 ) {
+    companion object {
+        fun portfolio(
+            project: Project,
+            estimator: TimeEstimator,
+            numThreads: Int,
+            timeLimit: Duration,
+        ): Pair<ParallelPortfolio, List<ChocoModel>> {
+            val portfolio = ParallelPortfolio()
+            val chocoModels = List(numThreads) { ChocoModel(project, estimator, it) }
+            chocoModels.forEach { chocoModel ->
+                chocoModel.model.solver.limitTime(timeLimit.inWholeMilliseconds)
+                portfolio.addModel(chocoModel.model)
+            }
+            portfolio.stealNogoodsOnRestarts()
+
+            return portfolio to chocoModels
+        }
+    }
+
+    val name: String = "ProjectSchedulerModel $idx"
+
     /**
      * The main Choco Solver model instance.
      */
-    internal val model = Model("ProjectSchedulerModel $idx")
+    private val model = Model(name)
 
     // --- Constants ---
 

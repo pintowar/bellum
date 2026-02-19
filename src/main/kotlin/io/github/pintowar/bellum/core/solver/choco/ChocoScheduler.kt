@@ -4,24 +4,26 @@ import io.github.pintowar.bellum.core.domain.Project
 import io.github.pintowar.bellum.core.estimator.TimeEstimator
 import io.github.pintowar.bellum.core.solver.Scheduler
 import io.github.pintowar.bellum.core.solver.SchedulerSolution
-import org.chocosolver.solver.ParallelPortfolio
 import org.chocosolver.solver.Solution
 import kotlin.time.Clock
 import kotlin.time.Duration
 
 class ChocoScheduler(
     override val estimator: TimeEstimator,
-    private val numThreads: Int = 1.coerceAtLeast((Runtime.getRuntime().availableProcessors() * 0.9).toInt()),
+    private val numThreads: Int = -1,
 ) : Scheduler() {
     override fun solveOptimizationProblem(
         project: Project,
         timeLimit: Duration,
         callback: (SchedulerSolution) -> Unit,
     ): Result<SchedulerSolution> =
-        if (numThreads == 1) {
-            singleSolve(project, timeLimit, callback)
-        } else {
-            parallelSolve(project, timeLimit, numThreads, callback)
+        when (numThreads) {
+            -1 -> {
+                val workers = 1.coerceAtLeast((Runtime.getRuntime().availableProcessors() * 0.9).toInt())
+                parallelSolve(project, timeLimit, workers, callback)
+            }
+            1 -> singleSolve(project, timeLimit, callback)
+            else -> parallelSolve(project, timeLimit, numThreads, callback)
         }
 
     fun singleSolve(
@@ -37,7 +39,7 @@ class ChocoScheduler(
             val initSolving = Clock.System.now()
             while (solver.solve()) {
                 solution.record()
-                val currentDuration = (Clock.System.now() - initSolving)
+                val currentDuration = Clock.System.now() - initSolving
                 model.decode(solution, currentDuration, false).onSuccess(callback)
             }
 
@@ -52,12 +54,7 @@ class ChocoScheduler(
         callback: (SchedulerSolution) -> Unit = {},
     ): Result<SchedulerSolution> =
         runCatching {
-            val portfolio = ParallelPortfolio()
-            val chocoModels = List(numThreads) { ChocoModel(project, estimator, it) }
-            chocoModels.forEach { chocoModel ->
-                chocoModel.model.solver.limitTime(timeLimit.inWholeMilliseconds)
-                portfolio.addModel(chocoModel.model)
-            }
+            val (portfolio, chocoModels) = ChocoModel.portfolio(project, estimator, numThreads, timeLimit)
 
             val initSolving = Clock.System.now()
             var bestSolution: Solution? = null
@@ -65,21 +62,20 @@ class ChocoScheduler(
 
             while (portfolio.solve()) {
                 val finderModel = portfolio.bestModel
-                bestModel = chocoModels.find { it.model.name == finderModel.name }
-                if (bestModel != null) {
-                    bestSolution = Solution(finderModel).record()
-                    val currentDuration = Clock.System.now() - initSolving
-                    bestModel.decode(bestSolution, currentDuration, false).onSuccess(callback)
-                }
+                bestModel = chocoModels.first { it.name == finderModel.name }
+                bestSolution = bestModel.solution().record()
+                val currentDuration = Clock.System.now() - initSolving
+                bestModel.decode(bestSolution, currentDuration, false).onSuccess(callback)
             }
 
             val currentDuration = Clock.System.now() - initSolving
-            val optimal = portfolio.models.all { it.solver.isStopCriterionMet }
+            val nonOptimal = portfolio.models.all { it.solver.isStopCriterionMet }
 
             if (bestSolution != null && bestModel != null) {
-                bestModel.decode(bestSolution, currentDuration, !optimal).getOrThrow()
+                bestModel.decode(bestSolution, currentDuration, !nonOptimal).getOrThrow()
             } else {
-                chocoModels.first().decode(chocoModels.first().solution(), currentDuration, false).getOrThrow()
+                val model = chocoModels.first()
+                model.decode(model.solution(), currentDuration, false).getOrThrow()
             }
         }
 }
