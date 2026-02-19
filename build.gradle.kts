@@ -156,11 +156,6 @@ jreleaser {
                 extraProperties.put("graalVMNativeImage", true)
             }
             artifact {
-                path.set(file("$rootDir/build/native/nativeCompile/bellum-osx-x86_64"))
-                platform.set("osx-x86_64")
-                extraProperties.put("graalVMNativeImage", true)
-            }
-            artifact {
                 path.set(file("$rootDir/build/native/nativeCompile/bellum-windows-x86_64.exe"))
                 platform.set("windows-x86_64")
                 extraProperties.put("graalVMNativeImage", true)
