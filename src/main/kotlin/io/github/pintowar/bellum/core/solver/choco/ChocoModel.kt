@@ -16,6 +16,7 @@ import org.chocosolver.solver.search.strategy.Search
 import org.chocosolver.solver.search.strategy.selectors.values.IntDomainMin
 import org.chocosolver.solver.search.strategy.selectors.variables.FirstFail
 import org.chocosolver.solver.search.strategy.selectors.variables.Smallest
+import org.chocosolver.solver.variables.BoolVar
 import org.chocosolver.solver.variables.IntVar
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
@@ -101,10 +102,10 @@ internal class ChocoModel(
     private val minPossibleTime = IntArray(numTasks) { t -> (0 until numEmployees).minOf { e -> taskDurationMatrix[e][t] } }
 
     /**
-     * The maximum possible duration for any single task across all employees.
-     * This is used to set the upper bound for the `taskDuration` variables.
+     * Earliest possible start time for each task based on precedence constraints.
+     * Computed using minimum task durations as optimistic estimates.
      */
-    private val maxPossibleDuration = taskDurationMatrix.maxOf { it.max() }
+    private val earliestStartTimes = computeEarliestStartTimes()
 
     /**
      * An array of variables where `employeeWorkload[e]` represents the total time (in minutes)
@@ -114,9 +115,12 @@ internal class ChocoModel(
 
     /**
      * An array of variables where `taskStartTime[t]` represents the start time (in minutes, relative to project kick-off)
-     * of task `t`.
+     * of task `t`. Domain is tightened using precedence analysis.
      */
-    private val taskStartTime = model.intVarArray("startTime", numTasks, 0, maxPossibleTime)
+    private val taskStartTime =
+        Array(numTasks) { t ->
+            model.intVar("startTime_$t", earliestStartTimes[t], maxPossibleTime)
+        }
 
     /**
      * An array of variables where `taskDuration[t]` represents the duration (in minutes) of task `t`.
@@ -124,8 +128,8 @@ internal class ChocoModel(
      */
     private val taskDuration =
         Array(numTasks) { t ->
-            val maxDur = (0 until numEmployees).maxOf { e -> taskDurationMatrix[e][t] }
-            model.intVar("duration_$t", 0, maxDur)
+            val maxDur = (0 until numEmployees).map { e -> taskDurationMatrix[e][t] }.toIntArray()
+            model.intVar("duration_$t", maxDur)
         }
 
     /**
@@ -146,13 +150,28 @@ internal class ChocoModel(
      */
     private val priorityCost = createPriorityCostObjective()
 
+    /**
+     * Boolean variables indicating if task t is assigned to employee e.
+     * Lazily created when the optimized workload constraint is needed.
+     */
+    private val taskAssignedTo: Array<Array<BoolVar>> by lazy {
+        Array(numTasks) { t ->
+            Array(numEmployees) { e ->
+                model.boolVar("assigned_${t}_$e")
+            }
+        }
+    }
+
     init {
         // Set initial values for already assigned tasks
         setInitialValuesForAssignedTasks()
 
+        // Link assignment variables to boolean matrix (lazy)
+        linkAssignmentVariables()
+
         // Add constraints to the model
         addTaskDurationConstraint()
-        addEmployeeWorkloadConstraint()
+        addEmployeeWorkloadConstraintOptimized()
         addPrecedenceConstraints()
         addNoOverlapConstraint()
         addSymmetryBreakingConstraints()
@@ -311,28 +330,27 @@ internal class ChocoModel(
     }
 
     /**
-     * Adds a constraint to calculate the total workload for each employee.
-     * The workload is the sum of the durations of all tasks assigned to that employee.
-     * This is modeled as: `employeeWorkload[e] = sum(duration[t] for all t where taskAssignee[t] = e)`
+     * Optimized workload constraint using scalar instead of O(E × T) ifThenElse constraints.
+     * Uses pre-computed boolean assignment variables for efficiency.
+     * employeeWorkload[e] = sum(taskDuration[t] * taskAssignedTo[t][e] for all t)
      */
-    private fun addEmployeeWorkloadConstraint() {
+    private fun addEmployeeWorkloadConstraintOptimized() {
         for (e in 0 until numEmployees) {
-            // Create an array of variables representing the duration of each task IF assigned to this employee
-            val assignedTaskDurations =
-                Array(numTasks) { t ->
-                    model.intVar("duration_e${e}_t$t", 0, taskDurationMatrix[e][t])
-                }
+            val coefficients = IntArray(numTasks) { t -> taskDurationMatrix[e][t] }
+            val boolsAsInts = taskAssignedTo.map { it[e] }.toTypedArray()
+            model.scalar(boolsAsInts, coefficients, "=", employeeWorkload[e]).post()
+        }
+    }
 
-            for (t in 0 until numTasks) {
-                // If task 't' is assigned to employee 'e', then its duration is taskDurationMatrix[e][t], else 0.
-                model.ifThenElse(
-                    model.arithm(taskAssignee[t], "=", e),
-                    model.arithm(assignedTaskDurations[t], "=", taskDurationMatrix[e][t]),
-                    model.arithm(assignedTaskDurations[t], "=", 0),
-                )
+    /**
+     * Links the taskAssignee variable to the boolean assignment matrix.
+     * taskAssignedTo[t][e] = 1 iff taskAssignee[t] == e
+     */
+    private fun linkAssignmentVariables() {
+        for (t in 0 until numTasks) {
+            for (e in 0 until numEmployees) {
+                model.arithm(taskAssignee[t], "=", e).reifyWith(taskAssignedTo[t][e])
             }
-            // The employee's total workload is the sum of these conditional durations
-            model.sum(assignedTaskDurations, "=", employeeWorkload[e]).post()
         }
     }
 
@@ -473,6 +491,36 @@ internal class ChocoModel(
         }
 
         return priorityCost
+    }
+
+    /**
+     * Computes the earliest possible start time for each task based on precedence constraints.
+     * Uses the minimum task duration (best-case across all employees) as an optimistic estimate.
+     *
+     * @return An array of earliest start times for each task index.
+     */
+    private fun computeEarliestStartTimes(): IntArray {
+        val earliest = IntArray(numTasks) { 0 }
+        val taskIndexMap = tasks.withIndex().associate { (idx, it) -> it.id to idx }
+        val visited = BooleanArray(numTasks)
+
+        fun computeEarliest(taskIdx: Int): Int {
+            if (visited[taskIdx]) return earliest[taskIdx]
+            visited[taskIdx] = true
+
+            val task = tasks[taskIdx]
+            if (task.dependsOn != null) {
+                val predIdx = taskIndexMap[task.dependsOn!!.id]!!
+                val predEarliest = computeEarliest(predIdx)
+                earliest[taskIdx] = predEarliest + minPossibleTime[predIdx]
+            }
+            return earliest[taskIdx]
+        }
+
+        for (t in 0 until numTasks) {
+            computeEarliest(t)
+        }
+        return earliest
     }
 
     /**
