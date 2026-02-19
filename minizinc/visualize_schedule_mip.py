@@ -17,8 +17,7 @@ def main():
     parser = create_parser("Visualize MiniZinc MIP Schedule")
     args = parser.parse_args()
 
-#     data = run_minizinc(args.model, args.data, args.solver)
-    data = run_minizinc("mip-scheduler.mzn", args.data, args.solver)
+    data = run_minizinc("mip-scheduler.mzn", args.data, args.solver, args.parallel)
 
     x = data.get("x", [])
     start_times = list(data.get("s", []))

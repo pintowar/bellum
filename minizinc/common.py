@@ -16,6 +16,9 @@ from minizinc import Instance, Model, Solver
 def create_parser(description: str) -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument(
+        "--parallel", type=int, help="Number of parallel threads"
+    )
+    parser.add_argument(
         "--save", type=str, help="Filename to save the plot (e.g., schedule.png)"
     )
     parser.add_argument(
@@ -26,7 +29,7 @@ def create_parser(description: str) -> argparse.ArgumentParser:
 
 
 def run_minizinc(
-    model_path: str, data_path: str | None = None, solver_name: str = "gecode"
+    model_path: str, data_path: str | None = None, solver_name: str = "gecode", parallel: int | None = None
 ) -> dict[str, Any]:
     model = Model(Path(model_path))
     solver = Solver.lookup(solver_name)
@@ -35,7 +38,8 @@ def run_minizinc(
     if data_path:
         instance.add_file(Path(data_path))
 
-    result = instance.solve()
+    params = {"processes" : parallel} if parallel else {}
+    result = instance.solve(**params)
     if result.solution is None:
         raise RuntimeError("No solution found")
 

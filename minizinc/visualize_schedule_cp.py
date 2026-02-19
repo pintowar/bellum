@@ -17,8 +17,7 @@ def main():
     parser = create_parser("Visualize MiniZinc CP Schedule")
     args = parser.parse_args()
 
-#     data = run_minizinc(args.model, args.data, args.solver)
-    data = run_minizinc("cp-scheduler.mzn", args.data, args.solver)
+    data = run_minizinc("cp-scheduler.mzn", args.data, args.solver, args.parallel)
 
     assignments = list(data.get("a", []))
     start_times = list(data.get("s", []))
