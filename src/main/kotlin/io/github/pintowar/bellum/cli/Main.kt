@@ -1,10 +1,7 @@
 package io.github.pintowar.bellum.cli
 
-import picocli.CommandLine
-import kotlin.system.exitProcess
+import com.github.ajalt.clikt.core.main
 
 fun main(args: Array<String>) {
-    val commandLine = CommandLine(BellumCmd())
-    val exitCode = commandLine.execute(*args)
-    exitProcess(exitCode)
+    BellumCommand().main(args)
 }

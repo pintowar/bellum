@@ -6,7 +6,7 @@ graalvm-native = "0.11.4"
 sonarqube = "7.2.2.6593"
 jreleaser = "1.22.0"
 release = "3.1.0"
-picocli = "4.7.7"
+clikt = "5.1.0"
 konform = "0.11.1"
 choco-solver = "5.0.0"
 uuid-generator = "5.1.1"
@@ -21,8 +21,7 @@ kotlinx-datetime = "0.7.1-0.6.x-compat"
 sl4j = "2.0.17"
 
 [libraries]
-picocli = { module = "info.picocli:picocli", version.ref = "picocli" }
-picocli-codegen = { module = "info.picocli:picocli-codegen", version.ref = "picocli" }
+clikt = { module = "com.github.ajalt.clikt:clikt", version.ref = "clikt" }
 konform-jvm = { module = "io.konform:konform-jvm", version.ref = "konform" }
 choco-solver = { module = "org.choco-solver:choco-solver", version.ref = "choco-solver" }
 uuid-generator = { module = "com.fasterxml.uuid:java-uuid-generator", version.ref = "uuid-generator" }
@@ -42,7 +41,6 @@ kotest-assertions-konform-jvm = { module = "io.kotest:kotest-assertions-konform-
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
-kotlin-kapt = { id = "org.jetbrains.kotlin.kapt", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlint" }
 graalvm-native = { id = "org.graalvm.buildtools.native", version.ref = "graalvm-native" }
