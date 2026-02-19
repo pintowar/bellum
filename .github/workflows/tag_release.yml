@@ -59,6 +59,8 @@ jobs:
     name: Create Release
     needs: build-native
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -118,6 +120,6 @@ jobs:
           ls -la build/native/nativeCompile/
 
       - name: Create GitHub Release
-        run: ./gradlew jreleaserRelease
+        run: ./gradlew jreleaserRelease --stacktrace
         env:
           JRELEASER_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
