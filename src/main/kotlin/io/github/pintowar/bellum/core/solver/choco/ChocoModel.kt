@@ -34,11 +34,12 @@ import kotlin.time.Duration.Companion.minutes
 internal class ChocoModel(
     private val project: Project,
     estimator: TimeEstimator,
+    idx: Int = 0,
 ) {
     /**
      * The main Choco Solver model instance.
      */
-    private val model = Model("ProjectSchedulerModel")
+    internal val model = Model("ProjectSchedulerModel $idx")
 
     // --- Constants ---
 
