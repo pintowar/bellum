@@ -9,8 +9,8 @@ import io.kotest.matchers.result.shouldBeSuccess
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
-import kotlinx.datetime.Instant
 import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Instant
 
 class ProjectTest :
     FunSpec({

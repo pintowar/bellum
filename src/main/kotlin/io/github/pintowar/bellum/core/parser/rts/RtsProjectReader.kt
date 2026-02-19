@@ -3,8 +3,8 @@ package io.github.pintowar.bellum.core.parser.rts
 import io.github.pintowar.bellum.core.domain.Project
 import io.github.pintowar.bellum.core.parser.ContentReader
 import io.github.pintowar.bellum.core.parser.InvalidFileFormat
-import kotlinx.datetime.Clock
 import java.net.URI
+import kotlin.time.Clock
 
 class RtsProjectReader(
     private val name: String,

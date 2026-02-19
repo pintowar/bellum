@@ -5,6 +5,7 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.result.shouldBeFailure
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeTypeOf
+import kotlin.time.Clock
 
 class RtsProjectReaderTest :
     FunSpec({
@@ -315,9 +316,7 @@ class RtsProjectReaderTest :
                     1,Task 1,minor,-1,0,3
                     """.trimIndent()
 
-                val beforeTime =
-                    kotlinx.datetime.Clock.System
-                        .now()
+                val beforeTime = Clock.System.now()
                 val result = RtsProjectReader("My Test Project").readContent(content).getOrThrow()
 
                 result.name shouldBe "My Test Project"
