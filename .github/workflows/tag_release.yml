@@ -120,6 +120,6 @@ jobs:
           ls -la build/native/nativeCompile/
 
       - name: Create GitHub Release
-        run: ./gradlew jreleaserRelease --stacktrace
+        run: ./gradlew jreleaserRelease
         env:
           JRELEASER_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -3,7 +3,6 @@ import org.apache.tools.ant.filters.ReplaceTokens
 
 plugins {
     alias(libs.plugins.kotlin.jvm)
-    alias(libs.plugins.kotlin.kapt)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ktlint)
     alias(libs.plugins.graalvm.native)
@@ -39,8 +38,7 @@ repositories {
 }
 
 dependencies {
-    implementation(libs.picocli)
-    kapt(libs.picocli.codegen)
+    implementation(libs.clikt)
 
     implementation(libs.konform.jvm)
     implementation(libs.choco.solver)
@@ -60,12 +58,6 @@ dependencies {
 
 application {
     mainClass.set("io.github.pintowar.bellum.cli.MainKt")
-}
-
-kapt {
-    arguments {
-        arg("project", "${project.group}/${project.name}")
-    }
 }
 
 graalvmNative {
