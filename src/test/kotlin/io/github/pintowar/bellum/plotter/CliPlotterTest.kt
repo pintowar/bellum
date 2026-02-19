@@ -8,8 +8,8 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.comparables.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
-import kotlinx.datetime.Instant
 import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Instant
 
 class CliPlotterTest :
     FunSpec({

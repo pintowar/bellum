@@ -2,12 +2,12 @@ package io.github.pintowar.bellum.core.domain
 
 import io.konform.validation.Validation
 import io.konform.validation.andThen
-import kotlinx.datetime.Instant
 import org.jgrapht.alg.cycle.CycleDetector
 import org.jgrapht.graph.DefaultDirectedGraph
 import org.jgrapht.graph.DefaultEdge
 import java.util.UUID
 import kotlin.time.Duration
+import kotlin.time.Instant
 
 enum class ProjectScheduled { NONE, PARTIAL, SCHEDULED }
 

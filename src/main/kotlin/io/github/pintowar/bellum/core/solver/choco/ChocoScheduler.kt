@@ -4,9 +4,9 @@ import io.github.pintowar.bellum.core.domain.Project
 import io.github.pintowar.bellum.core.estimator.TimeEstimator
 import io.github.pintowar.bellum.core.solver.Scheduler
 import io.github.pintowar.bellum.core.solver.SchedulerSolution
-import kotlinx.datetime.Clock
 import org.chocosolver.solver.ParallelPortfolio
 import org.chocosolver.solver.Solution
+import kotlin.time.Clock
 import kotlin.time.Duration
 
 class ChocoScheduler(

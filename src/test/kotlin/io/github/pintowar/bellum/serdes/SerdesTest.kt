@@ -7,10 +7,10 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldContain
-import kotlinx.datetime.Instant
 import kotlin.io.path.Path
 import kotlin.io.path.deleteIfExists
 import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Instant
 
 class SerdesTest :
     FunSpec({

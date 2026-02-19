@@ -5,9 +5,9 @@ import io.github.pintowar.bellum.core.domain.Employee
 import io.github.pintowar.bellum.core.domain.Project
 import io.github.pintowar.bellum.core.domain.UnassignedTask
 import io.github.pintowar.bellum.core.estimator.CustomEstimator
-import kotlinx.datetime.Instant
 import kotlin.getOrThrow
 import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Instant
 
 object DataFixtures {
     private val kickOff = Instant.parse("2022-01-01T00:00:00Z")

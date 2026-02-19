@@ -5,9 +5,9 @@ import io.github.pintowar.bellum.core.domain.Employee
 import io.github.pintowar.bellum.core.domain.Project
 import io.github.pintowar.bellum.core.domain.TaskPriority
 import io.github.pintowar.bellum.core.domain.UnassignedTask
-import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
 import kotlin.time.Duration
+import kotlin.time.Instant
 
 @Serializable
 data class EmployeeDto(

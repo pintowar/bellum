@@ -2,9 +2,9 @@ package io.github.pintowar.bellum.core.domain
 
 import io.konform.validation.Validation
 import io.konform.validation.constraints.notBlank
-import kotlinx.datetime.Instant
 import java.util.UUID
 import kotlin.time.Duration
+import kotlin.time.Instant
 
 enum class TaskPriority(
     val value: Int,
