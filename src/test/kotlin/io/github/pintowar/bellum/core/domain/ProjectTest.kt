@@ -220,6 +220,43 @@ class ProjectTest :
             }
         }
 
+        context("priorityCost") {
+            val start = Instant.parse("2022-01-01T00:00:00Z")
+            val dur = 5.minutes
+
+            test("should be zero when no priority inversions exist") {
+                val t1 = DataFixtures.task1.assign(DataFixtures.employee1, start, dur)
+                val t2 = DataFixtures.task2.assign(DataFixtures.employee2, start + dur, dur)
+                val project =
+                    sampleProjectSmall
+                        .replace(
+                            employees = setOf(DataFixtures.employee1, DataFixtures.employee2),
+                            tasks = setOf(t1, t2),
+                        ).getOrThrow()
+
+                project.priorityCost shouldBe 0L
+            }
+
+            test("should compute cost when lower priority task starts earlier") {
+                val tCritical = UnassignedTask("Task CRITICAL", priority = TaskPriority.CRITICAL).getOrThrow()
+                val tMinor = UnassignedTask("Task MINOR", priority = TaskPriority.MINOR).getOrThrow()
+
+                // Minor starts first, Critical starts later -> inversion!
+                val t1 = tMinor.assign(DataFixtures.employee1, start, dur)
+                val t2 = tCritical.assign(DataFixtures.employee2, start + dur, dur)
+
+                val project =
+                    Project(
+                        name = "P",
+                        kickOff = start,
+                        employees = setOf(DataFixtures.employee1, DataFixtures.employee2),
+                        tasks = setOf(t1, t2),
+                    ).getOrThrow()
+
+                project.priorityCost shouldBe 1L
+            }
+        }
+
         context("scheduledStatus") {
             val start = Instant.parse("2022-01-01T00:00:00Z")
             val dur = 5.minutes

@@ -79,6 +79,23 @@ class Project private constructor(
 
     fun totalDuration(): Duration? = endsAt()?.let { it - kickOff }
 
+    val priorityCost: Long by lazy {
+        val assigned = tasks.filterIsInstance<AssignedTask>()
+        var cost = 0L
+        for (i in 0 until assigned.size) {
+            for (j in i + 1 until assigned.size) {
+                val t1 = assigned[i]
+                val t2 = assigned[j]
+                if (t1.startAt < t2.startAt && t1.priority.value > t2.priority.value) {
+                    cost++
+                } else if (t2.startAt < t1.startAt && t2.priority.value > t1.priority.value) {
+                    cost++
+                }
+            }
+        }
+        cost
+    }
+
     fun validate(): ValidationResult = validator.validate(this).toDomain()
 
     fun isValid(): Boolean = validator.validate(this).isValid
