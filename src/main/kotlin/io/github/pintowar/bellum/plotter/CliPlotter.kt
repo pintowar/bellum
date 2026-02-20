@@ -79,7 +79,7 @@ object CliPlotter {
 
     private fun employeeName(employee: Employee): String =
         if (employee.name.length <= NAME_PADDING) {
-            employee.name
+            employee.name.padEnd(NAME_PADDING)
         } else {
             "E${employee.name.takeLast(NAME_PADDING - 1)}"
         }
@@ -96,7 +96,7 @@ object CliPlotter {
         rulerMarks.forEach { mark ->
             val pos = (mark / scale).toInt()
             val markStr = mark.toString()
-            if (pos < width && pos > lastPos) {
+            if (pos in (lastPos + 1)..<width) {
                 if (header.length < pos) header.append(" ".repeat(pos - header.length))
                 header.append(markStr)
 
