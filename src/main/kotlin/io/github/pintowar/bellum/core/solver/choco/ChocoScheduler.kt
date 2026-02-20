@@ -5,6 +5,8 @@ import io.github.pintowar.bellum.core.estimator.TimeEstimator
 import io.github.pintowar.bellum.core.solver.Scheduler
 import io.github.pintowar.bellum.core.solver.SchedulerSolution
 import org.chocosolver.solver.Solution
+import org.chocosolver.solver.Solver
+import org.chocosolver.solver.search.SearchState
 import kotlin.time.Clock
 import kotlin.time.Duration
 
@@ -44,7 +46,7 @@ class ChocoScheduler(
             }
 
             val currentDuration = Clock.System.now() - initSolving
-            return model.decode(solution, currentDuration, !solver.isStopCriterionMet)
+            return model.decode(solution, currentDuration, solver.searchState == SearchState.TERMINATED)
         }
 
     fun parallelSolve(
@@ -59,9 +61,11 @@ class ChocoScheduler(
             val initSolving = Clock.System.now()
             var bestSolution: Solution? = null
             var bestModel: ChocoModel? = null
+            var bestSolver: Solver? = null
 
             while (portfolio.solve()) {
                 val finderModel = portfolio.bestModel
+                bestSolver = finderModel.solver
                 bestModel = chocoModels.first { it.name == finderModel.name }
                 bestSolution = bestModel.solution().record()
                 val currentDuration = Clock.System.now() - initSolving
@@ -69,10 +73,10 @@ class ChocoScheduler(
             }
 
             val currentDuration = Clock.System.now() - initSolving
-            val nonOptimal = portfolio.models.all { it.solver.isStopCriterionMet }
+            val optimal = bestSolver?.searchState == SearchState.TERMINATED
 
             if (bestSolution != null && bestModel != null) {
-                bestModel.decode(bestSolution, currentDuration, !nonOptimal).getOrThrow()
+                bestModel.decode(bestSolution, currentDuration, optimal).getOrThrow()
             } else {
                 val model = chocoModels.first()
                 model.decode(model.solution(), currentDuration, false).getOrThrow()
