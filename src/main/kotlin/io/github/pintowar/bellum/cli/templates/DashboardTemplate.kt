@@ -15,17 +15,39 @@ object DashboardTemplate {
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <!-- Apache ECharts -->
     <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #262626; color: #ddd; margin: 0; padding: 20px; }
-        .dashboard { max-width: 1200px; margin: 0 auto; display: grid; gap: 20px; }
-        .card { background: #333; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.5); }
-        .row { display: flex; gap: 20px; flex-wrap: wrap; }
-        .col { flex: 1; min-width: 300px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { border: 1px solid #555; padding: 8px; text-align: left; }
-        th { background-color: #444; }
-        input[type=range] { width: 100%; }
-        h2 { margin-top: 0; font-size: 1.2rem; color: #fff; }
+        :root {
+            --bg-body: #f4f2ef;
+            --bg-card: #ffffff;
+            --text-main: #4a3b32;
+            --text-muted: #95877a;
+            --accent-primary: #d6913c;
+            --accent-secondary: #54c597;
+            --border-color: #e8dfd8;
+        }
+        body { font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: var(--bg-body); color: var(--text-main); margin: 0; padding: 30px; }
+        .dashboard { max-width: 1400px; margin: 0 auto; display: flex; flex-direction: column; gap: 24px; }
+        .card { background: var(--bg-card); padding: 24px 32px; border-radius: 12px; box-shadow: 0 8px 24px rgba(74, 59, 50, 0.04); border: 1px solid var(--border-color); }
+        .row { display: flex; gap: 24px; flex-wrap: wrap; }
+        .col-2 { flex: 2; min-width: 500px; }
+        .col-1 { flex: 1; min-width: 300px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.9em; }
+        th, td { border-bottom: 1px solid var(--border-color); padding: 14px 8px; text-align: left; }
+        th { color: var(--text-muted); font-weight: 600; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; border-bottom: 2px solid var(--border-color); }
+        h2 { margin-top: 0; font-size: 1.1rem; color: var(--accent-primary); font-weight: 700; margin-bottom: 20px; }
+        .tag { font-size: 0.75rem; padding: 4px 10px; border-radius: 20px; font-weight: 600; background: var(--border-color); color: var(--text-main); }
+        .tag.valid { background: #e3f5ec; color: #2e8b57; }
+        .tag.warn { background: #fdf3e1; color: #b87a20; }
+        
+        input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; margin: 15px 0; }
+        input[type=range]:focus { outline: none; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 20px; width: 20px; border-radius: 50%; background: var(--bg-card); cursor: pointer; margin-top: -8px; border: 4px solid var(--accent-primary); box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; cursor: pointer; background: var(--accent-primary); border-radius: 2px; }
+        
+        .header-title { font-size: 1.5rem; font-weight: 700; color: var(--text-main); margin-bottom: 4px; display: flex; align-items: center; gap: 10px; }
+        .header-subtitle { font-size: 0.85rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
     </style>
 </head>
 <body>
@@ -60,14 +82,13 @@ object DashboardTemplate {
             const chartRef = useRef(null);
 
             useEffect(() => {
-                if (!chartRef.current || !solution || !project) return;
-                const myChart = echarts.init(chartRef.current, 'dark');
+                const myChart = echarts.init(chartRef.current);
                 myChart.setOption({ backgroundColor: 'transparent' }); // align with our theme
                 
                 const employees = project.employees.map(e => e.name);
                 
                 const dataPairs = [];
-                const colors = ['#5470c6', '#91cc75', '#fac858', '#ee6666', '#73c0de', '#3ba272', '#fc8452', '#9a60b4', '#ea7ccc'];
+                const colors = ['#54c597', '#d6913c', '#e7b87c', '#89d4b4'];
 
                 project.tasks.forEach((t, i) => {
                     if (t.employee && t.startAt) {
@@ -136,7 +157,10 @@ object DashboardTemplate {
                     xAxis: {
                         type: 'time',
                         scale: true,
+                        axisLine: { lineStyle: { color: '#e8dfd8' } },
+                        splitLine: { lineStyle: { color: '#f4f2ef' } },
                         axisLabel: {
+                            color: '#95877a',
                             formatter: function (val) {
                                 // show relative time or formatted date
                                 const d = new Date(val);
@@ -145,7 +169,10 @@ object DashboardTemplate {
                         }
                     },
                     yAxis: {
-                        data: employees
+                        data: employees,
+                        axisLine: { show: false },
+                        axisTick: { show: false },
+                        axisLabel: { color: '#4a3b32', fontWeight: 600 }
                     },
                     series: [{
                         type: 'custom',
@@ -176,7 +203,7 @@ object DashboardTemplate {
 
             useEffect(() => {
                 if (!chartRef.current || !history) return;
-                const myChart = echarts.init(chartRef.current, 'dark');
+                const myChart = echarts.init(chartRef.current);
                 myChart.setOption({ backgroundColor: 'transparent' });
 
                 const maxDurations = history.map(h => parseDuration(h.maxDuration));
@@ -185,29 +212,44 @@ object DashboardTemplate {
 
                 const option = {
                     tooltip: { trigger: 'axis' },
-                    legend: { data: ['Max Duration (m)', 'Priority Cost'] },
-                    grid: { height: 200, bottom: 30 },
-                    xAxis: { type: 'category', data: xData },
-                    yAxis: [{ type: 'value', name: 'Duration (m)' }, { type: 'value', name: 'Cost' }],
+                    legend: { data: ['Max Duration (m)', 'Priority Cost'], textStyle: { color: '#95877a' } },
+                    grid: { height: 200, bottom: 30, left: 50, right: 50, top: 40 },
+                    animation: false,
+                    xAxis: { 
+                        type: 'category', 
+                        data: xData,
+                        axisLine: { lineStyle: { color: '#e8dfd8' } },
+                        axisLabel: { color: '#95877a' }
+                    },
+                    yAxis: [
+                        { type: 'value', name: 'Duration (m)', splitLine: { lineStyle: { color: '#f4f2ef' } }, axisLabel: { color: '#95877a' }, nameTextStyle: { color: '#95877a' } }, 
+                        { type: 'value', name: 'Cost', splitLine: { show: false }, axisLabel: { color: '#95877a' }, nameTextStyle: { color: '#95877a' } }
+                    ],
                     series: [
                         { 
                             name: 'Max Duration (m)', 
                             type: 'line', 
+                            smooth: true,
+                            symbol: 'none',
+                            lineStyle: { width: 4 },
                             data: maxDurations, 
-                            itemStyle: { color: '#fac858' },
+                            itemStyle: { color: '#d6913c' },
                             markLine: {
                                 symbol: ['none', 'none'],
                                 label: { show: false },
-                                lineStyle: { color: '#ee6666', type: 'solid' },
+                                lineStyle: { color: '#d6913c', type: 'dashed', width: 2 },
                                 data: [{ xAxis: currentIndex }]
                             } 
                         },
                         { 
                             name: 'Priority Cost', 
                             type: 'line', 
+                            smooth: true,
+                            symbol: 'none',
+                            lineStyle: { width: 3 },
                             yAxisIndex: 1, 
                             data: priorityCosts,
-                            itemStyle: { color: '#5470c6' }
+                            itemStyle: { color: '#54c597' }
                         }
                     ]
                 };
@@ -243,9 +285,23 @@ object DashboardTemplate {
 
             return (
                 <div className="dashboard">
-                    <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                        <h2>Solution Navigation</h2>
-                        <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
+                    <div style={{ padding: '0 10px' }}>
+                        <div className="header-title">
+                            <span style={{ backgroundColor: 'var(--accent-primary)', color: 'white', padding: '4px 8px', borderRadius: '4px', fontSize: '0.8em' }}>S</span>
+                            Solver Dashboard
+                        </div>
+                        <div className="header-subtitle">EVOLUTION & OPTIMIZATION</div>
+                    </div>
+
+                    <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                        <div style={{ display: 'flex', alignItems: 'baseline', gap: '15px' }}>
+                            <h2 style={{ marginBottom: 0 }}>Solution Evolution</h2>
+                            {activeStats.optimal && <span style={{ color: 'var(--accent-primary)', fontWeight: 600, fontSize: '0.9rem' }}>Optimal Found</span>}
+                        </div>
+                        <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                            Current Iteration: <span style={{ color: 'var(--accent-primary)', fontWeight: 700 }}>{currentIndex}</span> / {maxIdx}
+                        </div>
+                        <div style={{ display: 'flex', gap: '20px', alignItems: 'center', marginTop: '10px' }}>
                             <input 
                                 type="range" 
                                 min="0" 
@@ -254,49 +310,50 @@ object DashboardTemplate {
                                 onChange={e => setCurrentIndex(parseInt(e.target.value, 10))} 
                                 style={{ flex: 1 }}
                             />
-                            <div style={{ fontWeight: 'bold', minWidth: '150px', textAlign: 'right' }}>
-                                Solution: {currentIndex + 1} / {maxIdx + 1}
-                            </div>
                         </div>
-                    </div>
-
-                    <div className="card">
-                        <h2>Gantt Chart (Worker x Task)</h2>
-                        <GanttChart solution={activeStats} project={activeProject} />
                     </div>
 
                     <div className="row">
-                        <div className="card col">
-                            <h2>Current Solution Info</h2>
+                        <div className="card col-2">
+                            <h2>Resource Task Assignment</h2>
+                            <GanttChart solution={activeStats} project={activeProject} />
+                        </div>
+
+                        <div className="card col-1">
+                            <h2>Solution Statistics</h2>
                             <table>
                                 <tbody>
-                                    <tr><th>Optimal Found</th><td>{activeStats.optimal ? 'Yes' : 'No'}</td></tr>
-                                    <tr><th>Valid Schedule</th><td>{activeStats.valid ? 'Yes' : 'No'}</td></tr>
-                                    <tr><th>Scheduling Status</th><td>{status}</td></tr>
-                                    <tr><th>Max Duration</th><td>{activeStats.maxDuration}</td></tr>
-                                    <tr><th>Priority Cost</th><td>{activeStats.priorityCost}</td></tr>
+                                    <tr><th>Metric</th><th>Value</th></tr>
+                                    <tr><td>Status</td><td><span className={"tag " + (activeStats.valid ? "valid" : "warn")}>{status}</span></td></tr>
+                                    <tr><td>Valid Schedule</td><td><span className={"tag " + (activeStats.valid ? "valid" : "warn")}>{activeStats.valid ? 'YES' : 'NO'}</span></td></tr>
+                                    <tr><td>Max Duration</td><td style={{ fontWeight: 600 }}>{activeStats.maxDuration}</td></tr>
+                                    <tr><td>Priority Cost</td><td style={{ fontWeight: 600 }}>{activeStats.priorityCost}</td></tr>
+                                    <tr><td>Optimal Found</td><td>{activeStats.optimal ? 'YES' : 'NO'}</td></tr>
                                 </tbody>
                             </table>
                         </div>
+                    </div>
 
-                        <div className="card col">
+                    <div className="row">
+                        <div className="card col-2">
+                            <h2>Objective Trend <span style={{fontSize: '0.7em', color: 'var(--text-muted)', fontWeight: 400}}>MINIMIZING MAX SPAN</span></h2>
+                            <ObjectiveChart history={data.solutionHistory} currentIndex={currentIndex} />
+                        </div>
+
+                        <div className="card col-1">
                             <h2>Solver Statistics</h2>
                             <table>
                                 <tbody>
+                                    <tr><th>Metric</th><th>Value</th></tr>
                                     {Object.entries(data.solverStats)
                                         .filter(([k, v]) => typeof v !== 'object' && k !== 'type')
                                         .map(([k, v]) => (
-                                            <tr key={k}><th>{k.charAt(0).toUpperCase() + k.slice(1)}</th><td>{v}</td></tr>
+                                            <tr key={k}><td>{k.charAt(0).toUpperCase() + k.slice(1)}</td><td style={{ fontWeight: 600, color: 'var(--accent-primary)' }}>{v}</td></tr>
                                         ))
                                     }
                                 </tbody>
                             </table>
                         </div>
-                    </div>
-
-                    <div className="card">
-                        <h2>Objective Function Evolution</h2>
-                        <ObjectiveChart history={data.solutionHistory} currentIndex={currentIndex} />
                     </div>
                 </div>
             );
