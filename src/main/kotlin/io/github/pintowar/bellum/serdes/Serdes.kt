@@ -20,22 +20,23 @@ object Serdes {
 fun SolutionHistory.solutionAndStats(): JsonElement? {
     val history =
         solutions.map { sol ->
+            val solverStats =
+                when (sol.stats["solver"]) {
+                    "Choco Solver" -> SolverStats.ChocoSolverStats(sol.stats)
+                    else -> SolverStats.UnknownSolverStats
+                }
             SolutionStatsDto(
                 sol.duration,
                 sol.project.totalDuration() ?: kotlin.time.Duration.ZERO,
                 sol.project.priorityCost,
                 sol.project.isValid(),
                 sol.optimal,
+                solverStats,
             )
         }
     val sol =
         solutions.lastOrNull()?.let {
-            val solverStats =
-                when (it.stats["solver"]) {
-                    "Choco Solver" -> SolverStats.ChocoSolverStats(it.stats)
-                    else -> SolverStats.UnknownSolverStats
-                }
-            SolutionSummaryDto(solutions.map { p -> ProjectDto(p.project) }, history, solverStats)
+            SolutionSummaryDto(solutions.map { p -> ProjectDto(p.project) }, history)
         }
 
     return sol?.let(Serdes::toJson)

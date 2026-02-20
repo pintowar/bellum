@@ -41,7 +41,6 @@ class SerdesTest :
                     SolutionSummaryDto(
                         solutions = listOf(projectDto),
                         solutionHistory = listOf(solutionStats),
-                        solverStats = solverStats,
                     )
 
                 val jsonElement = Serdes.toJson(summaryDto)
@@ -165,7 +164,6 @@ class SerdesTest :
                 result shouldNotBe null
                 val jsonResult = result!!
                 val jsonString = jsonResult.toString()
-                jsonString shouldContain "UnknownSolverStats"
                 jsonString shouldContain "\"optimal\":true"
                 jsonString shouldContain "\"valid\":true"
                 jsonString shouldContain "\"solverDuration\""
@@ -241,7 +239,6 @@ class SerdesTest :
                                     ),
                                 ),
                             solutionHistory = emptyList(),
-                            solverStats = SolverStats.UnknownSolverStats,
                         ),
                     )
 
@@ -276,7 +273,6 @@ class SerdesTest :
                                     ),
                                 ),
                             solutionHistory = emptyList(),
-                            solverStats = SolverStats.UnknownSolverStats,
                         ),
                     )
 
@@ -294,7 +290,6 @@ class SerdesTest :
                                     ),
                                 ),
                             solutionHistory = emptyList(),
-                            solverStats = SolverStats.UnknownSolverStats,
                         ),
                     )
 

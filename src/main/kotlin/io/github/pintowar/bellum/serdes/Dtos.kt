@@ -69,13 +69,13 @@ data class SolutionStatsDto(
     val priorityCost: Long,
     val valid: Boolean,
     val optimal: Boolean,
+    val solverStats: SolverStats = SolverStats.UnknownSolverStats,
 )
 
 @Serializable
 data class SolutionSummaryDto(
     val solutions: List<ProjectDto>,
     val solutionHistory: List<SolutionStatsDto>,
-    val solverStats: SolverStats,
 )
 
 @Serializable

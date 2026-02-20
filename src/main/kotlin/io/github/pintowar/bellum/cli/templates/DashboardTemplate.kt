@@ -403,7 +403,7 @@ object DashboardTemplate {
                             <table>
                                 <tbody>
                                     <tr><th>Metric</th><th>Value</th></tr>
-                                    {Object.entries(data.solverStats)
+                                    {Object.entries(activeStats.solverStats || {})
                                         .filter(([k, v]) => typeof v !== 'object' && k !== 'type')
                                         .map(([k, v]) => (
                                             <tr key={k}><td>{k.charAt(0).toUpperCase() + k.slice(1)}</td><td style={{ fontWeight: 600, color: 'var(--accent-primary)' }}>{v}</td></tr>
