@@ -88,7 +88,11 @@ object DashboardTemplate {
                 const employees = project.employees.map(e => e.name);
                 
                 const dataPairs = [];
-                const colors = ['#54c597', '#d6913c', '#e7b87c', '#89d4b4'];
+                const arrows = [];
+                const priorityColors = { 'CRITICAL': '#e74c3c', 'MAJOR': '#3498db', 'MINOR': '#2ecc71' };
+
+                const tasksById = {};
+                project.tasks.forEach(t => { tasksById[t.id] = t; });
 
                 project.tasks.forEach((t, i) => {
                     if (t.employee && t.startAt) {
@@ -97,8 +101,24 @@ object DashboardTemplate {
                         const end = start + dur;
                         const empIndex = employees.indexOf(t.employee.name);
                         
-                        // Pick a color based on task name to make it look nicer
-                        const color = colors[i % colors.length];
+                        let label = t.name.replace('Task ', 'T');
+                        const pred = t.dependsOn ? tasksById[t.dependsOn] : null;
+
+                        if (pred) {
+                            const predLabel = pred.name.replace('Task ', 'T');
+                            label = predLabel + '->' + label;
+
+                            if (pred.startAt && pred.employee) {
+                                const predEnd = new Date(pred.startAt).getTime() + parseDuration(pred.duration) * 60000;
+                                const predEmpIndex = employees.indexOf(pred.employee.name);
+                                arrows.push([
+                                    { coord: [predEnd, predEmpIndex] },
+                                    { coord: [start, empIndex] }
+                                ]);
+                            }
+                        }
+
+                        const color = priorityColors[t.priority] || '#54c597';
 
                         dataPairs.push({
                             name: t.name,
@@ -106,7 +126,8 @@ object DashboardTemplate {
                                 empIndex,
                                 start,
                                 end,
-                                parseDuration(t.duration)
+                                parseDuration(t.duration),
+                                label
                             ],
                             itemStyle: { normal: { color: color } }
                         });
@@ -118,6 +139,7 @@ object DashboardTemplate {
                     const start = api.coord([api.value(1), categoryIndex]);
                     const end = api.coord([api.value(2), categoryIndex]);
                     const height = api.size([0, 1])[1] * 0.6;
+                    const labelText = api.value(4);
 
                     // Ensure minimum width to be visible
                     let width = end[0] - start[0];
@@ -135,12 +157,35 @@ object DashboardTemplate {
                         height: params.coordSys.height
                     });
 
-                    return rectShape && {
-                        type: 'rect',
-                        transition: ['shape'],
-                        shape: rectShape,
-                        style: api.style()
-                    };
+                    if (rectShape) {
+                        rectShape.r = 4;
+                        return {
+                            type: 'group',
+                            children: [
+                                {
+                                    type: 'rect',
+                                    transition: ['shape'],
+                                    shape: rectShape,
+                                    style: api.style()
+                                },
+                                {
+                                    type: 'text',
+                                    style: {
+                                        text: width > 20 ? labelText : '',
+                                        x: rectShape.x + rectShape.width / 2,
+                                        y: rectShape.y + rectShape.height / 2,
+                                        textVerticalAlign: 'middle',
+                                        textAlign: 'center',
+                                        fill: '#ffffff',
+                                        fontSize: 10,
+                                        fontWeight: 600,
+                                        fontFamily: 'Inter, sans-serif'
+                                    },
+                                    z2: 10
+                                }
+                            ]
+                        };
+                    }
                 }
 
                 const option = {
@@ -181,7 +226,20 @@ object DashboardTemplate {
                             x: [1, 2],
                             y: 0
                         },
-                        data: dataPairs
+                        data: dataPairs,
+                        markLine: {
+                            symbol: ['none', 'arrow'],
+                            symbolSize: [6, 12],
+                            label: { show: false },
+                            lineStyle: {
+                                color: '#8e44ad',
+                                width: 2,
+                                type: 'solid'
+                            },
+                            data: arrows,
+                            animation: false,
+                            z: 20
+                        }
                     }]
                 };
 
