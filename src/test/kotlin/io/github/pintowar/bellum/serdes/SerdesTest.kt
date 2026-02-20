@@ -30,6 +30,7 @@ class SerdesTest :
                     SolutionStatsDto(
                         solverDuration = 5.minutes,
                         maxDuration = 10.minutes,
+                        priorityCost = 0L,
                         valid = true,
                         optimal = false,
                     )
@@ -38,7 +39,7 @@ class SerdesTest :
 
                 val summaryDto =
                     SolutionSummaryDto(
-                        solution = projectDto,
+                        solutions = listOf(projectDto),
                         solutionHistory = listOf(solutionStats),
                         solverStats = solverStats,
                     )
@@ -229,13 +230,15 @@ class SerdesTest :
                 val jsonElement =
                     Serdes.toJson(
                         SolutionSummaryDto(
-                            solution =
-                                ProjectDto(
-                                    id = "test",
-                                    name = "Test",
-                                    kickOff = Instant.parse("2022-01-01T00:00:00Z"),
-                                    employees = emptyList(),
-                                    tasks = emptyList(),
+                            solutions =
+                                listOf(
+                                    ProjectDto(
+                                        id = "test",
+                                        name = "Test",
+                                        kickOff = Instant.parse("2022-01-01T00:00:00Z"),
+                                        employees = emptyList(),
+                                        tasks = emptyList(),
+                                    ),
                                 ),
                             solutionHistory = emptyList(),
                             solverStats = SolverStats.UnknownSolverStats,
@@ -262,13 +265,15 @@ class SerdesTest :
                 val jsonElement1 =
                     Serdes.toJson(
                         SolutionSummaryDto(
-                            solution =
-                                ProjectDto(
-                                    id = "test1",
-                                    name = "Test1",
-                                    kickOff = Instant.parse("2022-01-01T00:00:00Z"),
-                                    employees = emptyList(),
-                                    tasks = emptyList(),
+                            solutions =
+                                listOf(
+                                    ProjectDto(
+                                        id = "test1",
+                                        name = "Test1",
+                                        kickOff = Instant.parse("2022-01-01T00:00:00Z"),
+                                        employees = emptyList(),
+                                        tasks = emptyList(),
+                                    ),
                                 ),
                             solutionHistory = emptyList(),
                             solverStats = SolverStats.UnknownSolverStats,
@@ -278,13 +283,15 @@ class SerdesTest :
                 val jsonElement2 =
                     Serdes.toJson(
                         SolutionSummaryDto(
-                            solution =
-                                ProjectDto(
-                                    id = "test2",
-                                    name = "Test2",
-                                    kickOff = Instant.parse("2022-01-01T00:00:00Z"),
-                                    employees = emptyList(),
-                                    tasks = emptyList(),
+                            solutions =
+                                listOf(
+                                    ProjectDto(
+                                        id = "test2",
+                                        name = "Test2",
+                                        kickOff = Instant.parse("2022-01-01T00:00:00Z"),
+                                        employees = emptyList(),
+                                        tasks = emptyList(),
+                                    ),
                                 ),
                             solutionHistory = emptyList(),
                             solverStats = SolverStats.UnknownSolverStats,

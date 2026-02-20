@@ -4,7 +4,6 @@ import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.core.Context
 import com.github.ajalt.clikt.parameters.arguments.argument
 import com.github.ajalt.clikt.parameters.options.default
-import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.versionOption
 import com.github.ajalt.clikt.parameters.types.int
@@ -41,11 +40,11 @@ class BellumCommand(
         help = "solver time limit in seconds",
     ).int().default(30)
 
-    private val output: Boolean by option(
+    private val output: String? by option(
         "-o",
         "--output",
-        help = "output a detailed solution on a json file: 'output.json'",
-    ).flag()
+        help = "output a detailed solution on a html dashboard: 'index.html' on the given folder",
+    )
 
     private val path: String by argument(
         "PATH",
@@ -93,8 +92,10 @@ class BellumCommand(
         currentDir: String,
         result: SolutionHistory,
     ) {
-        if (output) {
-            result.solutionAndStats()?.export("$currentDir/output.json")
+        if (output != null) {
+            val out = if (output!!.endsWith(".html")) output!! else "$output/index.html"
+            val absOut = if (out.startsWith("/")) out else "$currentDir/$out"
+            result.solutionAndStats()?.export(absOut)
         }
     }
 
