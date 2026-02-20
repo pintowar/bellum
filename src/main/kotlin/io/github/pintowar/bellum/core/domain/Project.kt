@@ -121,15 +121,6 @@ class Project private constructor(
             .map { it as AssignedTask }
             .groupBy { it.employee }
 
-    fun describe(): String =
-        """
-        |Project: $name (starting at $kickOff). Max duration: ${totalDuration()}.
-        |-------
-        ${assignedTasks().map { (emp, tasks) ->
-            "|${emp.name}: ${tasks.map { "${it.description} (${it.priority}) - ${it.duration}" }}"
-        }.joinToString("\n")}
-    """.trimMargin("|")
-
     // validations
     private val overlappedEmployees by lazy {
         assignedTasks()
