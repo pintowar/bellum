@@ -1,9 +1,11 @@
 package io.github.pintowar.bellum.serdes
 
 import io.github.pintowar.bellum.core.solver.SolutionHistory
+import io.github.pintowar.bellum.report.SolverTemplate
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.encodeToJsonElement
+import java.nio.file.Files
 import kotlin.io.path.Path
 import kotlin.io.path.notExists
 import kotlin.io.path.writeBytes
@@ -46,13 +48,10 @@ fun JsonElement.export(fileName: String) {
     val file = Path(fileName)
     file.parent?.let {
         if (it.notExists()) {
-            java.nio.file.Files
-                .createDirectories(it)
+            Files.createDirectories(it)
         }
     }
 
-    val outputHtml =
-        io.github.pintowar.bellum.cli.templates.DashboardTemplate
-            .generateHtml(this.toString())
+    val outputHtml = SolverTemplate.generateHtml(this.toString())
     file.writeBytes(outputHtml.toByteArray())
 }
