@@ -46,8 +46,6 @@ dependencies {
     implementation(libs.jgrapht.core)
     implementation(libs.commons.math3)
 
-    implementation(libs.lets.plot.kotlin.jvm)
-    implementation(libs.lets.plot.image.export)
     implementation(libs.kotlinx.datetime)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.slf4j.nop)
