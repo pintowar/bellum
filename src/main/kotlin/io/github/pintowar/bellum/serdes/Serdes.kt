@@ -20,23 +20,10 @@ object Serdes {
 fun SolutionHistory.solutionAndStats(): JsonElement? {
     val history =
         solutions.map { sol ->
-            val tasks = sol.project.allTasks().filterIsInstance<io.github.pintowar.bellum.core.domain.AssignedTask>()
-            var priorityCost = 0L
-            for (i in 0 until tasks.size) {
-                for (j in i + 1 until tasks.size) {
-                    val t1 = tasks[i]
-                    val t2 = tasks[j]
-                    if (t1.startAt < t2.startAt && t1.priority.value > t2.priority.value) {
-                        priorityCost++
-                    } else if (t2.startAt < t1.startAt && t2.priority.value > t1.priority.value) {
-                        priorityCost++
-                    }
-                }
-            }
             SolutionStatsDto(
                 sol.duration,
                 sol.project.totalDuration() ?: kotlin.time.Duration.ZERO,
-                priorityCost,
+                sol.project.priorityCost,
                 sol.project.isValid(),
                 sol.optimal,
             )
