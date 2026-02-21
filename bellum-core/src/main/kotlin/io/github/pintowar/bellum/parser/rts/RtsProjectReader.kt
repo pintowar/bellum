@@ -91,14 +91,14 @@ class RtsProjectReader(
                 if (employeeContent.isBlank()) {
                     emptyList()
                 } else {
-                    RtsEmployeeReader.readContent(employeeContent).getOrThrow()
+                    RtsEmployeeReader.readContent(employeeContent, sep).getOrThrow()
                 }
 
             val tasks =
                 if (taskContent.isBlank()) {
                     emptyList()
                 } else {
-                    RtsTaskReader.readContent(taskContent).getOrThrow()
+                    RtsTaskReader.readContent(taskContent, sep).getOrThrow()
                 }
 
             val project = Project(name, Clock.System.now(), employees.toSet(), tasks.toSet()).getOrThrow()
@@ -106,7 +106,7 @@ class RtsProjectReader(
             val estimationMatrixContent = matrixLines.joinToString("\n")
             val estimationMatrix =
                 RtsMatrixReader
-                    .readContent(estimationMatrixContent)
+                    .readContent(estimationMatrixContent, sep)
                     .mapCatching {
                         if (it.isNotEmpty()) {
                             RtsMatrixReader.validateMatrix(it, employees.size, tasks.size).getOrThrow()

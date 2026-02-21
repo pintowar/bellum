@@ -213,11 +213,11 @@ class RtsProjectReaderTest :
             test("custom separator should work") {
                 val content =
                     """
-                    id,content,skill1,skill2
-                    1,Thiago,0,3
+                    id|content|skill1|skill2
+                    1|Thiago|0|3
                     ========================================
-                    id,content,priority,precedes,skill1,skill2
-                    1,Task 1,minor,-1,0,3
+                    id|content|priority|precedes|skill1|skill2
+                    1|Task 1|minor|-1|0|3
                     """.trimIndent()
 
                 val result = RtsProjectReader("Test").readContent(content, "|").getOrThrow()
