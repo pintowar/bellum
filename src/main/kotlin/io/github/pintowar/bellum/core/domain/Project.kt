@@ -2,12 +2,12 @@ package io.github.pintowar.bellum.core.domain
 
 import io.konform.validation.Validation
 import io.konform.validation.andThen
-import kotlinx.datetime.Instant
 import org.jgrapht.alg.cycle.CycleDetector
 import org.jgrapht.graph.DefaultDirectedGraph
 import org.jgrapht.graph.DefaultEdge
 import java.util.UUID
 import kotlin.time.Duration
+import kotlin.time.Instant
 
 enum class ProjectScheduled { NONE, PARTIAL, SCHEDULED }
 
@@ -79,6 +79,23 @@ class Project private constructor(
 
     fun totalDuration(): Duration? = endsAt()?.let { it - kickOff }
 
+    val priorityCost: Long by lazy {
+        val assigned = tasks.filterIsInstance<AssignedTask>()
+        var cost = 0L
+        for (i in 0 until assigned.size) {
+            for (j in i + 1 until assigned.size) {
+                val t1 = assigned[i]
+                val t2 = assigned[j]
+                if (t1.startAt < t2.startAt && t1.priority.value > t2.priority.value) {
+                    cost++
+                } else if (t2.startAt < t1.startAt && t2.priority.value > t1.priority.value) {
+                    cost++
+                }
+            }
+        }
+        cost
+    }
+
     fun validate(): ValidationResult = validator.validate(this).toDomain()
 
     fun isValid(): Boolean = validator.validate(this).isValid
@@ -103,15 +120,6 @@ class Project private constructor(
             .filter { it.isAssigned() }
             .map { it as AssignedTask }
             .groupBy { it.employee }
-
-    fun describe(): String =
-        """
-        |Project: $name (starting at $kickOff). Max duration: ${totalDuration()}.
-        |-------
-        ${assignedTasks().map { (emp, tasks) ->
-            "|${emp.name}: ${tasks.map { "${it.description} (${it.priority}) - ${it.duration}" }}"
-        }.joinToString("\n")}
-    """.trimMargin("|")
 
     // validations
     private val overlappedEmployees by lazy {

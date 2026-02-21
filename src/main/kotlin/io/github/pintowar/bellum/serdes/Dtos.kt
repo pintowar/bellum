@@ -5,9 +5,9 @@ import io.github.pintowar.bellum.core.domain.Employee
 import io.github.pintowar.bellum.core.domain.Project
 import io.github.pintowar.bellum.core.domain.TaskPriority
 import io.github.pintowar.bellum.core.domain.UnassignedTask
-import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
 import kotlin.time.Duration
+import kotlin.time.Instant
 
 @Serializable
 data class EmployeeDto(
@@ -66,15 +66,16 @@ data class ProjectDto(
 data class SolutionStatsDto(
     val solverDuration: Duration,
     val maxDuration: Duration,
+    val priorityCost: Long,
     val valid: Boolean,
     val optimal: Boolean,
+    val solverStats: SolverStats = SolverStats.UnknownSolverStats,
 )
 
 @Serializable
 data class SolutionSummaryDto(
-    val solution: ProjectDto,
+    val solutions: List<ProjectDto>,
     val solutionHistory: List<SolutionStatsDto>,
-    val solverStats: SolverStats,
 )
 
 @Serializable

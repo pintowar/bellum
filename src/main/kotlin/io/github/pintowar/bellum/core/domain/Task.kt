@@ -2,9 +2,9 @@ package io.github.pintowar.bellum.core.domain
 
 import io.konform.validation.Validation
 import io.konform.validation.constraints.notBlank
-import kotlinx.datetime.Instant
 import java.util.UUID
 import kotlin.time.Duration
+import kotlin.time.Instant
 
 enum class TaskPriority(
     val value: Int,
@@ -97,6 +97,7 @@ class AssignedTask private constructor(
     val employee: Employee,
     val startAt: Instant,
     val duration: Duration,
+    val pinned: Boolean = false,
 ) : Task {
     companion object {
         private val validator =
@@ -115,6 +116,7 @@ class AssignedTask private constructor(
             employee: Employee,
             startAt: Instant,
             duration: Duration,
+            pinned: Boolean = false,
         ): Result<AssignedTask> =
             AssignedTask(
                 TaskId(id),
@@ -125,6 +127,7 @@ class AssignedTask private constructor(
                 employee,
                 startAt,
                 duration,
+                pinned,
             ).validateAndWrap(validator)
 
         operator fun invoke(
@@ -135,11 +138,15 @@ class AssignedTask private constructor(
             employee: Employee,
             startAt: Instant,
             duration: Duration,
-        ): Result<AssignedTask> = invoke(TaskId()(), description, priority, skills, dependsOn, employee, startAt, duration)
+            pinned: Boolean = false,
+        ): Result<AssignedTask> = invoke(TaskId()(), description, priority, skills, dependsOn, employee, startAt, duration, pinned)
     }
 
     val endsAt: Instant = startAt + duration
 
+    fun pin(): AssignedTask =
+        if (pinned) this else invoke(id(), description, priority, requiredSkills, dependsOn, employee, startAt, duration, true).getOrThrow()
+
     override fun changeDependency(dependsOn: Task?): AssignedTask =
-        invoke(id(), description, priority, requiredSkills, dependsOn, employee, startAt, duration).getOrThrow()
+        invoke(id(), description, priority, requiredSkills, dependsOn, employee, startAt, duration, pinned).getOrThrow()
 }

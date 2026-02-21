@@ -1,11 +1,12 @@
 package io.github.pintowar.bellum.serdes
 
 import io.github.pintowar.bellum.core.solver.SolutionHistory
+import io.github.pintowar.bellum.report.SolverTemplate
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.encodeToJsonElement
+import java.nio.file.Files
 import kotlin.io.path.Path
-import kotlin.io.path.createFile
 import kotlin.io.path.notExists
 import kotlin.io.path.writeBytes
 
@@ -19,15 +20,25 @@ object Serdes {
 }
 
 fun SolutionHistory.solutionAndStats(): JsonElement? {
-    val history = solutions.map { SolutionStatsDto(it.duration, it.project.totalDuration()!!, it.project.isValid(), it.optimal) }
-    val sol =
-        solutions.lastOrNull()?.let {
+    val history =
+        solutions.map { sol ->
             val solverStats =
-                when (it.stats["solver"]) {
-                    "Choco Solver" -> SolverStats.ChocoSolverStats(it.stats)
+                when (sol.stats["solver"]) {
+                    "Choco Solver" -> SolverStats.ChocoSolverStats(sol.stats)
                     else -> SolverStats.UnknownSolverStats
                 }
-            SolutionSummaryDto(ProjectDto(it.project), history, solverStats)
+            SolutionStatsDto(
+                sol.duration,
+                sol.project.totalDuration() ?: kotlin.time.Duration.ZERO,
+                sol.project.priorityCost,
+                sol.project.isValid(),
+                sol.optimal,
+                solverStats,
+            )
+        }
+    val sol =
+        solutions.lastOrNull()?.let {
+            SolutionSummaryDto(solutions.map { p -> ProjectDto(p.project) }, history)
         }
 
     return sol?.let(Serdes::toJson)
@@ -35,8 +46,12 @@ fun SolutionHistory.solutionAndStats(): JsonElement? {
 
 fun JsonElement.export(fileName: String) {
     val file = Path(fileName)
-    if (file.notExists()) {
-        file.createFile()
+    file.parent?.let {
+        if (it.notExists()) {
+            Files.createDirectories(it)
+        }
     }
-    this.toString().toByteArray().let(file::writeBytes)
+
+    val outputHtml = SolverTemplate.generateHtml(this.toString())
+    file.writeBytes(outputHtml.toByteArray())
 }

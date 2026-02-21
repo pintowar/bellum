@@ -3,7 +3,6 @@ import org.apache.tools.ant.filters.ReplaceTokens
 
 plugins {
     alias(libs.plugins.kotlin.jvm)
-    alias(libs.plugins.kotlin.kapt)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ktlint)
     alias(libs.plugins.graalvm.native)
@@ -39,8 +38,7 @@ repositories {
 }
 
 dependencies {
-    implementation(libs.picocli)
-    kapt(libs.picocli.codegen)
+    implementation(libs.clikt)
 
     implementation(libs.konform.jvm)
     implementation(libs.choco.solver)
@@ -48,8 +46,6 @@ dependencies {
     implementation(libs.jgrapht.core)
     implementation(libs.commons.math3)
 
-    implementation(libs.lets.plot.kotlin.jvm)
-    implementation(libs.lets.plot.image.export)
     implementation(libs.kotlinx.datetime)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.slf4j.nop)
@@ -60,12 +56,6 @@ dependencies {
 
 application {
     mainClass.set("io.github.pintowar.bellum.cli.MainKt")
-}
-
-kapt {
-    arguments {
-        arg("project", "${project.group}/${project.name}")
-    }
 }
 
 graalvmNative {
@@ -146,7 +136,18 @@ jreleaser {
         create("bellum") {
             distributionType.set(org.jreleaser.model.Distribution.DistributionType.BINARY)
             artifact {
-                path.set(file("$rootDir/build/native/nativeCompile/bellum"))
+                path.set(file("$rootDir/build/native/nativeCompile/bellum-linux-x86_64"))
+                platform.set("linux-x86_64")
+                extraProperties.put("graalVMNativeImage", true)
+            }
+            artifact {
+                path.set(file("$rootDir/build/native/nativeCompile/bellum-osx-aarch_64"))
+                platform.set("osx-aarch_64")
+                extraProperties.put("graalVMNativeImage", true)
+            }
+            artifact {
+                path.set(file("$rootDir/build/native/nativeCompile/bellum-windows-x86_64.exe"))
+                platform.set("windows-x86_64")
                 extraProperties.put("graalVMNativeImage", true)
             }
         }
