@@ -473,6 +473,14 @@
                         {activeStats.optimal && <span style={{ color: 'var(--accent-primary)', fontWeight: 600, fontSize: '0.9rem' }}>Optimal Found</span>}
                     </div>
                     <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                        <span style={{ marginRight: '15px' }}>
+                            <strong>Project:</strong> {data.projectName}
+                        </span>
+                        <span>
+                            <strong>Solver:</strong> {data.solverName}
+                        </span>
+                    </div>
+                    <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
                         Current Iteration: <span style={{ color: 'var(--accent-primary)', fontWeight: 700 }}>{currentIndex}</span> / {maxIdx}
                     </div>
                     <div style={{ display: 'flex', gap: '20px', alignItems: 'center', marginTop: '10px' }}>

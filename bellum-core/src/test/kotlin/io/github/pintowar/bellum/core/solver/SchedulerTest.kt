@@ -27,7 +27,7 @@ class SchedulerTest :
             // Mock the behavior of solveOptimizationProblem.
             // We add a delay to increase the chance of threads interleaving,
             // making the race condition more likely to appear if the code is flawed.
-            coEvery { scheduler.solveOptimizationProblem(any(), any(), any()) } coAnswers {
+            coEvery { scheduler.solveOptimizationProblem(any(), any(), any(), any()) } coAnswers {
                 delay(100) // Simulate work
                 Result.success(SchedulerSolution(DataFixtures.sampleProjectSmall, false, 100.milliseconds))
             }
@@ -66,7 +66,7 @@ class SchedulerTest :
 
             // Crucially, verify that the actual heavy work was only performed ONCE.
             verify(exactly = 1) {
-                scheduler.solveOptimizationProblem(any(), any(), any())
+                scheduler.solveOptimizationProblem(any(), any(), any(), any())
             }
         }
 

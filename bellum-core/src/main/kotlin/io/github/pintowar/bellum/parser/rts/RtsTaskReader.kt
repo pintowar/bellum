@@ -1,4 +1,4 @@
-package io.github.pintowar.bellum.core.parser.rts
+package io.github.pintowar.bellum.parser.rts
 
 import io.github.pintowar.bellum.core.domain.SkillPoint
 import io.github.pintowar.bellum.core.domain.Task

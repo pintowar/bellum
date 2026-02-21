@@ -1,5 +1,6 @@
-package io.github.pintowar.bellum.core.estimator
+package io.github.pintowar.bellum.estimator
 
+import io.github.pintowar.bellum.core.estimator.TimeEstimator
 import org.apache.commons.math3.stat.correlation.PearsonsCorrelation
 import kotlin.math.roundToLong
 import kotlin.time.Duration

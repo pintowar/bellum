@@ -4,7 +4,7 @@ import io.github.pintowar.bellum.core.domain.AssignedTask
 import io.github.pintowar.bellum.core.domain.Employee
 import io.github.pintowar.bellum.core.domain.Project
 import io.github.pintowar.bellum.core.domain.UnassignedTask
-import io.github.pintowar.bellum.core.estimator.CustomEstimator
+import io.github.pintowar.bellum.estimator.CustomEstimator
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Instant
 
