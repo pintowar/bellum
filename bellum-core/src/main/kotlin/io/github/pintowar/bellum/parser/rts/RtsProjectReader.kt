@@ -39,54 +39,6 @@ class RtsProjectReader(
         }
     }
 
-    private fun parseMatrix(
-        lines: List<String>,
-        numEmployees: Int,
-        numTasks: Int,
-    ): List<List<Long>>? {
-        val matrixLines = lines.filter { it.isNotBlank() }
-        if (matrixLines.isEmpty()) return null
-
-        val taskIds =
-            matrixLines
-                .first()
-                .split(",")
-                .drop(1)
-                .map { it.trim() }
-        if (taskIds.size != numTasks) {
-            throw InvalidFileFormat(
-                "Matrix header has ${taskIds.size} task IDs but project has $numTasks tasks.",
-            )
-        }
-
-        val matrix =
-            matrixLines.drop(1).mapIndexed { idx, line ->
-                val parts = line.split(",").map { it.trim() }
-                if (parts.size != numTasks + 1) {
-                    throw InvalidFileFormat(
-                        "Matrix row has ${parts.size - 1} values but expected $numTasks.",
-                    )
-                }
-                parts.drop(1).mapIndexed { colIdx, value ->
-                    try {
-                        value.toLong()
-                    } catch (e: NumberFormatException) {
-                        throw InvalidFileFormat(
-                            "Invalid duration value '$value' at matrix row ${idx + 1}, column ${colIdx + 1}.",
-                        )
-                    }
-                }
-            }
-
-        if (matrix.size != numEmployees) {
-            throw InvalidFileFormat(
-                "Matrix has ${matrix.size} employee rows but project has $numEmployees employees.",
-            )
-        }
-
-        return matrix
-    }
-
     /**
      * Parses the project content string into a Project domain object.
      * Expects a format with employees above a separator line and tasks below.
@@ -151,7 +103,17 @@ class RtsProjectReader(
 
             val project = Project(name, Clock.System.now(), employees.toSet(), tasks.toSet()).getOrThrow()
 
-            val estimationMatrix = parseMatrix(matrixLines, employees.size, tasks.size)
+            val estimationMatrixContent = matrixLines.joinToString("\n")
+            val estimationMatrix =
+                RtsMatrixReader
+                    .readContent(estimationMatrixContent)
+                    .mapCatching {
+                        if (it.isNotEmpty()) {
+                            RtsMatrixReader.validateMatrix(it, employees.size, tasks.size).getOrThrow()
+                        } else {
+                            null
+                        }
+                    }.getOrThrow()
 
             ParsedProject(project, estimationMatrix)
         }
