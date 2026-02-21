@@ -5,6 +5,8 @@ import com.github.ajalt.clikt.parameters.arguments.argument
 import com.github.ajalt.clikt.parameters.options.default
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.types.int
+import com.github.ajalt.mordant.rendering.TextColors
+import com.github.ajalt.mordant.rendering.TextStyles
 import io.github.pintowar.bellum.core.domain.ProjectScheduled
 import io.github.pintowar.bellum.core.estimator.PearsonEstimator
 import io.github.pintowar.bellum.core.parser.rts.RtsProjectReader
@@ -14,16 +16,11 @@ import io.github.pintowar.bellum.core.solver.choco.ChocoScheduler
 import io.github.pintowar.bellum.plotter.cliGantt
 import io.github.pintowar.bellum.serdes.export
 import io.github.pintowar.bellum.serdes.solutionAndStats
-import java.io.PrintStream
 import kotlin.system.exitProcess
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
-class SolveCommand(
-    private val stdOutput: PrintStream,
-    private val stdError: PrintStream,
-) : CliktCommand(name = "solve") {
-    constructor() : this(System.out, System.err)
+class SolveCommand : CliktCommand(name = "solve") {
 
     private val timeLimit: Int by option(
         "-l",
@@ -67,7 +64,7 @@ class SolveCommand(
                 "| $valid, $status, $optimal",
             ).joinToString(" ")
 
-        stdOutput.println(desc)
+        echo(desc)
     }
 
     private fun getScheduler(): io.github.pintowar.bellum.core.solver.Scheduler =
@@ -107,21 +104,21 @@ class SolveCommand(
             val result = readAndSolveProject(currentDir).getOrThrow()
             writeOutput(currentDir, result)
 
-            stdOutput.println()
-            stdOutput.println(result.lastProject()?.cliGantt(120))
+            echo()
+            echo(result.lastProject()?.cliGantt(120))
         } catch (e: Exception) {
-            stdError.println(red(e.message ?: "Unknown error"))
+            echo(red(e.message ?: "Unknown error"), err = true)
             exitProcess(1)
         }
     }
 
     private companion object {
-        private fun bold(text: String) = "\u001b[1m$text\u001b[0m"
+        private fun bold(text: String) = TextStyles.bold(text)
 
-        private fun red(text: String) = bold("\u001b[31m$text\u001b[0m")
+        private fun red(text: String) = bold(TextColors.red(text))
 
-        private fun green(text: String) = bold("\u001b[32m$text\u001b[0m")
+        private fun green(text: String) = bold(TextColors.green(text))
 
-        private fun yellow(text: String) = bold("\u001b[33m$text\u001b[0m")
+        private fun yellow(text: String) = bold(TextColors.yellow(text))
     }
 }
