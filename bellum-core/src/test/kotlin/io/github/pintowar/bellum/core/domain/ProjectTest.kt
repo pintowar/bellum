@@ -2,7 +2,6 @@ package io.github.pintowar.bellum.core.domain
 
 import io.github.pintowar.bellum.core.DataFixtures
 import io.github.pintowar.bellum.core.DataFixtures.sampleProjectSmall
-import io.github.pintowar.bellum.core.domain.messagesAtPath
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.result.shouldBeFailure
 import io.kotest.matchers.result.shouldBeSuccess

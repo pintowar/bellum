@@ -15,7 +15,7 @@ abstract class Scheduler {
     /**
      * Core optimization algorithm implementation.
      *
-     * This internal method contains the actual solving logic for the scheduling optimization problem.
+     * This method contains the actual solving logic for the scheduling optimization problem.
      * It should implement a specific optimization algorithm (e.g., constraint programming,
      * linear programming, heuristic search) to find feasible schedules.
      *
@@ -24,7 +24,7 @@ abstract class Scheduler {
      * @param callback Optional callback invoked for each solution found during optimization
      * @return Result containing the optimal solution or failure with error details
      */
-    internal abstract fun solveOptimizationProblem(
+    abstract fun solveOptimizationProblem(
         project: Project,
         timeLimit: Duration = 1.minutes,
         callback: (SchedulerSolution) -> Unit = {},

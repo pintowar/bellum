@@ -13,6 +13,7 @@ plugins {
 rootProject.name = "bellum"
 
 include(":bellum-core")
+include(":bellum-solver:choco")
 include(":bellum-cli")
 
 kover {
