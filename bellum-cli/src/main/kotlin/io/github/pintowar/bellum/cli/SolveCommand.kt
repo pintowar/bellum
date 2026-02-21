@@ -8,11 +8,10 @@ import com.github.ajalt.clikt.parameters.types.int
 import com.github.ajalt.mordant.rendering.TextColors
 import com.github.ajalt.mordant.rendering.TextStyles
 import io.github.pintowar.bellum.core.domain.ProjectScheduled
-import io.github.pintowar.bellum.core.estimator.PearsonEstimator
 import io.github.pintowar.bellum.core.parser.rts.RtsProjectReader
+import io.github.pintowar.bellum.core.solver.SchedulerRegistry
 import io.github.pintowar.bellum.core.solver.SchedulerSolution
 import io.github.pintowar.bellum.core.solver.SolutionHistory
-import io.github.pintowar.bellum.core.solver.choco.ChocoScheduler
 import io.github.pintowar.bellum.plotter.cliGantt
 import io.github.pintowar.bellum.serdes.export
 import io.github.pintowar.bellum.serdes.solutionAndStats
@@ -21,7 +20,6 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
 class SolveCommand : CliktCommand(name = "solve") {
-
     private val timeLimit: Int by option(
         "-l",
         "--limit",
@@ -67,11 +65,7 @@ class SolveCommand : CliktCommand(name = "solve") {
         echo(desc)
     }
 
-    private fun getScheduler(): io.github.pintowar.bellum.core.solver.Scheduler =
-        when (solver.lowercase()) {
-            "choco" -> ChocoScheduler(PearsonEstimator())
-            else -> throw IllegalArgumentException("Unknown solver: $solver. Available solvers: choco")
-        }
+    private fun getScheduler() = SchedulerRegistry.getSolverOrThrow(solver).createScheduler()
 
     private fun readAndSolveProject(currentDir: String): Result<SolutionHistory> =
         runCatching {
