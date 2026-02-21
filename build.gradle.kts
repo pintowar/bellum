@@ -22,6 +22,16 @@ tasks {
     named("sonar") {
         dependsOn(koverXmlReport)
     }
+
+    register<Sync>("nativeCompile") {
+        group = "native"
+        description = "Compiles native image and copies to root build directory"
+
+        dependsOn(":bellum-cli:nativeCompile")
+
+        from("$rootDir/bellum-cli/build/native/nativeCompile")
+        into("$rootDir/build/native/nativeCompile")
+    }
 }
 
 configure<ReleaseExtension> {
