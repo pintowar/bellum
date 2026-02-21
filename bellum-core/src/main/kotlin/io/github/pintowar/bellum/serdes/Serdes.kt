@@ -38,7 +38,13 @@ fun SolutionHistory.solutionAndStats(): JsonElement? {
         }
     val sol =
         solutions.lastOrNull()?.let {
-            SolutionSummaryDto(solutions.map { p -> ProjectDto(p.project) }, history)
+            val solverName = it.stats["solver"]?.toString() ?: "Unknown"
+            SolutionSummaryDto(
+                solutions.map { p -> ProjectDto(p.project) },
+                history,
+                solverName,
+                it.project.name,
+            )
         }
 
     return sol?.let(Serdes::toJson)

@@ -76,6 +76,8 @@ data class SolutionStatsDto(
 data class SolutionSummaryDto(
     val solutions: List<ProjectDto>,
     val solutionHistory: List<SolutionStatsDto>,
+    val solverName: String = "Unknown",
+    val projectName: String = "",
 )
 
 @Serializable
