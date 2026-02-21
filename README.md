@@ -15,8 +15,113 @@ It uses constraint programming solvers for optimal scheduling.
 
 ## Features
 
-Handle complex constraints like:
+- **Constraint-based Scheduling**: Uses constraint programming to find feasible and optimal schedules
+- **Skill Matching**: Tasks require specific skill levels; employees have skill profiles
+- **Task Dependencies**: Support for task precedence constraints
+- **Priority Levels**: Tasks can be CRITICAL, MAJOR, or MINOR priority
+- **Parallel Solving**: Multi-threaded solver for faster optimization
+- **Multiple Output Formats**: Console output with optional HTML dashboard
 
-- Task dependencies;
-- Skill Requirements;
-- Time conflicts.
+## Modules
+
+- **bellum-core**: Core domain models, solver abstractions, estimators, and file parsers;
+- **bellum-solver**
+  - **choco**: ChocoSolver implementation using constraint programming;
+- **bellum-cli**: Command-line interface for running the scheduler.
+
+## Supported Solvers
+
+Currently supported:
+
+- **choco**: Choco Solver - Constraint programming solver (default)
+
+Run `solvers` command to list all available solvers.
+
+## Input Format (RTS)
+
+Bellum uses a custom RTS (Resource Task Scheduling) format with CSV-like structure:
+
+```
+id,content,skill1,skill2,skill3,...
+1,Employee Name,5,3,0,...
+================================================================================
+id,content,priority,precedes,skill1,skill2,skill3,...
+1,Task Description,major,-1,3,2,0,...
+2,Another Task,minor,1,1,1,2,...
+================================================================================
+10,20
+30,40
+```
+
+### Employee Section (above first separator)
+
+| Column | Description |
+|--------|-------------|
+| `id` | Unique employee identifier |
+| `content` | Employee name |
+| `skillN` | Skill level for skill N (0-5) |
+
+### Task Section (between separators)
+
+| Column | Description |
+|--------|-------------|
+| `id` | Unique task identifier |
+| `content` | Task description |
+| `priority` | Task priority: `critical`, `major`, or `minor` |
+| `precedes` | ID of task that must complete first (`-1` for none) |
+| `skillN` | Required skill level for skill N |
+
+### Estimation Matrix (below second separator - optional)
+
+When present, this section overrides the default Pearson correlation estimator and provides custom duration estimates (in minutes) for each employee-task pair. The matrix contains only numeric values where rows represent employees and columns represent tasks.
+
+```
+10,20,30
+40,50,60
+```
+
+| Column | Description |
+|--------|-------------|
+| (row N) | Duration in minutes for employee N on all tasks |
+| (values) | Duration for each task in order |
+
+If this section is omitted, the solver uses the default Pearson correlation estimator based on skill matching.
+
+## CLI Usage
+
+### List Available Solvers
+
+```bash
+./bellum solvers
+```
+
+### Solve a Scheduling Problem
+
+```bash
+./bellum solve [OPTIONS] PATH
+```
+
+### Examples
+
+```bash
+# Basic solve with default settings
+./bellum solve project.rts
+
+# Solve with 60 second time limit (default 30)
+./bellum solve -l 60 project.rts
+
+# Solve and generate HTML dashboard
+./bellum solve -o ./output project.rts
+
+# Use Choco as solver (default choco)
+./bellum solve -s choco project.rts
+
+# Use 4 threads for parallel solving
+./bellum solve -p 4 project.rts
+```
+
+### Output Report
+
+This is a sample report output:
+
+![solver-evo](https://github.com/user-attachments/assets/58f128da-ffba-43f0-a0f2-d8d6ce7f48c3)
