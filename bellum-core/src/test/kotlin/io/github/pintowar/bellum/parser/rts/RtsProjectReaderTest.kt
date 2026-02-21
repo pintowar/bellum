@@ -1,10 +1,13 @@
-package io.github.pintowar.bellum.core.parser.rts
+package io.github.pintowar.bellum.parser.rts
 
 import io.github.pintowar.bellum.core.parser.InvalidFileFormat
+import io.github.pintowar.bellum.parser.rts.RtsProjectReader
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.result.shouldBeFailure
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeTypeOf
+import kotlin.math.abs
+import kotlin.math.max
 import kotlin.time.Clock
 
 class RtsProjectReaderTest :
@@ -322,8 +325,8 @@ class RtsProjectReaderTest :
                 result.name shouldBe "My Test Project"
                 result.kickOff shouldBe result.kickOff // Check it's set
                 // Verify timestamp is reasonable (within a few seconds of now)
-                val timeDiff = kotlin.math.abs(result.kickOff.minus(beforeTime).inWholeMilliseconds)
-                timeDiff.shouldBe(kotlin.math.max(timeDiff, 0)) // Should be non-negative
+                val timeDiff = abs(result.kickOff.minus(beforeTime).inWholeMilliseconds)
+                timeDiff.shouldBe(max(timeDiff, 0)) // Should be non-negative
             }
         }
     })

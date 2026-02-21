@@ -1,6 +1,7 @@
-package io.github.pintowar.bellum.core.parser.rts
+package io.github.pintowar.bellum.parser.rts
 
 import io.github.pintowar.bellum.core.parser.InvalidFileFormat
+import io.github.pintowar.bellum.parser.rts.RtsEmployeeReader
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.result.shouldBeFailure
 import io.kotest.matchers.result.shouldBeSuccess

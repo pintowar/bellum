@@ -1,10 +1,11 @@
-package io.github.pintowar.bellum.core.estimator
+package io.github.pintowar.bellum.estimator
 
 import io.github.pintowar.bellum.core.domain.Employee
 import io.github.pintowar.bellum.core.domain.EmployeeId
 import io.github.pintowar.bellum.core.domain.Project
 import io.github.pintowar.bellum.core.domain.Task
 import io.github.pintowar.bellum.core.domain.TaskId
+import io.github.pintowar.bellum.core.estimator.TimeEstimator
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 
