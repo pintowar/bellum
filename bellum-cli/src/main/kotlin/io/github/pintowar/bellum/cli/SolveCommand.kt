@@ -38,6 +38,12 @@ class SolveCommand : CliktCommand(name = "solve") {
         help = "solver to use (default: choco)",
     ).default("choco")
 
+    private val parallel: Int by option(
+        "-p",
+        "--parallel",
+        help = "number of threads for parallel solver (-1 for auto, 1 for single-thread, default: -1)",
+    ).int().default(-1)
+
     private val path: String by argument(
         "PATH",
         help = "file to be solved",
@@ -75,7 +81,7 @@ class SolveCommand : CliktCommand(name = "solve") {
                 .readContentFromPath(currentDir, path)
                 .mapCatching {
                     scheduler
-                        .collectAllOptimalSchedules(it, timeLimit.seconds) { sol ->
+                        .collectAllOptimalSchedules(it, timeLimit.seconds, parallel) { sol ->
                             describe(sol)
                         }.getOrThrow()
                 }
