@@ -1,4 +1,4 @@
-package io.github.pintowar.bellum.core.solver.choco
+package io.github.pintowar.bellum.solver.choco
 
 import io.github.pintowar.bellum.core.domain.AssignedTask
 import io.github.pintowar.bellum.core.domain.Employee
