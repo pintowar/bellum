@@ -14,12 +14,14 @@ dependencies {
 
 application {
     mainClass.set("io.github.pintowar.bellum.cli.MainKt")
+    applicationName = "bellum"
 }
 
 graalvmNative {
     toolchainDetection.set(true)
     binaries {
         named("main") {
+            imageName.set(application.applicationName)
             buildArgs.add("-H:IncludeResources=application\\.properties")
             buildArgs.add("--enable-url-protocols=https")
             buildArgs.add("--rerun-class-initialization-at-runtime=kotlin.DeprecationLevel")
