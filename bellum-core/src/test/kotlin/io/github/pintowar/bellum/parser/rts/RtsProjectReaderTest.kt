@@ -1,10 +1,13 @@
-package io.github.pintowar.bellum.core.parser.rts
+package io.github.pintowar.bellum.parser.rts
 
 import io.github.pintowar.bellum.core.parser.InvalidFileFormat
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.result.shouldBeFailure
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.types.shouldBeTypeOf
+import kotlin.math.abs
+import kotlin.math.max
 import kotlin.time.Clock
 
 class RtsProjectReaderTest :
@@ -27,10 +30,10 @@ class RtsProjectReaderTest :
                 """.trimIndent()
 
             val result = RtsProjectReader("Sample Project").readContent(content).getOrThrow()
-            result.allEmployees().size shouldBe 3
-            result.allTasks().size shouldBe 5
-            result.name shouldBe "Sample Project"
-            result.kickOff shouldBe result.kickOff
+            result.project.allEmployees().size shouldBe 3
+            result.project.allTasks().size shouldBe 5
+            result.project.name shouldBe "Sample Project"
+            result.project.kickOff shouldBe result.project.kickOff
         }
 
         context("malformed content structure") {
@@ -134,8 +137,8 @@ class RtsProjectReaderTest :
                     """.trimIndent()
 
                 val result = RtsProjectReader("Test").readContent(content).getOrThrow()
-                result.allEmployees().size shouldBe 0
-                result.allTasks().size shouldBe 1
+                result.project.allEmployees().size shouldBe 0
+                result.project.allTasks().size shouldBe 1
             }
 
             test("empty task section should succeed") {
@@ -147,15 +150,15 @@ class RtsProjectReaderTest :
                     """.trimIndent()
 
                 val result = RtsProjectReader("Test").readContent(content).getOrThrow()
-                result.allEmployees().size shouldBe 1
-                result.allTasks().size shouldBe 0
+                result.project.allEmployees().size shouldBe 1
+                result.project.allTasks().size shouldBe 0
             }
 
             test("both sections empty should succeed") {
                 val content = "================================================="
                 val result = RtsProjectReader("Test").readContent(content).getOrThrow()
-                result.allEmployees().size shouldBe 0
-                result.allTasks().size shouldBe 0
+                result.project.allEmployees().size shouldBe 0
+                result.project.allTasks().size shouldBe 0
             }
         }
 
@@ -171,8 +174,8 @@ class RtsProjectReaderTest :
                     """.trimIndent()
 
                 val result = RtsProjectReader("Test").readContent(content).getOrThrow()
-                result.allEmployees().size shouldBe 1
-                result.allTasks().size shouldBe 1
+                result.project.allEmployees().size shouldBe 1
+                result.project.allTasks().size shouldBe 1
             }
 
             test("separator with different characters should work") {
@@ -186,8 +189,8 @@ class RtsProjectReaderTest :
                     """.trimIndent()
 
                 val result = RtsProjectReader("Test").readContent(content).getOrThrow()
-                result.allEmployees().size shouldBe 1
-                result.allTasks().size shouldBe 1
+                result.project.allEmployees().size shouldBe 1
+                result.project.allTasks().size shouldBe 1
             }
 
             test("separator line with spaces should work") {
@@ -201,8 +204,8 @@ class RtsProjectReaderTest :
                     """.trimIndent()
 
                 val result = RtsProjectReader("Test").readContent(content).getOrThrow()
-                result.allEmployees().size shouldBe 1
-                result.allTasks().size shouldBe 1
+                result.project.allEmployees().size shouldBe 1
+                result.project.allTasks().size shouldBe 1
             }
         }
 
@@ -210,16 +213,16 @@ class RtsProjectReaderTest :
             test("custom separator should work") {
                 val content =
                     """
-                    id,content,skill1,skill2
-                    1,Thiago,0,3
+                    id|content|skill1|skill2
+                    1|Thiago|0|3
                     ========================================
-                    id,content,priority,precedes,skill1,skill2
-                    1,Task 1,minor,-1,0,3
+                    id|content|priority|precedes|skill1|skill2
+                    1|Task 1|minor|-1|0|3
                     """.trimIndent()
 
                 val result = RtsProjectReader("Test").readContent(content, "|").getOrThrow()
-                result.allEmployees().size shouldBe 1
-                result.allTasks().size shouldBe 1
+                result.project.allEmployees().size shouldBe 1
+                result.project.allTasks().size shouldBe 1
             }
         }
 
@@ -242,11 +245,11 @@ class RtsProjectReaderTest :
                     """.trimIndent()
 
                 val result = RtsProjectReader("Complex Project").readContent(content).getOrThrow()
-                result.allEmployees().size shouldBe 4
-                result.allTasks().size shouldBe 5
-                result.name shouldBe "Complex Project"
+                result.project.allEmployees().size shouldBe 4
+                result.project.allTasks().size shouldBe 5
+                result.project.name shouldBe "Complex Project"
 
-                val task2 = result.allTasks().find { it.description == "Frontend UI" }
+                val task2 = result.project.allTasks().find { it.description == "Frontend UI" }
                 task2?.dependsOn?.description shouldBe "Backend API"
             }
         }
@@ -281,8 +284,8 @@ class RtsProjectReaderTest :
                     """.trimIndent()
 
                 val result = RtsProjectReader("Test").readContent(content).getOrThrow()
-                result.allEmployees().size shouldBe 1
-                result.allTasks().size shouldBe 1
+                result.project.allEmployees().size shouldBe 1
+                result.project.allTasks().size shouldBe 1
             }
 
             test("content with extra newlines between sections should work") {
@@ -300,8 +303,8 @@ class RtsProjectReaderTest :
                     """.trimIndent()
 
                 val result = RtsProjectReader("Test").readContent(content).getOrThrow()
-                result.allEmployees().size shouldBe 1
-                result.allTasks().size shouldBe 1
+                result.project.allEmployees().size shouldBe 1
+                result.project.allTasks().size shouldBe 1
             }
         }
 
@@ -319,11 +322,94 @@ class RtsProjectReaderTest :
                 val beforeTime = Clock.System.now()
                 val result = RtsProjectReader("My Test Project").readContent(content).getOrThrow()
 
-                result.name shouldBe "My Test Project"
-                result.kickOff shouldBe result.kickOff // Check it's set
+                result.project.name shouldBe "My Test Project"
+                result.project.kickOff shouldBe result.project.kickOff // Check it's set
                 // Verify timestamp is reasonable (within a few seconds of now)
-                val timeDiff = kotlin.math.abs(result.kickOff.minus(beforeTime).inWholeMilliseconds)
-                timeDiff.shouldBe(kotlin.math.max(timeDiff, 0)) // Should be non-negative
+                val timeDiff =
+                    abs(
+                        result.project.kickOff
+                            .minus(beforeTime)
+                            .inWholeMilliseconds,
+                    )
+                timeDiff.shouldBe(max(timeDiff, 0)) // Should be non-negative
+            }
+        }
+
+        context("estimation matrix") {
+            test("valid matrix should be parsed correctly") {
+                val content =
+                    """
+                    id,content,skill1,skill2
+                    1,Alice,5,3
+                    2,Bob,2,4
+                    ================================================================================
+                    id,content,priority,precedes,skill1,skill2
+                    1,Task 1,minor,-1,3,2
+                    2,Task 2,major,-1,1,1
+                    ================================================================================
+                    10,20
+                    30,40
+                    """.trimIndent()
+
+                val result = RtsProjectReader("Matrix Project").readContent(content).getOrThrow()
+                result.project.allEmployees().size shouldBe 2
+                result.project.allTasks().size shouldBe 2
+                result.estimationMatrix shouldNotBe null
+                val matrix = result.estimationMatrix!!
+                matrix.size shouldBe 2
+                matrix[0] shouldBe listOf(10L, 20L)
+                matrix[1] shouldBe listOf(30L, 40L)
+            }
+
+            test("without matrix should return null") {
+                val content =
+                    """
+                    id,content,skill1,skill2
+                    1,Alice,5,3
+                    ================================================================================
+                    id,content,priority,precedes,skill1,skill2
+                    1,Task 1,minor,-1,3,2
+                    """.trimIndent()
+
+                val result = RtsProjectReader("No Matrix").readContent(content).getOrThrow()
+                result.estimationMatrix shouldBe null
+            }
+
+            test("matrix with wrong number of columns should fail") {
+                val content =
+                    """
+                    id,content,skill1,skill2
+                    1,Alice,5,3
+                    2,Bob,2,4
+                    ================================================================================
+                    id,content,priority,precedes,skill1,skill2
+                    1,Task 1,minor,-1,3,2
+                    2,Task 2,major,-1,1,1
+                    ================================================================================
+                    10
+                    30
+                    """.trimIndent()
+
+                val result = RtsProjectReader("Wrong Matrix").readContent(content)
+                result.shouldBeFailure()
+            }
+
+            test("matrix with wrong number of rows should fail") {
+                val content =
+                    """
+                    id,content,skill1,skill2
+                    1,Alice,5,3
+                    2,Bob,2,4
+                    ================================================================================
+                    id,content,priority,precedes,skill1,skill2
+                    1,Task 1,minor,-1,3,2
+                    2,Task 2,major,-1,1,1
+                    ================================================================================
+                    10,20
+                    """.trimIndent()
+
+                val result = RtsProjectReader("Wrong Rows").readContent(content)
+                result.shouldBeFailure()
             }
         }
     })

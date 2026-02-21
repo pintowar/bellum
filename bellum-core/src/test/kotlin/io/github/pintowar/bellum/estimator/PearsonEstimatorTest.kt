@@ -1,5 +1,7 @@
-package io.github.pintowar.bellum.core.estimator
+package io.github.pintowar.bellum.estimator
 
+import io.github.pintowar.bellum.core.estimator.IllegalNumSkills
+import io.github.pintowar.bellum.core.estimator.IllegalSkillSets
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.result.shouldBeFailure
 import io.kotest.matchers.result.shouldBeSuccess

@@ -1,4 +1,4 @@
-package io.github.pintowar.bellum.core.solver.choco
+package io.github.pintowar.bellum.solver.choco
 
 import io.github.pintowar.bellum.core.domain.Project
 import io.github.pintowar.bellum.core.estimator.TimeEstimator
@@ -12,11 +12,11 @@ import kotlin.time.Duration
 
 class ChocoScheduler(
     override val estimator: TimeEstimator,
-    private val numThreads: Int = -1,
 ) : Scheduler() {
     override fun solveOptimizationProblem(
         project: Project,
         timeLimit: Duration,
+        numThreads: Int,
         callback: (SchedulerSolution) -> Unit,
     ): Result<SchedulerSolution> =
         when (numThreads) {
@@ -52,7 +52,7 @@ class ChocoScheduler(
     fun parallelSolve(
         project: Project,
         timeLimit: Duration,
-        numThreads: Int = Runtime.getRuntime().availableProcessors(),
+        numThreads: Int,
         callback: (SchedulerSolution) -> Unit = {},
     ): Result<SchedulerSolution> =
         runCatching {

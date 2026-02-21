@@ -1,4 +1,4 @@
-package io.github.pintowar.bellum.core.parser.rts
+package io.github.pintowar.bellum.parser.rts
 
 import io.github.pintowar.bellum.core.parser.InvalidFileFormat
 import io.kotest.core.spec.style.FunSpec

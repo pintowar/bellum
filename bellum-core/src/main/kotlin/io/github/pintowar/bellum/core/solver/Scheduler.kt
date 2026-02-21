@@ -21,12 +21,14 @@ abstract class Scheduler {
      *
      * @param project The project containing tasks and employees to schedule
      * @param timeLimit Maximum time allowed for optimization (default: 1 minute)
+     * @param numThreads Number of threads for parallel solving (-1 for auto, 1 for single-threaded)
      * @param callback Optional callback invoked for each solution found during optimization
      * @return Result containing the optimal solution or failure with error details
      */
     abstract fun solveOptimizationProblem(
         project: Project,
         timeLimit: Duration = 1.minutes,
+        numThreads: Int = -1,
         callback: (SchedulerSolution) -> Unit = {},
     ): Result<SchedulerSolution>
 
@@ -39,6 +41,7 @@ abstract class Scheduler {
      *
      * @param project The project containing tasks and employees to schedule
      * @param timeLimit Maximum time allowed for optimization (default: 1 minute)
+     * @param numThreads Number of threads for parallel solving (-1 for auto, 1 for single-threaded)
      * @param callback Optional callback invoked when a solution is found
      * @return Result containing the optimal schedule or failure if scheduling is already in progress
      * @throws IllegalStateException if the scheduler is already processing another project
@@ -46,13 +49,14 @@ abstract class Scheduler {
     fun findOptimalSchedule(
         project: Project,
         timeLimit: Duration = 1.minutes,
+        numThreads: Int = -1,
         callback: (SchedulerSolution) -> Unit = {},
     ): Result<SchedulerSolution> {
         if (!isProcessing.compareAndSet(false, true)) {
             return Result.failure(IllegalStateException("Scheduler is already processing."))
         }
 
-        val result = solveOptimizationProblem(project, timeLimit, callback)
+        val result = solveOptimizationProblem(project, timeLimit, numThreads, callback)
         isProcessing.set(false)
         return result
     }
@@ -66,17 +70,19 @@ abstract class Scheduler {
      *
      * @param project The project containing tasks and employees to schedule
      * @param timeLimit Maximum time allowed for optimization (default: 1 minute)
+     * @param numThreads Number of threads for parallel solving (-1 for auto, 1 for single-threaded)
      * @param callback Optional callback invoked for each solution found
      * @return Result containing all schedules discovered during optimization or failure details
      */
     fun collectAllOptimalSchedules(
         project: Project,
         timeLimit: Duration = 1.minutes,
+        numThreads: Int = -1,
         callback: (SchedulerSolution) -> Unit = {},
     ): Result<SolutionHistory> {
         val solutions = ConcurrentLinkedQueue<SchedulerSolution>()
         val finalSolution =
-            findOptimalSchedule(project, timeLimit) {
+            findOptimalSchedule(project, timeLimit, numThreads) {
                 callback(it)
                 solutions.add(it)
             }

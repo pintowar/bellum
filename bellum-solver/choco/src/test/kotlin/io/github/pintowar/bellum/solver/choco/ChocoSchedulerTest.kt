@@ -1,4 +1,4 @@
-package io.github.pintowar.bellum.core.solver.choco
+package io.github.pintowar.bellum.solver.choco
 
 import io.github.pintowar.bellum.core.DataFixtures
 import io.github.pintowar.bellum.core.domain.AssignedTask
@@ -19,7 +19,7 @@ class ChocoSchedulerTest :
             val (scheduledProject, optimal) = solution.getOrThrow()
             scheduledProject.scheduledStatus() shouldBe ProjectScheduled.SCHEDULED
             scheduledProject.isValid() shouldBe true
-            scheduledProject.endsAt() shouldBe Instant.parse("2022-01-01T01:00:00Z")
+            scheduledProject.endsAt() shouldBe Instant.Companion.parse("2022-01-01T01:00:00Z")
             optimal shouldBe true
         }
 
@@ -31,7 +31,7 @@ class ChocoSchedulerTest :
             val (scheduledProject, optimal) = solution.getOrThrow()
             scheduledProject.scheduledStatus() shouldBe ProjectScheduled.SCHEDULED
             scheduledProject.isValid() shouldBe true
-            scheduledProject.endsAt() shouldBe Instant.parse("2022-01-01T01:00:00Z")
+            scheduledProject.endsAt() shouldBe Instant.Companion.parse("2022-01-01T01:00:00Z")
             optimal shouldBe true
         }
 
