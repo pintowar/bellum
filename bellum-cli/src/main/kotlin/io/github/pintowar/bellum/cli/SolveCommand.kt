@@ -8,9 +8,13 @@ import com.github.ajalt.clikt.parameters.types.int
 import com.github.ajalt.mordant.rendering.TextColors
 import com.github.ajalt.mordant.rendering.TextStyles
 import io.github.pintowar.bellum.core.domain.ProjectScheduled
+import io.github.pintowar.bellum.core.estimator.TimeEstimator
+import io.github.pintowar.bellum.core.solver.Scheduler
 import io.github.pintowar.bellum.core.solver.SchedulerRegistry
 import io.github.pintowar.bellum.core.solver.SchedulerSolution
 import io.github.pintowar.bellum.core.solver.SolutionHistory
+import io.github.pintowar.bellum.estimator.CustomEstimator
+import io.github.pintowar.bellum.estimator.PearsonEstimator
 import io.github.pintowar.bellum.parser.rts.RtsProjectReader
 import io.github.pintowar.bellum.plotter.cliGantt
 import io.github.pintowar.bellum.serdes.export
@@ -71,20 +75,24 @@ class SolveCommand : CliktCommand(name = "solve") {
         echo(desc)
     }
 
-    private fun getScheduler() = SchedulerRegistry.getSolverOrThrow(solver).createScheduler()
+    private fun getScheduler(estimator: TimeEstimator): Scheduler = SchedulerRegistry.getSolverOrThrow(solver).createScheduler(estimator)
 
     private fun readAndSolveProject(currentDir: String): Result<SolutionHistory> =
         runCatching {
-            val scheduler = getScheduler()
+            val parsedProject =
+                RtsProjectReader.readContentFromPath(currentDir, path).getOrThrow()
 
-            return RtsProjectReader
-                .readContentFromPath(currentDir, path)
-                .mapCatching {
-                    scheduler
-                        .collectAllOptimalSchedules(it, timeLimit.seconds, parallel) { sol ->
-                            describe(sol)
-                        }.getOrThrow()
-                }
+            val estimator =
+                parsedProject.estimationMatrix?.let { matrix ->
+                    CustomEstimator(parsedProject.project, matrix)
+                } ?: PearsonEstimator()
+
+            val scheduler = getScheduler(estimator)
+
+            scheduler
+                .collectAllOptimalSchedules(parsedProject.project, timeLimit.seconds, parallel) { sol ->
+                    describe(sol)
+                }.getOrThrow()
         }
 
     private fun writeOutput(

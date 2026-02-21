@@ -9,9 +9,12 @@ import kotlin.time.Clock
 
 class RtsProjectReader(
     private val name: String,
-) : ContentReader<Project> {
+) : ContentReader<ParsedProject> {
     companion object {
         private fun content(uri: String) = URI(uri).toURL().readText()
+
+        private fun isSeparatorLine(line: String): Boolean =
+            line.isNotBlank() && line.all { it == '=' || it == '-' || it == '_' || it == ' ' }
 
         /**
          * Reads project content from a file path, trying multiple URI formats.
@@ -23,7 +26,7 @@ class RtsProjectReader(
         fun readContentFromPath(
             base: String,
             uri: String,
-        ): Result<Project> {
+        ): Result<ParsedProject> {
             val projectName = File(uri).nameWithoutExtension
             return Result
                 .success(uri)
@@ -36,9 +39,58 @@ class RtsProjectReader(
         }
     }
 
+    private fun parseMatrix(
+        lines: List<String>,
+        numEmployees: Int,
+        numTasks: Int,
+    ): List<List<Long>>? {
+        val matrixLines = lines.filter { it.isNotBlank() }
+        if (matrixLines.isEmpty()) return null
+
+        val taskIds =
+            matrixLines
+                .first()
+                .split(",")
+                .drop(1)
+                .map { it.trim() }
+        if (taskIds.size != numTasks) {
+            throw InvalidFileFormat(
+                "Matrix header has ${taskIds.size} task IDs but project has $numTasks tasks.",
+            )
+        }
+
+        val matrix =
+            matrixLines.drop(1).mapIndexed { idx, line ->
+                val parts = line.split(",").map { it.trim() }
+                if (parts.size != numTasks + 1) {
+                    throw InvalidFileFormat(
+                        "Matrix row has ${parts.size - 1} values but expected $numTasks.",
+                    )
+                }
+                parts.drop(1).mapIndexed { colIdx, value ->
+                    try {
+                        value.toLong()
+                    } catch (e: NumberFormatException) {
+                        throw InvalidFileFormat(
+                            "Invalid duration value '$value' at matrix row ${idx + 1}, column ${colIdx + 1}.",
+                        )
+                    }
+                }
+            }
+
+        if (matrix.size != numEmployees) {
+            throw InvalidFileFormat(
+                "Matrix has ${matrix.size} employee rows but project has $numEmployees employees.",
+            )
+        }
+
+        return matrix
+    }
+
     /**
      * Parses the project content string into a Project domain object.
      * Expects a format with employees above a separator line and tasks below.
+     * Optionally, a matrix section can follow tasks (after another separator line).
      * @param content The raw content string to parse
      * @param sep The delimiter used within employee and task sections
      * @return Result containing the parsed Project or an error
@@ -46,7 +98,7 @@ class RtsProjectReader(
     override fun readContent(
         content: String,
         sep: String,
-    ): Result<Project> =
+    ): Result<ParsedProject> =
         runCatching {
             val trimmedContent = content.trim()
             if (trimmedContent.isBlank()) {
@@ -54,16 +106,32 @@ class RtsProjectReader(
             }
 
             val lines = trimmedContent.lines()
-            val idx =
-                lines.indexOfFirst { line ->
-                    line.isNotBlank() && line.all { it == '=' || it == '-' || it == '_' || it == ' ' }
+            val separatorIndices =
+                lines.mapIndexedNotNull { idx, line ->
+                    if (isSeparatorLine(line)) idx else null
                 }
 
-            if (idx == -1) {
+            if (separatorIndices.isEmpty()) {
                 throw InvalidFileFormat("Missing separator line.")
             }
 
-            val (employeeLines, taskLines) = lines.take(idx) to lines.drop(idx + 1)
+            val firstSepIdx = separatorIndices.first()
+
+            val employeeLines = lines.take(firstSepIdx)
+            val afterFirstSep = lines.drop(firstSepIdx + 1)
+
+            val secondSepIdx =
+                separatorIndices.getOrNull(1)?.let { secondIdx ->
+                    secondIdx - firstSepIdx - 1
+                }
+
+            val (taskLines, matrixLines) =
+                if (secondSepIdx != null && secondSepIdx > 0) {
+                    afterFirstSep.take(secondSepIdx) to afterFirstSep.drop(secondSepIdx + 1)
+                } else {
+                    afterFirstSep to emptyList()
+                }
+
             val employeeContent = employeeLines.joinToString("\n")
             val taskContent = taskLines.joinToString("\n")
 
@@ -81,6 +149,10 @@ class RtsProjectReader(
                     RtsTaskReader.readContent(taskContent).getOrThrow()
                 }
 
-            return Project(name, Clock.System.now(), employees.toSet(), tasks.toSet())
+            val project = Project(name, Clock.System.now(), employees.toSet(), tasks.toSet()).getOrThrow()
+
+            val estimationMatrix = parseMatrix(matrixLines, employees.size, tasks.size)
+
+            ParsedProject(project, estimationMatrix)
         }
 }

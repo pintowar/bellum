@@ -48,9 +48,13 @@ id,content,skill1,skill2,skill3,...
 id,content,priority,precedes,skill1,skill2,skill3,...
 1,Task Description,major,-1,3,2,0,...
 2,Another Task,minor,1,1,1,2,...
+================================================================================
+,1,2
+1,10,20
+2,30,40
 ```
 
-### Employee Section (above separator)
+### Employee Section (above first separator)
 
 | Column | Description |
 |--------|-------------|
@@ -58,7 +62,7 @@ id,content,priority,precedes,skill1,skill2,skill3,...
 | `content` | Employee name |
 | `skillN` | Skill level for skill N (0-5) |
 
-### Task Section (below separator)
+### Task Section (between separators)
 
 | Column | Description |
 |--------|-------------|
@@ -67,6 +71,24 @@ id,content,priority,precedes,skill1,skill2,skill3,...
 | `priority` | Task priority: `critical`, `major`, or `minor` |
 | `precedes` | ID of task that must complete first (`-1` for none) |
 | `skillN` | Required skill level for skill N |
+
+### Estimation Matrix (below second separator - optional)
+
+When present, this section overrides the default Pearson correlation estimator and provides custom duration estimates (in minutes) for each employee-task pair.
+
+```
+,1,2,3
+emp_id1,10,20,30
+emp_id2,40,50,60
+```
+
+| Column | Description |
+|--------|-------------|
+| (first column) | Employee ID |
+| (remaining columns) | Task ID headers |
+| (data rows) | Duration in minutes for each employee-task combination |
+
+If this section is omitted, the solver uses the default Pearson correlation estimator based on skill matching.
 
 ## CLI Usage
 
