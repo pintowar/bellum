@@ -1,0 +1,112 @@
+name: Bellum Release Draft CI
+on:
+  push:
+    branches:
+      - 'release/*'
+
+env:
+  JAVA_VERSION: '25'
+  JAVA_DISTRO: 'graalvm'
+
+jobs:
+  build-native:
+    name: Build Native - ${{ matrix.platform }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            platform: linux-x86_64
+            artifact_name: bellum
+          - os: macos-latest
+            platform: osx-aarch64
+            artifact_name: bellum
+          - os: windows-latest
+            platform: windows-x86_64
+            artifact_name: bellum.exe
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Extract version
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/heads/release/}" >> $GITHUB_OUTPUT
+
+      - name: Setup GraalVM
+        uses: graalvm/setup-graalvm@v1
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: ${{ env.JAVA_DISTRO }}
+          cache: 'gradle'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build native executable
+        run: ./gradlew clean nativeCompile
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.platform }}
+          path: build/native/nativeCompile/${{ matrix.artifact_name }}
+          retention-days: 1
+
+  create-draft-release:
+    name: Create Draft Release
+    needs: build-native
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Extract version
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/heads/release/}" >> $GITHUB_OUTPUT
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: build/native/nativeCompile/
+
+      - name: Organize artifacts
+        run: |
+          for platform in linux-x86_64 osx-aarch64 windows-x86_64; do
+            if [ -d "build/native/nativeCompile/$platform" ]; then
+              if [ "$platform" = "windows-x86_64" ]; then
+                mv "build/native/nativeCompile/$platform/bellum.exe" "build/native/nativeCompile/bellum-$platform.exe" 2>/dev/null || true
+              elif [ "$platform" = "osx-aarch64" ]; then
+                mv "build/native/nativeCompile/$platform/bellum" "build/native/nativeCompile/bellum-osx-aarch_64" 2>/dev/null || true
+              else
+                mv "build/native/nativeCompile/$platform/bellum" "build/native/nativeCompile/bellum-$platform" 2>/dev/null || true
+              fi
+            fi
+          done
+
+          rm -rf build/native/nativeCompile/linux-x86_64 \
+                 build/native/nativeCompile/osx-aarch64 \
+                 build/native/nativeCompile/windows-x86_64
+
+      - name: Create Draft Release
+        run: |
+          cd build/native/nativeCompile/
+
+          gh release create "v${{ steps.version.outputs.VERSION }}" \
+            --draft \
+            --title "v${{ steps.version.outputs.VERSION }}" \
+            --notes "Draft release for version ${{ steps.version.outputs.VERSION }}"
+
+          for artifact in bellum-*; do
+            gh release upload "v${{ steps.version.outputs.VERSION }}" "$artifact" --clobber
+          done
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
