@@ -2,7 +2,6 @@ package io.github.pintowar.bellum.parser.rts
 
 import io.github.pintowar.bellum.core.domain.TaskPriority
 import io.github.pintowar.bellum.core.parser.InvalidFileFormat
-import io.github.pintowar.bellum.parser.rts.RtsTaskReader
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.result.shouldBeFailure
