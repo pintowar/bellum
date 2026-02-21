@@ -37,6 +37,6 @@ jobs:
       - name: Running gradle task
         run: |
           ./gradlew clean ktlintCheck
-          ./gradlew sonar
+          ./gradlew test sonar
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

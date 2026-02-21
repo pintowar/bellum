@@ -120,14 +120,8 @@ If this section is omitted, the solver uses the default Pearson correlation esti
 ./bellum solve -p 4 project.rts
 ```
 
-### Output Example
+### Output Report
 
-```
-[1.2s       ]: Sample Project - 4h 30m | valid, scheduled, optimal
-```
+This is a sample report output:
 
-The output shows:
-- **Duration**: Time taken to find the solution
-- **Project name**: From the input file
-- **Total duration**: Sum of all task durations
-- **Status**: valid/invalid, scheduled/partial/none, optimal/suboptimal
+![solver-evo](https://github.com/user-attachments/assets/58f128da-ffba-43f0-a0f2-d8d6ce7f48c3)
