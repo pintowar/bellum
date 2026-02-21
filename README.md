@@ -49,9 +49,8 @@ id,content,priority,precedes,skill1,skill2,skill3,...
 1,Task Description,major,-1,3,2,0,...
 2,Another Task,minor,1,1,1,2,...
 ================================================================================
-,1,2
-1,10,20
-2,30,40
+10,20
+30,40
 ```
 
 ### Employee Section (above first separator)
@@ -74,19 +73,17 @@ id,content,priority,precedes,skill1,skill2,skill3,...
 
 ### Estimation Matrix (below second separator - optional)
 
-When present, this section overrides the default Pearson correlation estimator and provides custom duration estimates (in minutes) for each employee-task pair.
+When present, this section overrides the default Pearson correlation estimator and provides custom duration estimates (in minutes) for each employee-task pair. The matrix contains only numeric values where rows represent employees and columns represent tasks.
 
 ```
-,1,2,3
-emp_id1,10,20,30
-emp_id2,40,50,60
+10,20,30
+40,50,60
 ```
 
 | Column | Description |
 |--------|-------------|
-| (first column) | Employee ID |
-| (remaining columns) | Task ID headers |
-| (data rows) | Duration in minutes for each employee-task combination |
+| (row N) | Duration in minutes for employee N on all tasks |
+| (values) | Duration for each task in order |
 
 If this section is omitted, the solver uses the default Pearson correlation estimator based on skill matching.
 

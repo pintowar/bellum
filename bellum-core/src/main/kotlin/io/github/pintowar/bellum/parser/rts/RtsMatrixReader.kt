@@ -13,9 +13,9 @@ object RtsMatrixReader : ContentReader<List<List<Long>>> {
             val lines = content.trim().lines().filter { it.isNotBlank() }
             if (lines.isEmpty()) return@runCatching emptyList()
 
-            lines.drop(1).mapIndexed { idx, line ->
+            lines.mapIndexed { idx, line ->
                 val parts = line.split(sep).map { it.trim() }
-                parts.drop(1).mapIndexed { colIdx, value ->
+                parts.mapIndexed { colIdx, value ->
                     value.toLongOrNull() ?: throw InvalidFileFormat(
                         "Invalid duration value '$value' at matrix row ${idx + 1}, column ${colIdx + 1}.",
                     )

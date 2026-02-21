@@ -347,9 +347,8 @@ class RtsProjectReaderTest :
                     1,Task 1,minor,-1,3,2
                     2,Task 2,major,-1,1,1
                     ================================================================================
-                    ,1,2
-                    1,10,20
-                    2,30,40
+                    10,20
+                    30,40
                     """.trimIndent()
 
                 val result = RtsProjectReader("Matrix Project").readContent(content).getOrThrow()
@@ -387,9 +386,8 @@ class RtsProjectReaderTest :
                     1,Task 1,minor,-1,3,2
                     2,Task 2,major,-1,1,1
                     ================================================================================
-                    ,1,2
-                    1,10
-                    2,30
+                    10
+                    30
                     """.trimIndent()
 
                 val result = RtsProjectReader("Wrong Matrix").readContent(content)
@@ -407,8 +405,7 @@ class RtsProjectReaderTest :
                     1,Task 1,minor,-1,3,2
                     2,Task 2,major,-1,1,1
                     ================================================================================
-                    ,1,2
-                    1,10,20
+                    10,20
                     """.trimIndent()
 
                 val result = RtsProjectReader("Wrong Rows").readContent(content)

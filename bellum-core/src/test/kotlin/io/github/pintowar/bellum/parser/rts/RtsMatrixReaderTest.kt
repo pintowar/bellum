@@ -13,9 +13,8 @@ class RtsMatrixReaderTest :
         test("successfully read matrix content") {
             val content =
                 """
-                ,task1,task2,task3
-                emp1,10,20,30
-                emp2,15,25,35
+                10,20,30
+                15,25,35
                 """.trimIndent()
 
             val result = RtsMatrixReader.readContent(content).getOrThrow()
@@ -37,20 +36,13 @@ class RtsMatrixReaderTest :
                 result.shouldBeSuccess()
                 result.getOrThrow() shouldBe emptyList()
             }
-
-            test("only header should return empty list") {
-                val result = RtsMatrixReader.readContent(",task1,task2")
-                result.shouldBeSuccess()
-                result.getOrThrow() shouldBe emptyList()
-            }
         }
 
         context("malformed CSV format") {
             test("invalid number format should fail") {
                 val content =
                     """
-                    ,task1,task2
-                    emp1,10,abc
+                    10,abc
                     """.trimIndent()
                 val result = RtsMatrixReader.readContent(content)
                 result shouldBeFailure { ex ->
@@ -62,8 +54,7 @@ class RtsMatrixReaderTest :
             test("decimal number should fail") {
                 val content =
                     """
-                    ,task1,task2
-                    emp1,10.5,20
+                    10.5,20
                     """.trimIndent()
                 val result = RtsMatrixReader.readContent(content)
                 result shouldBeFailure { ex ->
@@ -75,8 +66,7 @@ class RtsMatrixReaderTest :
             test("negative number should be parsed") {
                 val content =
                     """
-                    ,task1,task2
-                    emp1,-10,20
+                    -10,20
                     """.trimIndent()
                 val result = RtsMatrixReader.readContent(content)
                 result.shouldBeSuccess()
@@ -88,9 +78,8 @@ class RtsMatrixReaderTest :
             test("semicolon separator should work") {
                 val content =
                     """
-                    ;task1;task2
-                    emp1;10;20
-                    emp2;15;25
+                    10;20
+                    15;25
                     """.trimIndent()
                 val result = RtsMatrixReader.readContent(content, ";")
                 result.shouldBeSuccess()
@@ -101,9 +90,8 @@ class RtsMatrixReaderTest :
             test("tab separator should work") {
                 val content =
                     """
-                    	task1	task2
-                    emp1	10	20
-                    emp2	15	25
+                    	10	20
+                    15	25
                     """.trimIndent()
                 val result = RtsMatrixReader.readContent(content, "\t")
                 result.shouldBeSuccess()
@@ -147,8 +135,7 @@ class RtsMatrixReaderTest :
             test("single row matrix should work") {
                 val content =
                     """
-                    ,task1
-                    emp1,10
+                    10
                     """.trimIndent()
                 val result = RtsMatrixReader.readContent(content)
                 result.shouldBeSuccess()
@@ -159,8 +146,7 @@ class RtsMatrixReaderTest :
             test("large numbers should work") {
                 val content =
                     """
-                    ,task1
-                    emp1,9999999999999
+                    9999999999999
                     """.trimIndent()
                 val result = RtsMatrixReader.readContent(content)
                 result.shouldBeSuccess()
@@ -170,13 +156,13 @@ class RtsMatrixReaderTest :
             test("empty lines should be filtered") {
                 val content =
                     """
-                    ,task1,task2
+                    10,20
 
-                    emp1,10,20
+                    30,40
                     """.trimIndent()
                 val result = RtsMatrixReader.readContent(content)
                 result.shouldBeSuccess()
-                result.getOrThrow().size shouldBe 1
+                result.getOrThrow().size shouldBe 2
             }
         }
     })
