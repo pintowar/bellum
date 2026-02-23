@@ -177,13 +177,7 @@
     const { useState, useEffect, useRef } = React;
 
     const parseDurationMatch = (ptDuration) => {
-        // Very simple PT duration parser (e.g., PT30M, PT2H, PT1H30M)
-        let mins = 0;
-        const hoursMatch = ptDuration.match(/(\d+)H/);
-        const minsMatch = ptDuration.match(/(\d+)M/);
-        if (hoursMatch) mins += parseInt(hoursMatch[1], 10) * 60;
-        if (minsMatch) mins += parseInt(minsMatch[1], 10);
-        return mins;
+        return Temporal.Duration.from(ptDuration).total('minutes');
     }
 
     const parseDuration = (dur) => {
