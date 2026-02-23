@@ -25,6 +25,7 @@ fun SolutionHistory.solutionAndStats(): JsonElement? {
             val solverStats =
                 when (sol.stats["solver"]) {
                     "Choco Solver" -> SolverStats.ChocoSolverStats(sol.stats)
+                    "Jenetics" -> SolverStats.JeneticsStats(sol.stats)
                     else -> SolverStats.UnknownSolverStats
                 }
             SolutionStatsDto(

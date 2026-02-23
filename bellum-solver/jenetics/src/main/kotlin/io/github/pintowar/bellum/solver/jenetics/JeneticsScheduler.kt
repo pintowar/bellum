@@ -12,7 +12,9 @@ import io.jenetics.PartiallyMatchedCrossover
 import io.jenetics.engine.Codecs
 import io.jenetics.engine.Engine
 import io.jenetics.engine.EvolutionResult
+import io.jenetics.engine.EvolutionStatistics
 import io.jenetics.engine.Limits
+import io.jenetics.stat.DoubleMomentStatistics
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 import java.time.Duration as JavaDuration
@@ -33,15 +35,16 @@ class JeneticsScheduler(
             if (numTasks == 0) return@runCatching SchedulerSolution(project, true, 0.minutes, mapOf("solver" to "Jenetics Solver"))
 
             val engine = createEngine(project)
+            val statistics = EvolutionStatistics.ofNumber<Long>()
 
-            val result =
+            val evolutionResult =
                 engine
                     .stream()
                     .limit(Limits.byExecutionTime(JavaDuration.ofMillis(timeLimit.inWholeMilliseconds)))
-                    .limit(Limits.bySteadyFitness(50))
-                    .peek { result ->
-                        val phenotype = result.bestPhenotype()
-                        val (newProject, _, _) =
+                    .peek(statistics)
+                    .peek { evResult ->
+                        val phenotype = evResult.bestPhenotype()
+                        val (newProject, _) =
                             decodeSchedule(
                                 phenotype
                                     .genotype()
@@ -55,30 +58,28 @@ class JeneticsScheduler(
                                 newProject,
                                 false,
                                 0.minutes,
-                                mapOf(
-                                    "solver" to "Jenetics Solver",
-                                    "fitness" to phenotype.fitness(),
-                                ),
+                                buildStatsMap(phenotype.fitness(), evResult.generation(), statistics),
                             )
                         callback(sol)
-                    }.collect(EvolutionResult.toBestPhenotype())
+                    }.collect(EvolutionResult.toBestEvolutionResult())
 
-            val (bestProject, optimal, fitness) =
+            val (bestProject, fitness) =
                 decodeSchedule(
-                    result
+                    evolutionResult
+                        .bestPhenotype()
                         .genotype()
                         .chromosome()
                         .toMutableList()
                         .map { it.allele() },
                     project,
                 )
-            SchedulerSolution(bestProject, optimal, timeLimit, mapOf("solver" to "Jenetics Solver", "fitness" to fitness))
+            SchedulerSolution(bestProject, false, timeLimit, buildStatsMap(fitness, evolutionResult.totalGenerations(), statistics))
         }
 
     private fun createEngine(project: Project): Engine<EnumGene<Int>, Long> {
         val numTasks = project.allTasks().size
         val evalFunc = { seq: IntArray ->
-            val (_, _, fitness) = decodeSchedule(seq.toList(), project)
+            val (_, fitness) = decodeSchedule(seq.toList(), project)
             fitness
         }
 
@@ -92,10 +93,30 @@ class JeneticsScheduler(
             ).build()
     }
 
+    private fun buildStatsMap(
+        fitness: Long,
+        generations: Long,
+        statistics: EvolutionStatistics<Long, DoubleMomentStatistics>,
+    ): Map<String, Any> {
+        val fitnessStats = statistics.fitness()
+        return mapOf(
+            "solver" to "Jenetics",
+            "fitness" to fitness,
+            "generations" to generations,
+            "fitnessMin" to fitnessStats.min(),
+            "fitnessMax" to fitnessStats.max(),
+            "fitnessMean" to fitnessStats.mean(),
+            "fitnessVariance" to fitnessStats.variance(),
+            "alteredCount" to statistics.altered().sum(),
+            "killedCount" to statistics.killed().sum(),
+            "invalidCount" to statistics.invalids().sum(),
+        )
+    }
+
     private fun decodeSchedule(
         permutation: List<Int>,
         project: Project,
-    ): Triple<Project, Boolean, Long> {
+    ): Pair<Project, Long> {
         val tasks = project.allTasks()
         val numTasks = tasks.size
         val employees = project.allEmployees()
@@ -248,7 +269,6 @@ class JeneticsScheduler(
 
         val newProject = project.replace(tasks = assignedTasks).getOrThrow()
 
-        val optimal = penalty == 0L // True optimality can't be strictly proven by GA, but we return true if no penalties
-        return Triple(newProject, optimal, totalFitness)
+        return Pair(newProject, totalFitness)
     }
 }
