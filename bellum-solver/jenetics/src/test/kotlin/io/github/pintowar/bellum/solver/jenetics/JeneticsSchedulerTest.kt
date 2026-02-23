@@ -6,6 +6,7 @@ import io.github.pintowar.bellum.core.domain.ProjectScheduled
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
 
 class JeneticsSchedulerTest :
@@ -14,7 +15,7 @@ class JeneticsSchedulerTest :
         test("successful solve") {
             val solver = JeneticsScheduler(DataFixtures.smallTimeEstimator)
 
-            val solution = solver.findOptimalSchedule(DataFixtures.sampleProjectSmall)
+            val solution = solver.findOptimalSchedule(DataFixtures.sampleProjectSmall, 1.seconds)
 
             val (scheduledProject, _) = solution.getOrThrow()
             scheduledProject.scheduledStatus() shouldBe ProjectScheduled.SCHEDULED
@@ -25,7 +26,7 @@ class JeneticsSchedulerTest :
         test("partial project should preserve assigned tasks") {
             val solver = JeneticsScheduler(DataFixtures.smallTimeEstimator)
 
-            val solution = solver.findOptimalSchedule(DataFixtures.samplePartialProjectSmall)
+            val solution = solver.findOptimalSchedule(DataFixtures.samplePartialProjectSmall, 1.seconds)
 
             val (scheduledProject, _) = solution.getOrThrow()
             scheduledProject.scheduledStatus() shouldBe ProjectScheduled.SCHEDULED
@@ -36,7 +37,7 @@ class JeneticsSchedulerTest :
         test("partial pinned project should preserve assigned tasks") {
             val solver = JeneticsScheduler(DataFixtures.smallTimeEstimator)
 
-            val solution = solver.findOptimalSchedule(DataFixtures.samplePartialPinnedProjectSmall)
+            val solution = solver.findOptimalSchedule(DataFixtures.samplePartialPinnedProjectSmall, 1.seconds)
 
             val (scheduledProject, _) = solution.getOrThrow()
             scheduledProject.scheduledStatus() shouldBe ProjectScheduled.SCHEDULED

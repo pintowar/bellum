@@ -206,6 +206,8 @@ internal class ChocoModel(
         configureSearchStrategy()
     }
 
+    fun objective(solution: Solution) = solution.getIntVal(model.objective.asIntVar())
+
     /**
      * Configures and returns the solver with a specified time limit.
      *

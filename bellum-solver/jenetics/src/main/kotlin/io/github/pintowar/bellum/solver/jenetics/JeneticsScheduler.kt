@@ -15,6 +15,7 @@ import io.jenetics.engine.EvolutionResult
 import io.jenetics.engine.EvolutionStatistics
 import io.jenetics.engine.Limits
 import io.jenetics.stat.DoubleMomentStatistics
+import kotlin.time.Clock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 import java.time.Duration as JavaDuration
@@ -32,11 +33,18 @@ class JeneticsScheduler(
             val tasks = project.allTasks()
             val numTasks = tasks.size
 
-            if (numTasks == 0) return@runCatching SchedulerSolution(project, true, 0.minutes, mapOf("solver" to "Jenetics Solver"))
+            if (numTasks == 0) return@runCatching SchedulerSolution(
+                project,
+                true,
+                0.minutes,
+                mapOf("solver" to "Jenetics Solver")
+            )
 
             val engine = createEngine(project)
             val statistics = EvolutionStatistics.ofNumber<Long>()
 
+            var bestFitness = Long.MAX_VALUE
+            val initSolving = Clock.System.now()
             val evolutionResult =
                 engine
                     .stream()
@@ -44,23 +52,27 @@ class JeneticsScheduler(
                     .peek(statistics)
                     .peek { evResult ->
                         val phenotype = evResult.bestPhenotype()
-                        val (newProject, _) =
-                            decodeSchedule(
-                                phenotype
-                                    .genotype()
-                                    .chromosome()
-                                    .toMutableList()
-                                    .map { it.allele() },
-                                project,
-                            )
-                        val sol =
-                            SchedulerSolution(
-                                newProject,
-                                false,
-                                0.minutes,
-                                buildStatsMap(phenotype.fitness(), evResult.generation(), statistics),
-                            )
-                        callback(sol)
+                        val currentFitness = phenotype.fitness()
+                        if (currentFitness < bestFitness) {
+                            bestFitness = currentFitness
+                            val (newProject, _) =
+                                decodeSchedule(
+                                    phenotype
+                                        .genotype()
+                                        .chromosome()
+                                        .toMutableList()
+                                        .map { it.allele() },
+                                    project,
+                                )
+                            val sol =
+                                SchedulerSolution(
+                                    newProject,
+                                    false,
+                                    Clock.System.now() - initSolving,
+                                    buildStatsMap(currentFitness, evResult.generation(), statistics),
+                                )
+                            callback(sol)
+                        }
                     }.collect(EvolutionResult.toBestEvolutionResult())
 
             val (bestProject, fitness) =
@@ -73,7 +85,9 @@ class JeneticsScheduler(
                         .map { it.allele() },
                     project,
                 )
-            SchedulerSolution(bestProject, false, timeLimit, buildStatsMap(fitness, evolutionResult.totalGenerations(), statistics))
+            val currentDuration = Clock.System.now() - initSolving
+            val stats = buildStatsMap(fitness, evolutionResult.totalGenerations(), statistics)
+            SchedulerSolution(bestProject, false, currentDuration, stats)
         }
 
     private fun createEngine(project: Project): Engine<EnumGene<Int>, Long> {
@@ -200,7 +214,8 @@ class JeneticsScheduler(
             var bestDur = 0
 
             // If task was already assigned in a partial project (and not pinned), try to preserve it by giving it a strong preference
-            val assignedEmployeeId = if (tasks[chosen] is AssignedTask) (tasks[chosen] as AssignedTask).employee.id else null
+            val assignedEmployeeId =
+                if (tasks[chosen] is AssignedTask) (tasks[chosen] as AssignedTask).employee.id else null
 
             for (e in employees.indices) {
                 val durResult = estimator.estimate(employees[e], tasks[chosen])
