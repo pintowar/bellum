@@ -107,4 +107,29 @@ sealed class SolverStats {
             stats.getValue("restarts").toString().toLong(),
         )
     }
+
+    @Serializable
+    data class JeneticsStats(
+        val fitness: Long,
+        val generations: Long,
+        val fitnessMin: Double,
+        val fitnessMax: Double,
+        val fitnessMean: Double,
+        val fitnessVariance: Double,
+        val alteredCount: Long,
+        val killedCount: Long,
+        val invalidCount: Long,
+    ) : SolverStats() {
+        constructor(stats: Map<String, Any>) : this(
+            stats.getValue("fitness").toString().toLong(),
+            stats.getValue("generations").toString().toLong(),
+            stats.getValue("fitnessMin").toString().toDouble(),
+            stats.getValue("fitnessMax").toString().toDouble(),
+            stats.getValue("fitnessMean").toString().toDouble(),
+            stats.getValue("fitnessVariance").toString().toDouble(),
+            stats.getValue("alteredCount").toString().toLong(),
+            stats.getValue("killedCount").toString().toLong(),
+            stats.getValue("invalidCount").toString().toLong(),
+        )
+    }
 }

@@ -88,4 +88,11 @@ abstract class Scheduler {
             }
         return finalSolution.map { SolutionHistory(solutions + it) }
     }
+
+    protected fun realNumThreads(n: Int): Int =
+        if (n >= 1) {
+            n
+        } else {
+            1.coerceAtLeast((Runtime.getRuntime().availableProcessors() * 0.9).toInt())
+        }
 }

@@ -9,6 +9,7 @@ plugins {
 dependencies {
     implementation(project(":bellum-core"))
     implementation(project(":bellum-solver:choco"))
+    implementation(project(":bellum-solver:jenetics"))
     implementation(libs.clikt)
 }
 
