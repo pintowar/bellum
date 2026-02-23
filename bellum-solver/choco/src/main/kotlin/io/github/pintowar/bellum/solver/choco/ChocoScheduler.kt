@@ -18,15 +18,14 @@ class ChocoScheduler(
         timeLimit: Duration,
         numThreads: Int,
         callback: (SchedulerSolution) -> Unit,
-    ): Result<SchedulerSolution> =
-        when (numThreads) {
-            -1 -> {
-                val workers = 1.coerceAtLeast((Runtime.getRuntime().availableProcessors() * 0.9).toInt())
-                parallelSolve(project, timeLimit, workers, callback)
-            }
-            1 -> singleSolve(project, timeLimit, callback)
-            else -> parallelSolve(project, timeLimit, numThreads, callback)
+    ): Result<SchedulerSolution> {
+        val workers = realNumThreads(numThreads)
+        return if (workers == 1) {
+            singleSolve(project, timeLimit, callback)
+        } else {
+            parallelSolve(project, timeLimit, workers, callback)
         }
+    }
 
     fun singleSolve(
         project: Project,

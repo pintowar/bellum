@@ -14,6 +14,8 @@ import io.jenetics.engine.EvolutionResult
 import io.jenetics.engine.EvolutionStatistics
 import io.jenetics.engine.Limits
 import io.jenetics.stat.DoubleMomentStatistics
+import io.jenetics.util.BatchExecutor
+import java.util.concurrent.Executors
 import kotlin.time.Clock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
@@ -46,7 +48,7 @@ class JeneticsScheduler(
      *
      * @param project The project containing tasks and employees to schedule.
      * @param timeLimit Maximum duration for the optimization process.
-     * @param numThreads Number of threads for parallel evaluation (currently unused in this implementation).
+     * @param numThreads Number of threads for parallel evaluation.
      * @param callback Function called with each improved solution found during evolution.
      * @return A [Result] containing the best [SchedulerSolution] found, or an error if scheduling failed.
      */
@@ -70,7 +72,7 @@ class JeneticsScheduler(
             }
 
             val decoder = ScheduleDecoder(project, estimator)
-            val engine = createEngine(project, decoder)
+            val engine = createEngine(project, decoder, realNumThreads(numThreads))
             val statistics = EvolutionStatistics.ofNumber<Long>()
 
             var bestFitness = Long.MAX_VALUE
@@ -107,11 +109,13 @@ class JeneticsScheduler(
      *
      * @param project The project being optimized.
      * @param decoder The decoder used to convert permutations to schedules.
+     * @param numThreads Number of threads for parallel evaluation.
      * @return A configured [Engine] ready for evolution.
      */
     private fun createEngine(
         project: Project,
         decoder: ScheduleDecoder,
+        numThreads: Int,
     ): Engine<EnumGene<Int>, Long> {
         val numTasks = project.allTasks().size
 
@@ -120,6 +124,7 @@ class JeneticsScheduler(
 
         return Engine
             .builder({ decoded: ScheduleDecoder.DecodedSchedule -> decoded.fitness }, codec)
+            .fitnessExecutor(BatchExecutor.of(Executors.newFixedThreadPool(numThreads)))
             .optimize(Optimize.MINIMUM)
             .populationSize(100)
             .alterers(
