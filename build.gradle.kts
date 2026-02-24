@@ -1,108 +1,36 @@
 import net.researchgate.release.ReleaseExtension
-import org.apache.tools.ant.filters.ReplaceTokens
 
 plugins {
-    alias(libs.plugins.kotlin.jvm)
-    alias(libs.plugins.kotlin.serialization)
-    alias(libs.plugins.ktlint)
-    alias(libs.plugins.graalvm.native)
-    alias(libs.plugins.kotlinx.kover)
+    base
+    id("idea")
     alias(libs.plugins.sonarqube)
     alias(libs.plugins.jreleaser)
     alias(libs.plugins.release)
-    id("idea")
-    application
-}
-
-group = "io.github.pintowar"
-
-val javaLangVersion: JavaLanguageVersion = JavaLanguageVersion.of(25)
-val javaVendor: JvmVendorSpec = JvmVendorSpec.GRAAL_VM
-
-java {
-    toolchain {
-        languageVersion.set(javaLangVersion)
-        vendor.set(javaVendor)
-    }
-}
-
-kotlin {
-    jvmToolchain {
-        languageVersion.set(javaLangVersion)
-        vendor.set(javaVendor)
-    }
 }
 
 repositories {
+    gradlePluginPortal()
     mavenCentral()
 }
 
-dependencies {
-    implementation(libs.clikt)
-
-    implementation(libs.konform.jvm)
-    implementation(libs.choco.solver)
-    implementation(libs.uuid.generator)
-    implementation(libs.jgrapht.core)
-    implementation(libs.commons.math3)
-
-    implementation(libs.kotlinx.datetime)
-    implementation(libs.kotlinx.serialization.json)
-    implementation(libs.slf4j.nop)
-
-    testImplementation(libs.mockk.jvm)
-    testImplementation(libs.bundles.kotest)
-}
-
-application {
-    mainClass.set("io.github.pintowar.bellum.cli.MainKt")
-}
-
-graalvmNative {
-    toolchainDetection.set(true)
-    binaries {
-        named("main") {
-            buildArgs.add("-H:IncludeResources=application\\.properties")
-            buildArgs.add("--enable-url-protocols=https")
-            buildArgs.add("--rerun-class-initialization-at-runtime=kotlin.DeprecationLevel")
-        }
-        named("test") {
-            buildArgs.add("-H:IncludeResources=application\\.properties")
-            buildArgs.add("--enable-url-protocols=https")
-        }
-    }
+allprojects {
+    group = "io.github.pintowar"
+    description = "Kotlin based scheduling system that optimizes task assignment to employees"
 }
 
 tasks {
-    processResources {
-        filesMatching("**/application.properties") {
-            filter(ReplaceTokens::class, "tokens" to mapOf("version" to version))
-        }
-    }
-
-    test {
-        useJUnitPlatform()
-    }
-
     named("sonar") {
         dependsOn(koverXmlReport)
     }
 
-    register<JavaExec>("runWithNativeImageAgent") {
+    register<Sync>("nativeCompile") {
         group = "native"
-        description = "Run the app on the JVM with native-image agent to generate config for native-image"
-        classpath = sourceSets["main"].runtimeClasspath
-        mainClass.set(application.mainClass)
+        description = "Compiles native image and copies to root build directory"
 
-        // the agent writes configs into the path you choose. This matches the files referenced above.
-        jvmArgs = listOf("-agentlib:native-image-agent=config-output-dir=src/main/resources/META-INF/native-image")
-        standardInput = System.`in`
+        dependsOn(":bellum-cli:nativeCompile")
 
-        // Add these lines to process command-line arguments
-        if (project.hasProperty("args")) {
-            // Splits the single string of arguments into a list
-            args((project.property("args") as String).split(" "))
-        }
+        from("$rootDir/bellum-cli/build/native/nativeCompile")
+        into("$rootDir/build/native/nativeCompile")
     }
 }
 

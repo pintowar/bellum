@@ -36,7 +36,10 @@ jobs:
 
       - name: Running gradle task
         run: |
-          ./gradlew clean ktlintCheck
-          ./gradlew sonar
+          ./gradlew clean ktlintCheck test sonar --scan \
+          -Dscan.tag.CI \
+          -Dscan.tag.${{ github.event_name }} \
+          -Dscan.value.Job-ID=${{ github.run_id }} \
+          -Dscan.link.GitHub-Action=https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

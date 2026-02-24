@@ -45,7 +45,7 @@ jobs:
         id: release
         run: |
           ./gradlew clean ktlintCheck
-          ./gradlew sonar release -Prelease.useAutomaticVersion=true
+          ./gradlew test sonar release -Prelease.useAutomaticVersion=true
           echo "tag=$(git describe --tags --abbrev=0)" >> $GITHUB_OUTPUT
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
