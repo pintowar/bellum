@@ -180,6 +180,10 @@
         return Temporal.Duration.from(ptDuration).total('minutes');
     }
 
+    const parseDurationSeconds = (ptDuration) => {
+        return Temporal.Duration.from(ptDuration).total('seconds');
+    }
+
     const parseDuration = (dur) => {
         if (!dur) return 0;
         if (typeof dur === 'string' && dur.startsWith('PT')) {
@@ -376,7 +380,7 @@
 
             const maxDurations = history.map(h => parseDuration(h.maxDuration));
             const priorityCosts = history.map(h => h.priorityCost);
-            const xData = history.map((_, i) => i);
+            const xData = history.map(h => parseDurationSeconds(h.solverDuration).toFixed(2));
 
             const option = {
                 tooltip: { trigger: 'axis' },
@@ -385,6 +389,10 @@
                 animation: false,
                 xAxis: {
                     type: 'category',
+                    name: 'Solver Duration (s)',
+                    nameLocation: 'middle',
+                    nameGap: 25,
+                    nameTextStyle: { color: '#95877a' },
                     data: xData,
                     axisLine: { lineStyle: { color: '#e8dfd8' } },
                     axisLabel: { color: '#95877a' }
