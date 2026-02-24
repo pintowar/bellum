@@ -89,12 +89,12 @@ class JeneticsScheduler(
                             bestFitness = currentFitness
                             val decoded = decoder.decode(extractPermutation(evResult.bestPhenotype().genotype()))
                             val sol = createSolution(decoded.project, currentFitness, evResult.generation(), statistics, initSolving)
-                            callback(sol)
+                            callback(sol.copy(duration = listOf(timeLimit, sol.duration).min()))
                         }
                     }.collect(EvolutionResult.toBestEvolutionResult())
 
             val decoded = decoder.decode(extractPermutation(evolutionResult.bestPhenotype().genotype()))
-            val currentDuration = Clock.System.now() - initSolving
+            val currentDuration = listOf(timeLimit, Clock.System.now() - initSolving).min()
             val stats = buildStatsMap(decoded.fitness, evolutionResult.totalGenerations(), statistics)
 
             SchedulerSolution(decoded.project, false, currentDuration, stats)
