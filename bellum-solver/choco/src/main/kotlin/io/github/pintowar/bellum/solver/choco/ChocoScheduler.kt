@@ -41,7 +41,7 @@ class ChocoScheduler(
             var bestObjective = Long.MAX_VALUE
             while (solver.solve()) {
                 solution.record()
-                val currentDuration = Clock.System.now() - initSolving
+                val currentDuration = listOf(timeLimit, Clock.System.now() - initSolving).min()
                 val currentObjective = model.objective(solution).toLong()
                 if (currentObjective < bestObjective) {
                     bestObjective = currentObjective
@@ -49,7 +49,7 @@ class ChocoScheduler(
                 }
             }
 
-            val currentDuration = Clock.System.now() - initSolving
+            val currentDuration = listOf(timeLimit, Clock.System.now() - initSolving).min()
             return model.decode(solution, currentDuration, solver.searchState == SearchState.TERMINATED)
         }
 
@@ -80,12 +80,12 @@ class ChocoScheduler(
                     bestSolver = finderModel.solver
                     bestModel = chocoModels.first { it.name == finderModel.name }
                     bestSolution = bestModel.solution().record()
-                    val currentDuration = Clock.System.now() - initSolving
+                    val currentDuration = listOf(timeLimit, Clock.System.now() - initSolving).min()
                     bestModel.decode(bestSolution, currentDuration, false).onSuccess(callback)
                 }
             }
 
-            val currentDuration = Clock.System.now() - initSolving
+            val currentDuration = listOf(timeLimit, Clock.System.now() - initSolving).min()
             val optimal = bestSolver?.searchState == SearchState.TERMINATED
 
             if (bestSolution != null && bestModel != null) {

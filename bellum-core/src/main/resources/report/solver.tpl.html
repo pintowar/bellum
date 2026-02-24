@@ -378,9 +378,10 @@
             const myChart = echarts.init(chartRef.current);
             myChart.setOption({ backgroundColor: 'transparent' });
 
-            const maxDurations = history.map(h => parseDuration(h.maxDuration));
-            const priorityCosts = history.map(h => h.priorityCost);
-            const xData = history.map(h => parseDurationSeconds(h.solverDuration).toFixed(2));
+            const solverDurations = history.map(h => parseFloat(parseDurationSeconds(h.solverDuration).toFixed(2)));
+            const maxDurations = history.map((h, i) => [solverDurations[i], parseDuration(h.maxDuration)]);
+            const priorityCosts = history.map((h, i) => [solverDurations[i], h.priorityCost]);
+            const currentSolverDuration = solverDurations[currentIndex];
 
             const option = {
                 tooltip: { trigger: 'axis' },
@@ -388,12 +389,11 @@
                 grid: { height: 200, bottom: 30, left: 50, right: 50, top: 40 },
                 animation: false,
                 xAxis: {
-                    type: 'category',
+                    type: 'value',
                     name: 'Solver Duration (s)',
                     nameLocation: 'middle',
                     nameGap: 25,
                     nameTextStyle: { color: '#95877a' },
-                    data: xData,
                     axisLine: { lineStyle: { color: '#e8dfd8' } },
                     axisLabel: { color: '#95877a' }
                 },
@@ -414,7 +414,7 @@
                             symbol: ['none', 'none'],
                             label: { show: false },
                             lineStyle: { color: '#d6913c', type: 'dashed', width: 2 },
-                            data: [{ xAxis: currentIndex }]
+                            data: [{ xAxis: currentSolverDuration }]
                         }
                     },
                     {

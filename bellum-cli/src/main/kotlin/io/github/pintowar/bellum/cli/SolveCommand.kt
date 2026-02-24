@@ -114,6 +114,7 @@ class SolveCommand : CliktCommand(name = "solve") {
 
             echo()
             echo(result.lastProject()?.cliGantt(120))
+            exitProcess(0)
         } catch (e: Exception) {
             echo(red(e.message ?: "Unknown error"), err = true)
             exitProcess(1)
