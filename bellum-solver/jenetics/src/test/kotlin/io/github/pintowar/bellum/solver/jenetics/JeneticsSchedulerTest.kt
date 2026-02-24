@@ -1,4 +1,4 @@
-package io.github.pintowar.bellum.solver.choco
+package io.github.pintowar.bellum.solver.jenetics
 
 import io.github.pintowar.bellum.core.DataFixtures
 import io.github.pintowar.bellum.core.domain.AssignedTask
@@ -6,39 +6,38 @@ import io.github.pintowar.bellum.core.domain.ProjectScheduled
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
 
-class ChocoSchedulerTest :
+class JeneticsSchedulerTest :
     FunSpec({
 
         test("successful solve") {
-            val solver = ChocoScheduler(DataFixtures.smallTimeEstimator)
+            val solver = JeneticsScheduler(DataFixtures.smallTimeEstimator)
 
-            val solution = solver.findOptimalSchedule(DataFixtures.sampleProjectSmall)
+            val solution = solver.findOptimalSchedule(DataFixtures.sampleProjectSmall, 1.seconds)
 
-            val (scheduledProject, optimal) = solution.getOrThrow()
+            val (scheduledProject, _) = solution.getOrThrow()
             scheduledProject.scheduledStatus() shouldBe ProjectScheduled.SCHEDULED
             scheduledProject.isValid() shouldBe true
             scheduledProject.endsAt() shouldBe Instant.parse("2022-01-01T01:00:00Z")
-            optimal shouldBe true
         }
 
         test("partial project should preserve assigned tasks") {
-            val solver = ChocoScheduler(DataFixtures.smallTimeEstimator)
+            val solver = JeneticsScheduler(DataFixtures.smallTimeEstimator)
 
-            val solution = solver.findOptimalSchedule(DataFixtures.samplePartialProjectSmall)
+            val solution = solver.findOptimalSchedule(DataFixtures.samplePartialProjectSmall, 1.seconds)
 
-            val (scheduledProject, optimal) = solution.getOrThrow()
+            val (scheduledProject, _) = solution.getOrThrow()
             scheduledProject.scheduledStatus() shouldBe ProjectScheduled.SCHEDULED
             scheduledProject.isValid() shouldBe true
             scheduledProject.endsAt() shouldBe Instant.parse("2022-01-01T01:00:00Z")
-            optimal shouldBe true
         }
 
         test("partial pinned project should preserve assigned tasks") {
-            val solver = ChocoScheduler(DataFixtures.smallTimeEstimator)
+            val solver = JeneticsScheduler(DataFixtures.smallTimeEstimator)
 
-            val solution = solver.findOptimalSchedule(DataFixtures.samplePartialPinnedProjectSmall)
+            val solution = solver.findOptimalSchedule(DataFixtures.samplePartialPinnedProjectSmall, 1.seconds)
 
             val (scheduledProject, _) = solution.getOrThrow()
             scheduledProject.scheduledStatus() shouldBe ProjectScheduled.SCHEDULED

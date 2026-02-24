@@ -18,15 +18,14 @@ class ChocoScheduler(
         timeLimit: Duration,
         numThreads: Int,
         callback: (SchedulerSolution) -> Unit,
-    ): Result<SchedulerSolution> =
-        when (numThreads) {
-            -1 -> {
-                val workers = 1.coerceAtLeast((Runtime.getRuntime().availableProcessors() * 0.9).toInt())
-                parallelSolve(project, timeLimit, workers, callback)
-            }
-            1 -> singleSolve(project, timeLimit, callback)
-            else -> parallelSolve(project, timeLimit, numThreads, callback)
+    ): Result<SchedulerSolution> {
+        val workers = realNumThreads(numThreads)
+        return if (workers == 1) {
+            singleSolve(project, timeLimit, callback)
+        } else {
+            parallelSolve(project, timeLimit, workers, callback)
         }
+    }
 
     fun singleSolve(
         project: Project,
@@ -39,13 +38,18 @@ class ChocoScheduler(
 
             val solution = model.solution()
             val initSolving = Clock.System.now()
+            var bestObjective = Long.MAX_VALUE
             while (solver.solve()) {
                 solution.record()
-                val currentDuration = Clock.System.now() - initSolving
-                model.decode(solution, currentDuration, false).onSuccess(callback)
+                val currentDuration = listOf(timeLimit, Clock.System.now() - initSolving).min()
+                val currentObjective = model.objective(solution).toLong()
+                if (currentObjective < bestObjective) {
+                    bestObjective = currentObjective
+                    model.decode(solution, currentDuration, false).onSuccess(callback)
+                }
             }
 
-            val currentDuration = Clock.System.now() - initSolving
+            val currentDuration = listOf(timeLimit, Clock.System.now() - initSolving).min()
             return model.decode(solution, currentDuration, solver.searchState == SearchState.TERMINATED)
         }
 
@@ -62,17 +66,26 @@ class ChocoScheduler(
             var bestSolution: Solution? = null
             var bestModel: ChocoModel? = null
             var bestSolver: Solver? = null
+            var bestObjective = Long.MAX_VALUE
 
             while (portfolio.solve()) {
                 val finderModel = portfolio.bestModel
-                bestSolver = finderModel.solver
-                bestModel = chocoModels.first { it.name == finderModel.name }
-                bestSolution = bestModel.solution().record()
-                val currentDuration = Clock.System.now() - initSolving
-                bestModel.decode(bestSolution, currentDuration, false).onSuccess(callback)
+                val currentObjective =
+                    finderModel.solver
+                        .toArray()
+                        .getOrNull(5)
+                        ?.toLong() ?: Long.MAX_VALUE
+                if (currentObjective < bestObjective) {
+                    bestObjective = currentObjective
+                    bestSolver = finderModel.solver
+                    bestModel = chocoModels.first { it.name == finderModel.name }
+                    bestSolution = bestModel.solution().record()
+                    val currentDuration = listOf(timeLimit, Clock.System.now() - initSolving).min()
+                    bestModel.decode(bestSolution, currentDuration, false).onSuccess(callback)
+                }
             }
 
-            val currentDuration = Clock.System.now() - initSolving
+            val currentDuration = listOf(timeLimit, Clock.System.now() - initSolving).min()
             val optimal = bestSolver?.searchState == SearchState.TERMINATED
 
             if (bestSolution != null && bestModel != null) {

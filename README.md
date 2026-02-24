@@ -11,7 +11,7 @@
 ## Description
 
 It is a Kotlin-based scheduling system that optimizes task assignment to employees.
-It uses constraint programming solvers for optimal scheduling.
+It uses constraint programming solvers and genetic algorithm for optimal scheduling.
 
 ## Features
 
@@ -27,6 +27,7 @@ It uses constraint programming solvers for optimal scheduling.
 - **bellum-core**: Core domain models, solver abstractions, estimators, and file parsers;
 - **bellum-solver**
   - **choco**: ChocoSolver implementation using constraint programming;
+  - **jenetics**: Jenetics implementation using genetic algorithms;
 - **bellum-cli**: Command-line interface for running the scheduler.
 
 ## Supported Solvers
@@ -34,6 +35,7 @@ It uses constraint programming solvers for optimal scheduling.
 Currently supported:
 
 - **choco**: Choco Solver - Constraint programming solver (default)
+- **jenetics**: Jenetics - Genetic Algorithm Library
 
 Run `solvers` command to list all available solvers.
 
