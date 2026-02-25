@@ -9,6 +9,7 @@ clikt = "5.1.0"
 konform = "0.11.1"
 choco-solver = "5.0.0"
 jenetics = "9.0.0"
+timefold = "1.31.0"
 uuid-generator = "5.1.1"
 jgrapht = "1.5.2"
 commons-math3 = "3.6.1"
@@ -23,6 +24,7 @@ clikt = { module = "com.github.ajalt.clikt:clikt", version.ref = "clikt" }
 konform-jvm = { module = "io.konform:konform-jvm", version.ref = "konform" }
 choco-solver = { module = "org.choco-solver:choco-solver", version.ref = "choco-solver" }
 jenetics = { module = "io.jenetics:jenetics", version.ref = "jenetics" }
+timefold-core = { module = "ai.timefold.solver:timefold-solver-core", version.ref = "timefold" }
 uuid-generator = { module = "com.fasterxml.uuid:java-uuid-generator", version.ref = "uuid-generator" }
 jgrapht-core = { module = "org.jgrapht:jgrapht-core", version.ref = "jgrapht" }
 commons-math3 = { module = "org.apache.commons:commons-math3", version.ref = "commons-math3" }

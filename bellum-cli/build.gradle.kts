@@ -10,6 +10,7 @@ dependencies {
     implementation(project(":bellum-core"))
     implementation(project(":bellum-solver:choco"))
     implementation(project(":bellum-solver:jenetics"))
+    implementation(project(":bellum-solver:timefold"))
     implementation(libs.clikt)
 }
 
