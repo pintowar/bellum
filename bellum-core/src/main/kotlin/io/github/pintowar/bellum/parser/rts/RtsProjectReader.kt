@@ -24,9 +24,11 @@ import kotlin.time.Clock
  * ```
  *
  * @property name The project name
+ * @property sep The delimiter used to separate values in each line (default: ",")
  */
 class RtsProjectReader(
     private val name: String,
+    private val sep: String = ",",
 ) : ContentReader<ParsedProject> {
     companion object {
         /**
@@ -39,7 +41,6 @@ class RtsProjectReader(
          * Convenience method to parse RTS content directly.
          *
          * @param content The raw RTS content string
-         * @param sep The delimiter used within sections (default: comma)
          * @param name The project name
          * @return Result containing the parsed ParsedProject or an error
          */
@@ -47,7 +48,7 @@ class RtsProjectReader(
             content: String,
             sep: String = ",",
             name: String = "",
-        ): Result<ParsedProject> = RtsProjectReader(name).readContent(content, sep)
+        ): Result<ParsedProject> = RtsProjectReader(name, sep).readContent(content)
     }
 
     /**
@@ -55,13 +56,9 @@ class RtsProjectReader(
      * Expects a format with employees above a separator line and tasks below.
      * Optionally, a matrix section can follow tasks (after another separator line).
      * @param content The raw content string to parse
-     * @param sep The delimiter used within employee and task sections
      * @return Result containing the parsed Project or an error
      */
-    override fun readContent(
-        content: String,
-        sep: String,
-    ): Result<ParsedProject> =
+    override fun readContent(content: String): Result<ParsedProject> =
         runCatching {
             val trimmedContent = content.trim()
             if (trimmedContent.isBlank()) {
@@ -102,25 +99,25 @@ class RtsProjectReader(
                 if (employeeContent.isBlank()) {
                     emptyList()
                 } else {
-                    RtsEmployeeReader.readContent(employeeContent, sep).getOrThrow()
+                    RtsEmployeeReader(sep).readContent(employeeContent).getOrThrow()
                 }
 
             val tasks =
                 if (taskContent.isBlank()) {
                     emptyList()
                 } else {
-                    RtsTaskReader.readContent(taskContent, sep).getOrThrow()
+                    RtsTaskReader(sep).readContent(taskContent).getOrThrow()
                 }
 
             val project = Project(name, Clock.System.now(), employees.toSet(), tasks.toSet()).getOrThrow()
 
             val estimationMatrixContent = matrixLines.joinToString("\n")
             val estimationMatrix =
-                RtsMatrixReader
-                    .readContent(estimationMatrixContent, sep)
+                RtsMatrixReader(sep)
+                    .readContent(estimationMatrixContent)
                     .mapCatching {
                         if (it.isNotEmpty()) {
-                            RtsMatrixReader.validateMatrix(it, employees.size, tasks.size).getOrThrow()
+                            RtsMatrixReader(sep).validateMatrix(it, employees.size, tasks.size).getOrThrow()
                         } else {
                             null
                         }

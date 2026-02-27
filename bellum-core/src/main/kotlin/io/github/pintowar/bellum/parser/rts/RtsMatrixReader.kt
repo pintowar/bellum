@@ -14,12 +14,13 @@ import io.github.pintowar.bellum.core.parser.InvalidFileFormat
  * 10,20,30
  * 15,25,35
  * ```
+ *
+ * @property sep The delimiter used to separate values in each line (default: ",")
  */
-object RtsMatrixReader : ContentReader<List<List<Long>>> {
-    override fun readContent(
-        content: String,
-        sep: String,
-    ): Result<List<List<Long>>> =
+class RtsMatrixReader(
+    private val sep: String = ",",
+) : ContentReader<List<List<Long>>> {
+    override fun readContent(content: String): Result<List<List<Long>>> =
         runCatching {
             if (content.isBlank()) return@runCatching emptyList()
             val lines = content.trim().lines().filter { it.isNotBlank() }

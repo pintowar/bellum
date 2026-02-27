@@ -23,12 +23,13 @@ import io.github.pintowar.bellum.core.parser.InvalidFileFormat
  * 1,Task 1,minor,-1,3,2
  * 2,Task 2,major,1,5,0
  * ```
+ *
+ * @property sep The delimiter used to separate values in each line (default: ",")
  */
-object RtsTaskReader : ContentReader<List<Task>> {
-    override fun readContent(
-        content: String,
-        sep: String,
-    ): Result<List<Task>> =
+class RtsTaskReader(
+    private val sep: String = ",",
+) : ContentReader<List<Task>> {
+    override fun readContent(content: String): Result<List<Task>> =
         runCatching {
             if (content.isBlank()) throw InvalidFileFormat("Empty task content.")
             val lines = content.trim().lines()

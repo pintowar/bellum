@@ -221,7 +221,7 @@ class RtsProjectReaderTest :
                     1|Task 1|minor|-1|0|3
                     """.trimIndent()
 
-                val result = RtsProjectReader("Test").readContent(content, "|").getOrThrow()
+                val result = RtsProjectReader("Test", "|").readContent(content).getOrThrow()
                 result.project.allEmployees().size shouldBe 1
                 result.project.allTasks().size shouldBe 1
             }
