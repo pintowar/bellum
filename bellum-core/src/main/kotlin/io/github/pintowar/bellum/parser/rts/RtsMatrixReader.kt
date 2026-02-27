@@ -3,6 +3,18 @@ package io.github.pintowar.bellum.parser.rts
 import io.github.pintowar.bellum.core.parser.ContentReader
 import io.github.pintowar.bellum.core.parser.InvalidFileFormat
 
+/**
+ * Parser for estimation matrix in RTS (Resource Task Scheduling) format.
+ *
+ * Expects CSV-like content where each line represents a row of the matrix.
+ * Each value should be a non-negative integer representing the estimated time.
+ *
+ * Example:
+ * ```
+ * 10,20,30
+ * 15,25,35
+ * ```
+ */
 object RtsMatrixReader : ContentReader<List<List<Long>>> {
     override fun readContent(
         content: String,
@@ -23,6 +35,14 @@ object RtsMatrixReader : ContentReader<List<List<Long>>> {
             }
         }
 
+    /**
+     * Validates that the estimation matrix has correct dimensions.
+     *
+     * @param matrix The estimation matrix to validate
+     * @param employeesSize Expected number of rows (employees)
+     * @param tasksSize Expected number of columns (tasks)
+     * @return Result containing the validated matrix or an error
+     */
     fun validateMatrix(
         matrix: List<List<Long>>,
         employeesSize: Int,

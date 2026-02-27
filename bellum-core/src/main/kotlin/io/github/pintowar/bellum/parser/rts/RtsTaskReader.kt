@@ -7,6 +7,23 @@ import io.github.pintowar.bellum.core.domain.UnassignedTask
 import io.github.pintowar.bellum.core.parser.ContentReader
 import io.github.pintowar.bellum.core.parser.InvalidFileFormat
 
+/**
+ * Parser for task data in RTS (Resource Task Scheduling) format.
+ *
+ * Expects CSV-like content where:
+ * - First line is the header with column names
+ * - Remaining lines are task data
+ * - Columns starting with "skill" are treated as required skill levels
+ * - Supports both "priority" and "criticity" column names
+ * - "precedes" column defines task dependencies (-1 means no dependency)
+ *
+ * Example:
+ * ```
+ * id,description,priority,precedes,skill1,skill2
+ * 1,Task 1,minor,-1,3,2
+ * 2,Task 2,major,1,5,0
+ * ```
+ */
 object RtsTaskReader : ContentReader<List<Task>> {
     override fun readContent(
         content: String,
@@ -45,6 +62,14 @@ object RtsTaskReader : ContentReader<List<Task>> {
             adjustDependencies(ids, precedes, tasks)
         }
 
+    /**
+     * Adjusts task dependencies based on task IDs and precedence relationships.
+     *
+     * @param ids List of task IDs in order
+     * @param precedes List of precedence IDs (task IDs that must come before each task)
+     * @param tasks List of tasks to adjust
+     * @return List of tasks with dependencies applied
+     */
     fun adjustDependencies(
         ids: List<String>,
         precedes: List<String>,

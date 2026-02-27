@@ -1,6 +1,7 @@
 package io.github.pintowar.bellum.parser.rts
 
 import io.github.pintowar.bellum.core.parser.InvalidFileFormat
+import io.github.pintowar.bellum.parser.ProjectReader
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.result.shouldBeFailure
 import io.kotest.matchers.shouldBe
@@ -256,14 +257,12 @@ class RtsProjectReaderTest :
 
         context("companion object readContentFromPath") {
             test("should fallback to file URI when data URI fails") {
-                // This test would need actual file system setup to be meaningful
-                // For now, we'll test the logic with an invalid URI that should trigger fallback
-                val result = RtsProjectReader.readContentFromPath("", "invalid-uri-format")
+                val result = ProjectReader.readContentFromPath("", "invalid-uri-format")
                 result.shouldBeFailure()
             }
 
             test("should handle malformed content in file fallback") {
-                val result = RtsProjectReader.readContentFromPath("", "invalid-malformed")
+                val result = ProjectReader.readContentFromPath("", "invalid-malformed")
                 result.shouldBeFailure()
             }
         }
