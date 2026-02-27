@@ -15,7 +15,7 @@ import io.github.pintowar.bellum.core.solver.SchedulerSolution
 import io.github.pintowar.bellum.core.solver.SolutionHistory
 import io.github.pintowar.bellum.estimator.CustomEstimator
 import io.github.pintowar.bellum.estimator.PearsonEstimator
-import io.github.pintowar.bellum.parser.rts.RtsProjectReader
+import io.github.pintowar.bellum.parser.ProjectReader
 import io.github.pintowar.bellum.plotter.cliGantt
 import io.github.pintowar.bellum.serdes.export
 import io.github.pintowar.bellum.serdes.solutionAndStats
@@ -80,7 +80,7 @@ class SolveCommand : CliktCommand(name = "solve") {
     private fun readAndSolveProject(currentDir: String): Result<SolutionHistory> =
         runCatching {
             val parsedProject =
-                RtsProjectReader.readContentFromPath(currentDir, path).getOrThrow()
+                ProjectReader.readContentFromPath(currentDir, path).getOrThrow()
 
             val estimator =
                 parsedProject.estimationMatrix?.let { matrix ->
