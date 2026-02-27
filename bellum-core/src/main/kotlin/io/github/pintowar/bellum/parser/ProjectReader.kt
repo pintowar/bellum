@@ -16,10 +16,10 @@ import java.net.URI
  * Use [readContentFromPath] to read a project from a file path with automatic format detection.
  */
 class ProjectReader : ContentReader<ParsedProject> {
-    override fun readContent(
-        content: String,
-        sep: String,
-    ): Result<ParsedProject> = RtsProjectReader("").readContent(content, sep)
+    /**
+     * Parsing content directly is not supported. Use [readContentFromPath] instead.
+     */
+    override fun readContent(content: String): Result<ParsedProject> = Result.failure(NotImplementedError("Method not implements"))
 
     companion object {
         /**
