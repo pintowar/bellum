@@ -9,7 +9,7 @@ import io.github.pintowar.bellum.core.domain.UnassignedTask
 import io.github.pintowar.bellum.core.parser.ContentReader
 import io.github.pintowar.bellum.core.parser.InvalidFileFormat
 import io.github.pintowar.bellum.parser.ParsedProject
-import io.github.pintowar.bellum.parser.rts.RtsTaskReader
+import io.github.pintowar.bellum.parser.TaskReader.adjustDependencies
 import kotlinx.serialization.json.Json
 import kotlin.time.Clock
 
@@ -34,21 +34,16 @@ class JsonProjectReader(
          * Convenience method to parse JSON content directly.
          *
          * @param content The raw JSON content string
-         * @param sep The delimiter used within sections (default: comma)
          * @param defaultName The default project name
          * @return Result containing the parsed ParsedProject or an error
          */
         fun readContent(
             content: String,
-            sep: String = ",",
             defaultName: String = "Unnamed Project",
-        ): Result<ParsedProject> = JsonProjectReader(defaultName).readContent(content, sep)
+        ): Result<ParsedProject> = JsonProjectReader(defaultName).readContent(content)
     }
 
-    override fun readContent(
-        content: String,
-        sep: String,
-    ): Result<ParsedProject> =
+    override fun readContent(content: String): Result<ParsedProject> =
         runCatching {
             val trimmedContent = content.trim()
             if (trimmedContent.isBlank()) {
@@ -106,7 +101,7 @@ class JsonProjectReader(
 
         val (table, tasks) = data.unzip()
         val (ids, precedes) = table.unzip()
-        return RtsTaskReader.adjustDependencies(ids.map { it.toString() }, precedes.map { it.toString() }, tasks)
+        return adjustDependencies(ids.map { it.toString() }, precedes.map { it.toString() }, tasks)
     }
 
     /**

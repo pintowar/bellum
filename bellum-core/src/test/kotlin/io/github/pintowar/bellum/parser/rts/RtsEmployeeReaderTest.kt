@@ -10,6 +10,8 @@ import io.kotest.matchers.types.shouldBeTypeOf
 class RtsEmployeeReaderTest :
     FunSpec({
 
+        val employeeReader = RtsEmployeeReader()
+
         test("successfully read content") {
             val content =
                 """
@@ -19,7 +21,7 @@ class RtsEmployeeReaderTest :
                 3,Kim,3,2,0,3,0,0,4,4,0,0
                 """.trimIndent()
 
-            val result = RtsEmployeeReader.readContent(content).getOrThrow()
+            val result = employeeReader.readContent(content).getOrThrow()
             result.size shouldBe 3
 
             val employee1 = result.first()
@@ -35,7 +37,7 @@ class RtsEmployeeReaderTest :
 
         context("empty content") {
             test("empty content should fail") {
-                val result = RtsEmployeeReader.readContent("")
+                val result = employeeReader.readContent("")
                 result shouldBeFailure { ex ->
                     ex.shouldBeTypeOf<InvalidFileFormat>()
                     ex.message shouldBe "Empty employee content."
@@ -43,7 +45,7 @@ class RtsEmployeeReaderTest :
             }
 
             test("only header should return empty list") {
-                val result = RtsEmployeeReader.readContent("id,content,skill1,skill2")
+                val result = employeeReader.readContent("id,content,skill1,skill2")
                 result.shouldBeSuccess()
                 result.getOrThrow() shouldBe emptyList()
             }
@@ -56,7 +58,7 @@ class RtsEmployeeReaderTest :
                     1,Thiago,0,3,0,1
                     2,Bruno,2,1,3,0
                     """.trimIndent()
-                val result = RtsEmployeeReader.readContent(content)
+                val result = employeeReader.readContent(content)
                 result.shouldBeFailure()
             }
 
@@ -67,7 +69,7 @@ class RtsEmployeeReaderTest :
                     1,Thiago,0,3,0
                     2,Bruno,2,1
                     """.trimIndent()
-                val result = RtsEmployeeReader.readContent(content)
+                val result = employeeReader.readContent(content)
                 result shouldBeFailure { ex ->
                     ex.shouldBeTypeOf<InvalidFileFormat>()
                     ex.message shouldBe
@@ -82,7 +84,7 @@ class RtsEmployeeReaderTest :
                     1,0,3
                     2,2,1
                     """.trimIndent()
-                val result = RtsEmployeeReader.readContent(content)
+                val result = employeeReader.readContent(content)
                 result.shouldBeFailure()
             }
 
@@ -94,7 +96,7 @@ class RtsEmployeeReaderTest :
                     1,Thiago,0,3
                     2,Bruno,2,1
                     """.trimIndent()
-                val result = RtsEmployeeReader.readContent(content)
+                val result = employeeReader.readContent(content)
                 result.shouldBeFailure()
             }
         }
@@ -106,7 +108,7 @@ class RtsEmployeeReaderTest :
                     id,content,skill1,skill2
                     1,Thiago,0,10
                     """.trimIndent()
-                val result = RtsEmployeeReader.readContent(content)
+                val result = employeeReader.readContent(content)
                 result.shouldBeFailure()
             }
 
@@ -116,7 +118,7 @@ class RtsEmployeeReaderTest :
                     id,content,skill1,skill2
                     1,Thiago,-1,3
                     """.trimIndent()
-                val result = RtsEmployeeReader.readContent(content)
+                val result = employeeReader.readContent(content)
                 result.shouldBeFailure()
             }
 
@@ -126,7 +128,7 @@ class RtsEmployeeReaderTest :
                     id,content,skill1,skill2
                     1,Thiago,abc,3
                     """.trimIndent()
-                val result = RtsEmployeeReader.readContent(content)
+                val result = employeeReader.readContent(content)
                 result.shouldBeFailure()
             }
 
@@ -136,7 +138,7 @@ class RtsEmployeeReaderTest :
                     id,content,skill1,skill2
                     1,Thiago,2.5,3
                     """.trimIndent()
-                val result = RtsEmployeeReader.readContent(content)
+                val result = employeeReader.readContent(content)
                 result.shouldBeFailure()
             }
         }
@@ -148,7 +150,7 @@ class RtsEmployeeReaderTest :
                     id,content,skill1,skill2
                     1,,0,3
                     """.trimIndent()
-                val result = RtsEmployeeReader.readContent(content)
+                val result = employeeReader.readContent(content)
                 result.shouldBeFailure()
             }
 
@@ -158,7 +160,7 @@ class RtsEmployeeReaderTest :
                     id,content,skill1,skill2
                     1,  ,0,3
                     """.trimIndent()
-                val result = RtsEmployeeReader.readContent(content)
+                val result = employeeReader.readContent(content)
                 result.shouldBeFailure()
             }
         }
@@ -170,7 +172,7 @@ class RtsEmployeeReaderTest :
                     id,content
                     1,Thiago
                     """.trimIndent()
-                val result = RtsEmployeeReader.readContent(content)
+                val result = employeeReader.readContent(content)
                 result.shouldBeSuccess()
                 result.getOrThrow().size shouldBe 1
                 result.getOrThrow().first().name shouldBe "Thiago"
@@ -183,7 +185,7 @@ class RtsEmployeeReaderTest :
                     id,content,skill1,skill2,skill3,skill4,skill5,skill6,skill7,skill8,skill9,skill10,skill11,skill12
                     1,Thiago,0,3,0,1,4,0,3,0,0,0,1,2
                     """.trimIndent()
-                val result = RtsEmployeeReader.readContent(content)
+                val result = employeeReader.readContent(content)
                 result.shouldBeSuccess()
                 result
                     .getOrThrow()
@@ -197,7 +199,7 @@ class RtsEmployeeReaderTest :
                     id,content,skill1
                     1,Thiago,5
                     """.trimIndent()
-                val result = RtsEmployeeReader.readContent(content)
+                val result = employeeReader.readContent(content)
                 result.shouldBeSuccess()
                 result
                     .getOrThrow()
@@ -211,7 +213,7 @@ class RtsEmployeeReaderTest :
                     id,content,skill3,skill1,skill2
                     1,Thiago,1,0,3
                     """.trimIndent()
-                val result = RtsEmployeeReader.readContent(content)
+                val result = employeeReader.readContent(content)
                 result.shouldBeSuccess()
                 result
                     .getOrThrow()
@@ -239,7 +241,7 @@ class RtsEmployeeReaderTest :
                     1;Thiago;0;3
                     2;Bruno;2;1
                     """.trimIndent()
-                val result = RtsEmployeeReader.readContent(content, ";")
+                val result = RtsEmployeeReader(";").readContent(content)
                 result.shouldBeSuccess()
                 result.getOrThrow().size shouldBe 2
             }
@@ -251,7 +253,7 @@ class RtsEmployeeReaderTest :
                     1	Thiago	0	3
                     2	Bruno	2	1
                     """.trimIndent()
-                val result = RtsEmployeeReader.readContent(content, "\t")
+                val result = RtsEmployeeReader("\t").readContent(content)
                 result.shouldBeSuccess()
                 result.getOrThrow().size shouldBe 2
             }
@@ -263,7 +265,7 @@ class RtsEmployeeReaderTest :
                     1|Thiago|0|3
                     2|Bruno|2|1
                     """.trimIndent()
-                val result = RtsEmployeeReader.readContent(content, "|")
+                val result = RtsEmployeeReader("|").readContent(content)
                 result.shouldBeSuccess()
                 result.getOrThrow().size shouldBe 2
             }
@@ -277,7 +279,7 @@ class RtsEmployeeReaderTest :
                     1,"John Doe",0,3
                     2,"Jane, Smith",2,1
                     """.trimIndent()
-                val result = RtsEmployeeReader.readContent(content)
+                val result = employeeReader.readContent(content)
                 result.shouldBeSuccess()
                 result.getOrThrow().first().name shouldBe "John Doe"
                 result.getOrThrow().last().name shouldBe "Jane, Smith"
@@ -290,7 +292,7 @@ class RtsEmployeeReaderTest :
                     1,Mário José,0,3
                     2,Jean-Luc,2,1
                     """.trimIndent()
-                val result = RtsEmployeeReader.readContent(content)
+                val result = employeeReader.readContent(content)
                 result.shouldBeSuccess()
                 result.getOrThrow().first().name shouldBe "Mário José"
                 result.getOrThrow().last().name shouldBe "Jean-Luc"
