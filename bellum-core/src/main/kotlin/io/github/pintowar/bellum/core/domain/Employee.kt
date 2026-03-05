@@ -11,7 +11,7 @@ class Employee private constructor(
 ) {
     companion object {
         private val validator =
-            Validation<Employee> {
+            Validation {
                 Employee::name {
                     notBlank()
                 }
