@@ -5,6 +5,7 @@ import com.github.ajalt.clikt.testing.test
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
+import io.kotest.matchers.string.shouldNotContain
 import java.io.File
 
 class ConvertCommandTest :
@@ -85,7 +86,7 @@ class ConvertCommandTest :
 
         test("convert with explicit RTS format") {
             val tempFile = File.createTempFile("test", ".txt")
-            tempFile.writeText(sampleJsonContent)
+            tempFile.writeText(sampleRtsContent)
             tempFile.deleteOnExit()
 
             val result = command.test("convert -f rts ${tempFile.absolutePath}")
@@ -159,5 +160,58 @@ class ConvertCommandTest :
 
             result.statusCode shouldBe 0
             result.output shouldContain "\"name\": \"${tempFile.nameWithoutExtension}\""
+        }
+
+        test("convert help shows recalc-matrix option") {
+            val result = command.test("convert --help")
+
+            result.statusCode shouldBe 0
+            result.output shouldContain "--recalc-matrix"
+        }
+
+        test("convert RTS to JSON with recalc-matrix adds estimation matrix") {
+            val tempFile = File.createTempFile("test", ".rts")
+            tempFile.writeText(sampleRtsContent)
+            tempFile.deleteOnExit()
+
+            val result = command.test("convert --recalc-matrix ${tempFile.absolutePath}")
+
+            result.statusCode shouldBe 0
+            result.output shouldContain "estimationMatrix"
+        }
+
+        test("convert JSON to RTS with recalc-matrix adds estimation matrix") {
+            val tempFile = File.createTempFile("test", ".json")
+            tempFile.writeText(sampleJsonContent)
+            tempFile.deleteOnExit()
+
+            val result = command.test("convert --recalc-matrix ${tempFile.absolutePath}")
+
+            result.statusCode shouldBe 0
+            result.output shouldContain "================="
+            result.output shouldContain "5,5,85"
+            result.output shouldContain "85,85,5"
+        }
+
+        test("convert without recalc-matrix does not add matrix when not present") {
+            val tempFile = File.createTempFile("test", ".rts")
+            tempFile.writeText(sampleRtsContent)
+            tempFile.deleteOnExit()
+
+            val result = command.test("convert ${tempFile.absolutePath}")
+
+            result.statusCode shouldBe 0
+            result.output shouldNotContain "estimationMatrix"
+        }
+
+        test("convert with recalc-matrix -m short flag") {
+            val tempFile = File.createTempFile("test", ".rts")
+            tempFile.writeText(sampleRtsContent)
+            tempFile.deleteOnExit()
+
+            val result = command.test("convert -m ${tempFile.absolutePath}")
+
+            result.statusCode shouldBe 0
+            result.output shouldContain "estimationMatrix"
         }
     })

@@ -1,6 +1,7 @@
 package io.github.pintowar.bellum.cli
 
 import com.github.ajalt.clikt.core.CliktCommand
+import com.github.ajalt.clikt.core.ProgramResult
 import com.github.ajalt.clikt.parameters.arguments.argument
 import com.github.ajalt.clikt.parameters.options.default
 import com.github.ajalt.clikt.parameters.options.option
@@ -19,7 +20,6 @@ import io.github.pintowar.bellum.io.reader.ProjectReader
 import io.github.pintowar.bellum.plotter.cliGantt
 import io.github.pintowar.bellum.serdes.export
 import io.github.pintowar.bellum.serdes.solutionAndStats
-import kotlin.system.exitProcess
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
@@ -114,10 +114,9 @@ class SolveCommand : CliktCommand(name = "solve") {
 
             echo()
             echo(result.lastProject()?.cliGantt(120))
-            exitProcess(0)
         } catch (e: Exception) {
             echo(red(e.message ?: "Unknown error"), err = true)
-            exitProcess(1)
+            throw ProgramResult(1)
         }
     }
 
