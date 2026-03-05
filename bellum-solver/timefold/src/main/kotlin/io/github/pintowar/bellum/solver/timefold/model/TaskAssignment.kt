@@ -2,6 +2,7 @@ package io.github.pintowar.bellum.solver.timefold.model
 
 import ai.timefold.solver.core.api.domain.entity.PlanningEntity
 import ai.timefold.solver.core.api.domain.lookup.PlanningId
+import ai.timefold.solver.core.api.domain.variable.InverseRelationShadowVariable
 import ai.timefold.solver.core.api.domain.variable.PlanningVariable
 import io.github.pintowar.bellum.core.domain.TaskPriority
 import java.util.UUID
@@ -15,7 +16,7 @@ class TaskAssignment {
     var dependsOnTaskId: UUID? = null
     var requiredDuration: Int = 0
 
-    @PlanningVariable
+    @InverseRelationShadowVariable(sourceVariableName = "tasks")
     var employee: EmployeeResource? = null
 
     @PlanningVariable

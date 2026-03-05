@@ -75,7 +75,7 @@ class TimefoldScheduler(
         SolverConfig()
 //            .withMoveThreadCount("$workers")
             .withSolutionClass(SchedulingSolution::class.java)
-            .withEntityClasses(TaskAssignment::class.java)
+            .withEntityClasses(TaskAssignment::class.java, EmployeeResource::class.java)
             .withConstraintProviderClass(SchedulingConstraintProvider::class.java)
             .withTerminationSpentLimit(java.time.Duration.ofMillis(timeLimit.inWholeMilliseconds))
             .withPhases(

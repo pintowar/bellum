@@ -9,14 +9,14 @@ import ai.timefold.solver.core.api.score.buildin.hardsoft.HardSoftScore
 
 @PlanningSolution
 class SchedulingSolution {
-    @ProblemFactCollectionProperty
-    @ValueRangeProvider
+    @PlanningEntityCollectionProperty
     lateinit var employees: List<EmployeeResource>
 
     @ProblemFactCollectionProperty
     @ValueRangeProvider
     lateinit var taskRange: List<Int>
 
+    @ValueRangeProvider
     @PlanningEntityCollectionProperty
     lateinit var taskAssignments: List<TaskAssignment>
 
