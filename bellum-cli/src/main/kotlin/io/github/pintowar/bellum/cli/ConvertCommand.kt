@@ -7,9 +7,9 @@ import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.types.choice
 import com.github.ajalt.mordant.rendering.TextColors
 import com.github.ajalt.mordant.rendering.TextStyles
-import io.github.pintowar.bellum.parser.ProjectReader
-import io.github.pintowar.bellum.parser.converter.JsonToRtsConverter
-import io.github.pintowar.bellum.parser.converter.RtsToJsonConverter
+import io.github.pintowar.bellum.io.converter.JsonToRtsConverter
+import io.github.pintowar.bellum.io.converter.RtsToJsonConverter
+import io.github.pintowar.bellum.io.reader.ProjectReader
 import java.io.File
 import kotlin.system.exitProcess
 

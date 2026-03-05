@@ -15,7 +15,7 @@ import io.github.pintowar.bellum.core.solver.SchedulerSolution
 import io.github.pintowar.bellum.core.solver.SolutionHistory
 import io.github.pintowar.bellum.estimator.CustomEstimator
 import io.github.pintowar.bellum.estimator.PearsonEstimator
-import io.github.pintowar.bellum.parser.ProjectReader
+import io.github.pintowar.bellum.io.reader.ProjectReader
 import io.github.pintowar.bellum.plotter.cliGantt
 import io.github.pintowar.bellum.serdes.export
 import io.github.pintowar.bellum.serdes.solutionAndStats
