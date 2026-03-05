@@ -25,7 +25,7 @@ class SchedulingConstraintProvider : ConstraintProvider {
                 { taskAssignment ->
                     val empId =
                         taskAssignment.employee
-                            ?.id()
+                            ?.employeeId
                             ?.toString()
                     val startTime = taskAssignment.startTimeMinute ?: 0
                     val expectedEmpId = taskAssignment.pinnedEmployeeId

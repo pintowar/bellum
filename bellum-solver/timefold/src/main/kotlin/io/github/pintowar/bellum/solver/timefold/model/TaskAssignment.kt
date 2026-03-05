@@ -3,7 +3,6 @@ package io.github.pintowar.bellum.solver.timefold.model
 import ai.timefold.solver.core.api.domain.entity.PlanningEntity
 import ai.timefold.solver.core.api.domain.lookup.PlanningId
 import ai.timefold.solver.core.api.domain.variable.PlanningVariable
-import io.github.pintowar.bellum.core.domain.Employee
 import io.github.pintowar.bellum.core.domain.TaskPriority
 import java.util.UUID
 
@@ -17,7 +16,7 @@ class TaskAssignment {
     var requiredDuration: Int = 0
 
     @PlanningVariable
-    var employee: Employee? = null
+    var employee: EmployeeResource? = null
 
     @PlanningVariable
     var startTimeMinute: Int? = null
@@ -54,7 +53,7 @@ class TaskAssignment {
 
     fun getDuration(): Int {
         val employee = this.employee ?: return requiredDuration
-        val employeeId = employee.id().toString()
+        val employeeId = employee.employeeId.toString()
         val taskIdStr = taskId?.toString() ?: return requiredDuration
         return durationMap["$employeeId|$taskIdStr"] ?: requiredDuration
     }

@@ -6,9 +6,11 @@ import ai.timefold.solver.core.api.solver.SolverFactory
 import ai.timefold.solver.core.config.solver.SolverConfig
 import io.github.pintowar.bellum.core.domain.AssignedTask
 import io.github.pintowar.bellum.core.domain.Project
+import io.github.pintowar.bellum.core.domain.Task
 import io.github.pintowar.bellum.core.estimator.TimeEstimator
 import io.github.pintowar.bellum.core.solver.Scheduler
 import io.github.pintowar.bellum.core.solver.SchedulerSolution
+import io.github.pintowar.bellum.solver.timefold.model.EmployeeResource
 import io.github.pintowar.bellum.solver.timefold.model.SchedulingConstraintProvider
 import io.github.pintowar.bellum.solver.timefold.model.SchedulingSolution
 import io.github.pintowar.bellum.solver.timefold.model.TaskAssignment
@@ -127,7 +129,7 @@ class TimefoldScheduler(
         val taskRange = (0 until maxPossibleTime).toList()
 
         return SchedulingSolution(
-            employees = employees,
+            employees = employees.map { EmployeeResource(it.id(), it.name) },
             taskRange = taskRange,
             taskAssignments = taskAssignments,
             durationMap = durationMap,
@@ -147,7 +149,8 @@ class TimefoldScheduler(
         val kickOffEpochMilli = solution.kickOffTime
         val kickOff = Instant.fromEpochMilliseconds(kickOffEpochMilli)
 
-        val assignedTasks = mutableSetOf<io.github.pintowar.bellum.core.domain.Task>()
+        val assignedTasks = mutableSetOf<Task>()
+        val employeesById = originalProject.allEmployees().associateBy { it.id() }
 
         for (assignment in solution.taskAssignments) {
             val employee = assignment.employee
@@ -161,7 +164,7 @@ class TimefoldScheduler(
                         id = assignment.taskId!!,
                         description = assignment.taskDescription,
                         priority = assignment.taskPriority,
-                        employee = employee,
+                        employee = employeesById.getValue(employee.employeeId!!),
                         startAt = startAt,
                         duration = durationDur,
                         pinned = assignment.pinned,

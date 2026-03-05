@@ -6,13 +6,12 @@ import ai.timefold.solver.core.api.domain.solution.PlanningSolution
 import ai.timefold.solver.core.api.domain.solution.ProblemFactCollectionProperty
 import ai.timefold.solver.core.api.domain.valuerange.ValueRangeProvider
 import ai.timefold.solver.core.api.score.buildin.hardsoft.HardSoftScore
-import io.github.pintowar.bellum.core.domain.Employee
 
 @PlanningSolution
 class SchedulingSolution {
     @ProblemFactCollectionProperty
     @ValueRangeProvider
-    lateinit var employees: List<Employee>
+    lateinit var employees: List<EmployeeResource>
 
     @ProblemFactCollectionProperty
     @ValueRangeProvider
@@ -37,7 +36,7 @@ class SchedulingSolution {
     constructor()
 
     constructor(
-        employees: List<Employee>,
+        employees: List<EmployeeResource>,
         taskRange: List<Int>,
         taskAssignments: List<TaskAssignment>,
         durationMap: Map<String, Int>,
