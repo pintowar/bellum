@@ -15,21 +15,28 @@ from minizinc import Instance, Model, Solver
 
 def create_parser(description: str) -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=description)
-    parser.add_argument(
-        "--parallel", type=int, help="Number of parallel threads"
-    )
+    parser.add_argument("--parallel", type=int, help="Number of parallel threads")
     parser.add_argument(
         "--save", type=str, help="Filename to save the plot (e.g., schedule.png)"
     )
     parser.add_argument(
-        "--solver", type=str, required=True, default="gecode", help="MiniZinc solver (default: gecode)"
+        "--solver",
+        type=str,
+        required=True,
+        default="gecode",
+        help="MiniZinc solver (default: gecode)",
     )
-    parser.add_argument("--data", type=str, required=True, help="Path to data file (.dzn)")
+    parser.add_argument(
+        "--data", type=str, required=True, help="Path to data file (.dzn or .json)"
+    )
     return parser
 
 
 def run_minizinc(
-    model_path: str, data_path: str | None = None, solver_name: str = "gecode", parallel: int | None = None
+    model_path: str,
+    data_path: str | None = None,
+    solver_name: str = "gecode",
+    parallel: int | None = None,
 ) -> dict[str, Any]:
     model = Model(Path(model_path))
     solver = Solver.lookup(solver_name)
@@ -38,7 +45,7 @@ def run_minizinc(
     if data_path:
         instance.add_file(Path(data_path))
 
-    params = {"processes" : parallel} if parallel else {}
+    params = {"processes": parallel} if parallel else {}
     result = instance.solve(**params)
     if result.solution is None:
         raise RuntimeError("No solution found")

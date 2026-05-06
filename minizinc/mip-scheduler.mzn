@@ -3,21 +3,34 @@
 % ----------------------------------------------------------
 % 1. Indices and Parameters
 % ----------------------------------------------------------
-int: n;
-int: m;
+type Task = record(int: id, string: description, string: priority, int: precedes);
+
+array[int] of Task: tasks;
+array[int, int] of int: estimationMatrix;
+
+int: m = card(index_set_1of2(estimationMatrix));
+int: n = card(index_set_2of2(estimationMatrix));
 
 set of int: T = 0..n-1;
 set of int: E = 0..m-1;
 
 % Coerce data to 0-based indexing
-array[int, int] of int: d_raw; 
-array[E, T] of int: d = array2d(E, T, d_raw);
+array[E, T] of int: d = array2d(E, T, estimationMatrix);
 
-array[int] of int: p_raw;
-array[T] of int: p = array1d(T, p_raw);
+array[T] of int: p = array1d(T, [
+    if tasks[i+1].priority == "critical" then 0
+    elseif tasks[i+1].priority == "major" then 1
+    else 2 endif | i in T
+]);
 
-array[int, 1..2] of int: P_raw;
-array[int, 1..2] of int: P = P_raw;
+array[int] of int: pred_list = [
+    if j == 1 then t.id - 1 else t.precedes - 1 endif
+    | t in tasks, j in 1..2 where t.precedes != -1
+];
+
+int: num_preds = length(pred_list) div 2;
+array[1..num_preds, 1..2] of int: P_raw = array2d(1..num_preds, 1..2, pred_list);
+array[1..num_preds, 1..2] of int: P = P_raw;
 
 % Precomputed bounds
 array[T] of int: min_dur = array1d(T, [min(e in E)(d[e,t]) | t in T]);

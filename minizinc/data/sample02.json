@@ -1,0 +1,183 @@
+{
+    "name": "sample02",
+    "employees": [
+        {
+            "id": 1,
+            "name": "Employee 1"
+        },
+        {
+            "id": 2,
+            "name": "Employee 2"
+        },
+        {
+            "id": 3,
+            "name": "Employee 3"
+        },
+        {
+            "id": 4,
+            "name": "Employee 4"
+        }
+    ],
+    "tasks": [
+        {
+            "id": 1,
+            "description": "Task 1",
+            "priority": "minor",
+            "precedes": -1
+        },
+        {
+            "id": 2,
+            "description": "Task 2",
+            "priority": "major",
+            "precedes": 5
+        },
+        {
+            "id": 3,
+            "description": "Task 3",
+            "priority": "minor",
+            "precedes": -1
+        },
+        {
+            "id": 4,
+            "description": "Task 4",
+            "priority": "minor",
+            "precedes": -1
+        },
+        {
+            "id": 5,
+            "description": "Task 5",
+            "priority": "major",
+            "precedes": -1
+        },
+        {
+            "id": 6,
+            "description": "Task 6",
+            "priority": "minor",
+            "precedes": -1
+        },
+        {
+            "id": 7,
+            "description": "Task 7",
+            "priority": "minor",
+            "precedes": -1
+        },
+        {
+            "id": 8,
+            "description": "Task 8",
+            "priority": "critical",
+            "precedes": -1
+        },
+        {
+            "id": 9,
+            "description": "Task 9",
+            "priority": "minor",
+            "precedes": -1
+        },
+        {
+            "id": 10,
+            "description": "Task 10",
+            "priority": "minor",
+            "precedes": -1
+        },
+        {
+            "id": 11,
+            "description": "Task 11",
+            "priority": "minor",
+            "precedes": -1
+        },
+        {
+            "id": 12,
+            "description": "Task 12",
+            "priority": "minor",
+            "precedes": -1
+        },
+        {
+            "id": 13,
+            "description": "Task 13",
+            "priority": "minor",
+            "precedes": -1
+        },
+        {
+            "id": 14,
+            "description": "Task 14",
+            "priority": "minor",
+            "precedes": 2
+        },
+        {
+            "id": 15,
+            "description": "Task 15",
+            "priority": "minor",
+            "precedes": -1
+        }
+    ],
+    "estimationMatrix": [
+        [
+            44,
+            57,
+            41,
+            57,
+            39,
+            17,
+            27,
+            29,
+            68,
+            67,
+            37,
+            42,
+            29,
+            47,
+            51
+        ],
+        [
+            22,
+            41,
+            54,
+            26,
+            50,
+            63,
+            60,
+            57,
+            55,
+            39,
+            44,
+            63,
+            52,
+            57,
+            54
+        ],
+        [
+            58,
+            41,
+            30,
+            57,
+            10,
+            33,
+            35,
+            36,
+            50,
+            47,
+            46,
+            50,
+            20,
+            67,
+            31
+        ],
+        [
+            30,
+            34,
+            27,
+            46,
+            18,
+            51,
+            63,
+            50,
+            61,
+            58,
+            47,
+            56,
+            28,
+            67,
+            52
+        ]
+    ]
+}
