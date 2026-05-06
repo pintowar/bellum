@@ -19,7 +19,7 @@ def main():
 
     data = run_minizinc("cp-scheduler.mzn", args.data, args.solver, args.parallel)
 
-    assignments = list(data.get("a", []))
+    assigns = list(data.get("a", []))
     start_times = list(data.get("s", []))
     durations = list(data.get("dur", []))
     priorities = list(data.get("task_priority", []))
@@ -28,7 +28,7 @@ def main():
         [(pair[0], pair[1]) for pair in precedence_raw] if precedence_raw else []
     )
 
-    if not assignments or not start_times or not durations:
+    if not assigns or not start_times or not durations:
         print("Error: Missing required data fields (a, s, dur).")
         return
 
@@ -36,7 +36,7 @@ def main():
     priority_cost = data.get("c_p", 0)
 
     fig = plot_schedule(
-        assignments=assignments,
+        assignments=assigns,
         start_times=start_times,
         durations=durations,
         priorities=priorities,
