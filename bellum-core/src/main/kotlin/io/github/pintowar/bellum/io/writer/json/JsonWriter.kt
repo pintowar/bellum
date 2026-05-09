@@ -16,15 +16,22 @@ class JsonWriter : ContentWriter<ParsedProject> {
             }
     }
 
-    override fun write(input: ParsedProject): String {
+    override fun write(
+        input: ParsedProject,
+        omitSkills: Boolean,
+    ): String {
         val project = input.project
         val employees =
             project.allEmployees().mapIndexed { idx, emp ->
-                val maxSkills =
-                    emp.skills.keys.maxOfOrNull { it.removePrefix("skill").toInt() } ?: 0
                 val skills =
-                    (1..maxSkills).map { skillNum ->
-                        emp.skills["skill$skillNum"]?.invoke() ?: 0
+                    if (omitSkills) {
+                        null
+                    } else {
+                        val maxSkills =
+                            emp.skills.keys.maxOfOrNull { it.removePrefix("skill").toInt() } ?: 0
+                        (1..maxSkills).map { skillNum ->
+                            emp.skills["skill$skillNum"]?.invoke() ?: 0
+                        }
                     }
                 JsonEmployeeDto(
                     id = idx + 1,
@@ -35,11 +42,15 @@ class JsonWriter : ContentWriter<ParsedProject> {
 
         val tasks =
             project.allTasks().mapIndexed { idx, task ->
-                val maxSkills =
-                    task.requiredSkills.keys.maxOfOrNull { it.removePrefix("skill").toInt() } ?: 0
                 val requiredSkills =
-                    (1..maxSkills).map { skillNum ->
-                        task.requiredSkills["skill$skillNum"]?.invoke() ?: 0
+                    if (omitSkills) {
+                        null
+                    } else {
+                        val maxSkills =
+                            task.requiredSkills.keys.maxOfOrNull { it.removePrefix("skill").toInt() } ?: 0
+                        (1..maxSkills).map { skillNum ->
+                            task.requiredSkills["skill$skillNum"]?.invoke() ?: 0
+                        }
                     }
                 val precedes =
                     task.dependsOn?.let { dep ->

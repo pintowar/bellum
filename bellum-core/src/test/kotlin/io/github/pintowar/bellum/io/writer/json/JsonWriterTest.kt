@@ -197,4 +197,44 @@ class JsonWriterTest :
                 result shouldContain "Alice"
             }
         }
+
+        context("omit skills") {
+            test("should include both employee skills and task requiredSkills when omitSkills is false") {
+                val emp = Employee(name = "Alice", skills = mapOf("skill1" to SkillPoint(5).getOrThrow())).getOrThrow()
+                val task = UnassignedTask(description = "Task 1", skills = mapOf("skill1" to SkillPoint(3).getOrThrow())).getOrThrow()
+
+                val project =
+                    DataFixtures.sampleProjectSmall
+                        .replace(
+                            employees = setOf(emp),
+                            tasks = setOf(task),
+                        ).getOrThrow()
+
+                val result = writer.write(ParsedProject(project), omitSkills = false)
+
+                result shouldContain "skills"
+                result shouldContain "5"
+                result shouldContain "requiredSkills"
+                result shouldContain "3"
+            }
+
+            test("should omit both employee skills and task requiredSkills when omitSkills is true") {
+                val emp = Employee(name = "Alice", skills = mapOf("skill1" to SkillPoint(5).getOrThrow())).getOrThrow()
+                val task = UnassignedTask(description = "Task 1", skills = mapOf("skill1" to SkillPoint(3).getOrThrow())).getOrThrow()
+
+                val project =
+                    DataFixtures.sampleProjectSmall
+                        .replace(
+                            employees = setOf(emp),
+                            tasks = setOf(task),
+                        ).getOrThrow()
+
+                val result = writer.write(ParsedProject(project), omitSkills = true)
+
+                result shouldNotContain "skills"
+                result shouldContain "Alice"
+                result shouldNotContain "requiredSkills"
+                result shouldContain "Task 1"
+            }
+        }
     })

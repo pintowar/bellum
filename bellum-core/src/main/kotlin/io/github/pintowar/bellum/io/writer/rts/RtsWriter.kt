@@ -8,7 +8,10 @@ class RtsWriter : ContentWriter<ParsedProject> {
         private const val SEP = ","
     }
 
-    override fun write(input: ParsedProject): String {
+    override fun write(
+        input: ParsedProject,
+        omitSkills: Boolean,
+    ): String {
         val project = input.project
         val employees = project.allEmployees()
         val tasks = project.allTasks()
