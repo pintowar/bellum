@@ -7,6 +7,7 @@ import io.kotest.matchers.result.shouldBeFailure
 import io.kotest.matchers.result.shouldBeSuccess
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
+import io.kotest.matchers.string.shouldNotContain
 import io.kotest.matchers.types.shouldBeTypeOf
 
 class ConverterTest :
@@ -154,6 +155,41 @@ class ConverterTest :
                 result.shouldBeSuccess()
                 val json = result.getOrThrow()
                 json.shouldContain("estimationMatrix")
+            }
+
+            test("convert omits skills when omitSkills is true") {
+                val parsedProject =
+                    io.github.pintowar.bellum.io.reader.rts
+                        .RtsProjectReader("Test")
+                        .readContent(sampleRtsContent)
+                        .getOrThrow()
+
+                val converter = RtsToJsonConverter(omitSkills = true)
+                val result = converter.convert(parsedProject)
+
+                result.shouldBeSuccess()
+                val json = result.getOrThrow()
+                json.shouldContain("Alice")
+                json.shouldContain("Bob")
+                json.shouldContain("Task 1")
+                json.shouldNotContain("skills")
+                json.shouldNotContain("requiredSkills")
+            }
+
+            test("convert includes skills when omitSkills is false") {
+                val parsedProject =
+                    io.github.pintowar.bellum.io.reader.rts
+                        .RtsProjectReader("Test")
+                        .readContent(sampleRtsContent)
+                        .getOrThrow()
+
+                val converter = RtsToJsonConverter(omitSkills = false)
+                val result = converter.convert(parsedProject)
+
+                result.shouldBeSuccess()
+                val json = result.getOrThrow()
+                json.shouldContain("skills")
+                json.shouldContain("requiredSkills")
             }
         }
 

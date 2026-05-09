@@ -79,7 +79,7 @@ class JsonProjectReader(
     fun convertEmployees(parsed: List<JsonEmployeeDto>): List<Employee> =
         parsed.map {
             val skills =
-                it.skills.withIndex().associate { (i, el) -> "skill${i + 1}" to SkillPoint(el).getOrThrow() }
+                (it.skills ?: emptyList()).withIndex().associate { (i, el) -> "skill${i + 1}" to SkillPoint(el).getOrThrow() }
             Employee(it.name, skills).getOrThrow()
         }
 
@@ -93,7 +93,7 @@ class JsonProjectReader(
         val data =
             parsed.map {
                 val skills =
-                    it.requiredSkills
+                    (it.requiredSkills ?: emptyList())
                         .withIndex()
                         .associate { (i, el) -> "skill${i + 1}" to SkillPoint(el).getOrThrow() }
                 val priority = TaskPriority.valueOf(it.priority.uppercase())
