@@ -13,7 +13,7 @@ import kotlinx.serialization.Serializable
 data class JsonEmployeeDto(
     val id: Int,
     val name: String,
-    val skills: List<Int> = emptyList(),
+    val skills: List<Int>? = null,
 )
 
 /**
@@ -31,7 +31,7 @@ data class JsonTaskDto(
     val description: String,
     val priority: String,
     val precedes: Int,
-    val requiredSkills: List<Int> = emptyList(),
+    val requiredSkills: List<Int>? = null,
 )
 
 /**

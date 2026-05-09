@@ -88,7 +88,7 @@ class ConvertCommand : CliktCommand(name = "convert") {
 
             val converted =
                 when (targetFormat) {
-                    "json" -> RtsToJsonConverter().convert(parsedProject).getOrThrow()
+                    "json" -> RtsToJsonConverter(omitSkills = recalcMatrix).convert(parsedProject).getOrThrow()
                     "rts" -> JsonToRtsConverter().convert(parsedProject).getOrThrow()
                     else -> throw IllegalArgumentException("Unsupported target format: $targetFormat")
                 }

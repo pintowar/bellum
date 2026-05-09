@@ -214,4 +214,43 @@ class ConvertCommandTest :
             result.statusCode shouldBe 0
             result.output shouldContain "estimationMatrix"
         }
+
+        test("convert RTS to JSON with recalc-matrix omits skills") {
+            val tempFile = File.createTempFile("test", ".rts")
+            tempFile.writeText(sampleRtsContent)
+            tempFile.deleteOnExit()
+
+            val result = command.test("convert --recalc-matrix ${tempFile.absolutePath}")
+
+            result.statusCode shouldBe 0
+            result.output shouldNotContain "\"skills\""
+            result.output shouldNotContain "\"requiredSkills\""
+            result.output shouldContain "Alice"
+            result.output shouldContain "Task 1"
+        }
+
+        test("convert JSON to RTS with recalc-matrix includes skills") {
+            val tempFile = File.createTempFile("test", ".json")
+            tempFile.writeText(sampleJsonContent)
+            tempFile.deleteOnExit()
+
+            val result = command.test("convert --recalc-matrix ${tempFile.absolutePath}")
+
+            result.statusCode shouldBe 0
+            result.output shouldContain "================="
+            result.output shouldContain "skill1"
+            result.output shouldContain "skill2"
+        }
+
+        test("convert without recalc-matrix includes skills in RTS to JSON") {
+            val tempFile = File.createTempFile("test", ".rts")
+            tempFile.writeText(sampleRtsContent)
+            tempFile.deleteOnExit()
+
+            val result = command.test("convert ${tempFile.absolutePath}")
+
+            result.statusCode shouldBe 0
+            result.output shouldContain "\"skills\""
+            result.output shouldContain "\"requiredSkills\""
+        }
     })

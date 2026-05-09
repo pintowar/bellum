@@ -6,6 +6,7 @@ import io.github.pintowar.bellum.io.writer.json.JsonWriter
 
 class RtsToJsonConverter(
     private val writer: JsonWriter = JsonWriter(),
+    private val omitSkills: Boolean = false,
 ) : BaseConverter<ParsedProject, String>() {
-    override fun doConvert(input: ParsedProject): String = writer.write(input)
+    override fun doConvert(input: ParsedProject): String = writer.write(input, omitSkills)
 }
