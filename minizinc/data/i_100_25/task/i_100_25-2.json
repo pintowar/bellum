@@ -1,0 +1,1017 @@
+{
+    "name": "i_100_25-2",
+    "employees": [
+        {
+            "id": 1,
+            "name": "Thiago"
+        },
+        {
+            "id": 2,
+            "name": "Bruno"
+        },
+        {
+            "id": 3,
+            "name": "Kim"
+        }
+    ],
+    "tasks": [
+        {
+            "id": 1,
+            "description": "Task 001",
+            "priority": "major",
+            "precedes": 64
+        },
+        {
+            "id": 2,
+            "description": "Task 002",
+            "priority": "minor",
+            "precedes": -1
+        },
+        {
+            "id": 3,
+            "description": "Task 003",
+            "priority": "minor",
+            "precedes": -1
+        },
+        {
+            "id": 4,
+            "description": "Task 004",
+            "priority": "minor",
+            "precedes": -1
+        },
+        {
+            "id": 5,
+            "description": "Task 005",
+            "priority": "critical",
+            "precedes": 8
+        },
+        {
+            "id": 6,
+            "description": "Task 006",
+            "priority": "major",
+            "precedes": -1
+        },
+        {
+            "id": 7,
+            "description": "Task 007",
+            "priority": "minor",
+            "precedes": 30
+        },
+        {
+            "id": 8,
+            "description": "Task 008",
+            "priority": "minor",
+            "precedes": 22
+        },
+        {
+            "id": 9,
+            "description": "Task 009",
+            "priority": "major",
+            "precedes": -1
+        },
+        {
+            "id": 10,
+            "description": "Task 010",
+            "priority": "minor",
+            "precedes": -1
+        },
+        {
+            "id": 11,
+            "description": "Task 011",
+            "priority": "minor",
+            "precedes": -1
+        },
+        {
+            "id": 12,
+            "description": "Task 012",
+            "priority": "critical",
+            "precedes": -1
+        },
+        {
+            "id": 13,
+            "description": "Task 013",
+            "priority": "minor",
+            "precedes": -1
+        },
+        {
+            "id": 14,
+            "description": "Task 014",
+            "priority": "minor",
+            "precedes": -1
+        },
+        {
+            "id": 15,
+            "description": "Task 015",
+            "priority": "minor",
+            "precedes": -1
+        },
+        {
+            "id": 16,
+            "description": "Task 016",
+            "priority": "minor",
+            "precedes": -1
+        },
+        {
+            "id": 17,
+            "description": "Task 017",
+            "priority": "minor",
+            "precedes": 42
+        },
+        {
+            "id": 18,
+            "description": "Task 018",
+            "priority": "major",
+            "precedes": -1
+        },
+        {
+            "id": 19,
+            "description": "Task 019",
+            "priority": "minor",
+            "precedes": 46
+        },
+        {
+            "id": 20,
+            "description": "Task 020",
+            "priority": "critical",
+            "precedes": -1
+        },
+        {
+            "id": 21,
+            "description": "Task 021",
+            "priority": "minor",
+            "precedes": 98
+        },
+        {
+            "id": 22,
+            "description": "Task 022",
+            "priority": "minor",
+            "precedes": -1
+        },
+        {
+            "id": 23,
+            "description": "Task 023",
+            "priority": "major",
+            "precedes": -1
+        },
+        {
+            "id": 24,
+            "description": "Task 024",
+            "priority": "minor",
+            "precedes": -1
+        },
+        {
+            "id": 25,
+            "description": "Task 025",
+            "priority": "major",
+            "precedes": -1
+        },
+        {
+            "id": 26,
+            "description": "Task 026",
+            "priority": "minor",
+            "precedes": -1
+        },
+        {
+            "id": 27,
+            "description": "Task 027",
+            "priority": "minor",
+            "precedes": -1
+        },
+        {
+            "id": 28,
+            "description": "Task 028",
+            "priority": "major",
+            "precedes": -1
+        },
+        {
+            "id": 29,
+            "description": "Task 029",
+            "priority": "minor",
+            "precedes": -1
+        },
+        {
+            "id": 30,
+            "description": "Task 030",
+            "priority": "major",
+            "precedes": 24
+        },
+        {
+            "id": 31,
+            "description": "Task 031",
+            "priority": "minor",
+            "precedes": -1
+        },
+        {
+            "id": 32,
+            "description": "Task 032",
+            "priority": "major",
+            "precedes": -1
+        },
+        {
+            "id": 33,
+            "description": "Task 033",
+            "priority": "minor",
+            "precedes": 97
+        },
+        {
+            "id": 34,
+            "description": "Task 034",
+            "priority": "critical",
+            "precedes": -1
+        },
+        {
+            "id": 35,
+            "description": "Task 035",
+            "priority": "major",
+            "precedes": -1
+        },
+        {
+            "id": 36,
+            "description": "Task 036",
+            "priority": "major",
+            "precedes": -1
+        },
+        {
+            "id": 37,
+            "description": "Task 037",
+            "priority": "minor",
+            "precedes": -1
+        },
+        {
+            "id": 38,
+            "description": "Task 038",
+            "priority": "minor",
+            "precedes": -1
+        },
+        {
+            "id": 39,
+            "description": "Task 039",
+            "priority": "minor",
+            "precedes": 18
+        },
+        {
+            "id": 40,
+            "description": "Task 040",
+            "priority": "minor",
+            "precedes": -1
+        },
+        {
+            "id": 41,
+            "description": "Task 041",
+            "priority": "minor",
+            "precedes": -1
+        },
+        {
+            "id": 42,
+            "description": "Task 042",
+            "priority": "minor",
+            "precedes": -1
+        },
+        {
+            "id": 43,
+            "description": "Task 043",
+            "priority": "minor",
+            "precedes": -1
+        },
+        {
+            "id": 44,
+            "description": "Task 044",
+            "priority": "minor",
+            "precedes": -1
+        },
+        {
+            "id": 45,
+            "description": "Task 045",
+            "priority": "minor",
+            "precedes": -1
+        },
+        {
+            "id": 46,
+            "description": "Task 046",
+            "priority": "minor",
+            "precedes": -1
+        },
+        {
+            "id": 47,
+            "description": "Task 047",
+            "priority": "major",
+            "precedes": 34
+        },
+        {
+            "id": 48,
+            "description": "Task 048",
+            "priority": "minor",
+            "precedes": -1
+        },
+        {
+            "id": 49,
+            "description": "Task 049",
+            "priority": "critical",
+            "precedes": 75
+        },
+        {
+            "id": 50,
+            "description": "Task 050",
+            "priority": "minor",
+            "precedes": -1
+        },
+        {
+            "id": 51,
+            "description": "Task 051",
+            "priority": "major",
+            "precedes": -1
+        },
+        {
+            "id": 52,
+            "description": "Task 052",
+            "priority": "major",
+            "precedes": 88
+        },
+        {
+            "id": 53,
+            "description": "Task 053",
+            "priority": "critical",
+            "precedes": 73
+        },
+        {
+            "id": 54,
+            "description": "Task 054",
+            "priority": "major",
+            "precedes": -1
+        },
+        {
+            "id": 55,
+            "description": "Task 055",
+            "priority": "minor",
+            "precedes": -1
+        },
+        {
+            "id": 56,
+            "description": "Task 056",
+            "priority": "minor",
+            "precedes": -1
+        },
+        {
+            "id": 57,
+            "description": "Task 057",
+            "priority": "minor",
+            "precedes": -1
+        },
+        {
+            "id": 58,
+            "description": "Task 058",
+            "priority": "major",
+            "precedes": -1
+        },
+        {
+            "id": 59,
+            "description": "Task 059",
+            "priority": "minor",
+            "precedes": 73
+        },
+        {
+            "id": 60,
+            "description": "Task 060",
+            "priority": "minor",
+            "precedes": -1
+        },
+        {
+            "id": 61,
+            "description": "Task 061",
+            "priority": "major",
+            "precedes": -1
+        },
+        {
+            "id": 62,
+            "description": "Task 062",
+            "priority": "minor",
+            "precedes": 1
+        },
+        {
+            "id": 63,
+            "description": "Task 063",
+            "priority": "major",
+            "precedes": -1
+        },
+        {
+            "id": 64,
+            "description": "Task 064",
+            "priority": "critical",
+            "precedes": -1
+        },
+        {
+            "id": 65,
+            "description": "Task 065",
+            "priority": "major",
+            "precedes": 42
+        },
+        {
+            "id": 66,
+            "description": "Task 066",
+            "priority": "major",
+            "precedes": -1
+        },
+        {
+            "id": 67,
+            "description": "Task 067",
+            "priority": "minor",
+            "precedes": -1
+        },
+        {
+            "id": 68,
+            "description": "Task 068",
+            "priority": "minor",
+            "precedes": -1
+        },
+        {
+            "id": 69,
+            "description": "Task 069",
+            "priority": "major",
+            "precedes": -1
+        },
+        {
+            "id": 70,
+            "description": "Task 070",
+            "priority": "major",
+            "precedes": 42
+        },
+        {
+            "id": 71,
+            "description": "Task 071",
+            "priority": "minor",
+            "precedes": 90
+        },
+        {
+            "id": 72,
+            "description": "Task 072",
+            "priority": "major",
+            "precedes": -1
+        },
+        {
+            "id": 73,
+            "description": "Task 073",
+            "priority": "minor",
+            "precedes": -1
+        },
+        {
+            "id": 74,
+            "description": "Task 074",
+            "priority": "minor",
+            "precedes": 38
+        },
+        {
+            "id": 75,
+            "description": "Task 075",
+            "priority": "major",
+            "precedes": -1
+        },
+        {
+            "id": 76,
+            "description": "Task 076",
+            "priority": "minor",
+            "precedes": 40
+        },
+        {
+            "id": 77,
+            "description": "Task 077",
+            "priority": "minor",
+            "precedes": -1
+        },
+        {
+            "id": 78,
+            "description": "Task 078",
+            "priority": "major",
+            "precedes": -1
+        },
+        {
+            "id": 79,
+            "description": "Task 079",
+            "priority": "minor",
+            "precedes": -1
+        },
+        {
+            "id": 80,
+            "description": "Task 080",
+            "priority": "major",
+            "precedes": -1
+        },
+        {
+            "id": 81,
+            "description": "Task 081",
+            "priority": "major",
+            "precedes": -1
+        },
+        {
+            "id": 82,
+            "description": "Task 082",
+            "priority": "minor",
+            "precedes": -1
+        },
+        {
+            "id": 83,
+            "description": "Task 083",
+            "priority": "major",
+            "precedes": 53
+        },
+        {
+            "id": 84,
+            "description": "Task 084",
+            "priority": "critical",
+            "precedes": -1
+        },
+        {
+            "id": 85,
+            "description": "Task 085",
+            "priority": "minor",
+            "precedes": -1
+        },
+        {
+            "id": 86,
+            "description": "Task 086",
+            "priority": "minor",
+            "precedes": -1
+        },
+        {
+            "id": 87,
+            "description": "Task 087",
+            "priority": "minor",
+            "precedes": -1
+        },
+        {
+            "id": 88,
+            "description": "Task 088",
+            "priority": "critical",
+            "precedes": -1
+        },
+        {
+            "id": 89,
+            "description": "Task 089",
+            "priority": "minor",
+            "precedes": 36
+        },
+        {
+            "id": 90,
+            "description": "Task 090",
+            "priority": "minor",
+            "precedes": -1
+        },
+        {
+            "id": 91,
+            "description": "Task 091",
+            "priority": "minor",
+            "precedes": -1
+        },
+        {
+            "id": 92,
+            "description": "Task 092",
+            "priority": "major",
+            "precedes": 60
+        },
+        {
+            "id": 93,
+            "description": "Task 093",
+            "priority": "minor",
+            "precedes": -1
+        },
+        {
+            "id": 94,
+            "description": "Task 094",
+            "priority": "minor",
+            "precedes": 12
+        },
+        {
+            "id": 95,
+            "description": "Task 095",
+            "priority": "minor",
+            "precedes": -1
+        },
+        {
+            "id": 96,
+            "description": "Task 096",
+            "priority": "minor",
+            "precedes": -1
+        },
+        {
+            "id": 97,
+            "description": "Task 097",
+            "priority": "minor",
+            "precedes": -1
+        },
+        {
+            "id": 98,
+            "description": "Task 098",
+            "priority": "critical",
+            "precedes": -1
+        },
+        {
+            "id": 99,
+            "description": "Task 099",
+            "priority": "major",
+            "precedes": -1
+        },
+        {
+            "id": 100,
+            "description": "Task 100",
+            "priority": "minor",
+            "precedes": -1
+        },
+        {
+            "id": 101,
+            "description": "Task 026",
+            "priority": "major",
+            "precedes": -1
+        },
+        {
+            "id": 102,
+            "description": "Task 027",
+            "priority": "major",
+            "precedes": -1
+        },
+        {
+            "id": 103,
+            "description": "Task 028",
+            "priority": "minor",
+            "precedes": -1
+        },
+        {
+            "id": 104,
+            "description": "Task 029",
+            "priority": "major",
+            "precedes": -1
+        },
+        {
+            "id": 105,
+            "description": "Task 030",
+            "priority": "minor",
+            "precedes": -1
+        },
+        {
+            "id": 106,
+            "description": "Task 031",
+            "priority": "critical",
+            "precedes": -1
+        },
+        {
+            "id": 107,
+            "description": "Task 032",
+            "priority": "minor",
+            "precedes": -1
+        },
+        {
+            "id": 108,
+            "description": "Task 033",
+            "priority": "minor",
+            "precedes": -1
+        },
+        {
+            "id": 109,
+            "description": "Task 034",
+            "priority": "minor",
+            "precedes": -1
+        },
+        {
+            "id": 110,
+            "description": "Task 035",
+            "priority": "minor",
+            "precedes": -1
+        }
+    ],
+    "estimationMatrix": [
+        [
+            44,
+            43,
+            30,
+            45,
+            16,
+            49,
+            48,
+            59,
+            34,
+            21,
+            47,
+            47,
+            44,
+            54,
+            46,
+            43,
+            39,
+            46,
+            50,
+            37,
+            36,
+            51,
+            29,
+            23,
+            48,
+            31,
+            26,
+            54,
+            64,
+            46,
+            49,
+            55,
+            33,
+            63,
+            62,
+            27,
+            45,
+            57,
+            38,
+            39,
+            60,
+            42,
+            47,
+            56,
+            32,
+            65,
+            18,
+            56,
+            32,
+            28,
+            29,
+            33,
+            17,
+            46,
+            49,
+            42,
+            22,
+            46,
+            38,
+            59,
+            45,
+            54,
+            48,
+            62,
+            27,
+            49,
+            43,
+            41,
+            18,
+            46,
+            51,
+            52,
+            39,
+            16,
+            69,
+            23,
+            76,
+            65,
+            55,
+            56,
+            40,
+            25,
+            39,
+            24,
+            63,
+            36,
+            40,
+            31,
+            21,
+            53,
+            27,
+            43,
+            61,
+            56,
+            41,
+            53,
+            61,
+            27,
+            22,
+            45,
+            58,
+            24,
+            62,
+            39,
+            47,
+            61,
+            43,
+            64,
+            46,
+            66
+        ],
+        [
+            42,
+            55,
+            71,
+            36,
+            49,
+            46,
+            51,
+            42,
+            41,
+            44,
+            23,
+            31,
+            66,
+            46,
+            35,
+            40,
+            38,
+            27,
+            52,
+            35,
+            36,
+            37,
+            50,
+            62,
+            54,
+            27,
+            61,
+            36,
+            46,
+            19,
+            35,
+            21,
+            67,
+            47,
+            63,
+            51,
+            23,
+            41,
+            27,
+            41,
+            36,
+            54,
+            28,
+            53,
+            42,
+            52,
+            48,
+            47,
+            33,
+            41,
+            58,
+            52,
+            63,
+            35,
+            53,
+            40,
+            57,
+            52,
+            44,
+            42,
+            48,
+            42,
+            61,
+            57,
+            57,
+            34,
+            64,
+            64,
+            55,
+            51,
+            18,
+            45,
+            50,
+            50,
+            45,
+            53,
+            26,
+            16,
+            12,
+            63,
+            36,
+            54,
+            60,
+            45,
+            67,
+            63,
+            51,
+            51,
+            45,
+            35,
+            57,
+            33,
+            30,
+            49,
+            49,
+            56,
+            39,
+            48,
+            41,
+            19,
+            27,
+            52,
+            33,
+            39,
+            48,
+            34,
+            44,
+            18,
+            39,
+            47
+        ],
+        [
+            45,
+            37,
+            51,
+            44,
+            36,
+            49,
+            43,
+            48,
+            46,
+            49,
+            42,
+            66,
+            43,
+            31,
+            48,
+            52,
+            42,
+            53,
+            25,
+            55,
+            48,
+            37,
+            33,
+            25,
+            52,
+            50,
+            34,
+            34,
+            49,
+            61,
+            42,
+            59,
+            62,
+            36,
+            56,
+            23,
+            44,
+            69,
+            49,
+            34,
+            61,
+            37,
+            53,
+            57,
+            41,
+            47,
+            26,
+            51,
+            40,
+            23,
+            17,
+            34,
+            42,
+            40,
+            41,
+            43,
+            50,
+            41,
+            49,
+            20,
+            19,
+            32,
+            29,
+            32,
+            23,
+            54,
+            45,
+            49,
+            50,
+            26,
+            49,
+            60,
+            62,
+            34,
+            56,
+            28,
+            50,
+            65,
+            63,
+            36,
+            30,
+            40,
+            29,
+            50,
+            32,
+            44,
+            52,
+            49,
+            58,
+            40,
+            32,
+            53,
+            66,
+            69,
+            32,
+            60,
+            38,
+            57,
+            36,
+            55,
+            49,
+            29,
+            60,
+            32,
+            51,
+            50,
+            26,
+            67,
+            56,
+            33
+        ]
+    ]
+}
