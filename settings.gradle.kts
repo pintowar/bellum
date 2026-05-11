@@ -14,7 +14,7 @@ plugins {
 rootProject.name = "bellum"
 
 include(":bellum-core")
-include(":bellum-solver:choco", ":bellum-solver:jenetics")
+include(":bellum-solver:choco", ":bellum-solver:ortools", ":bellum-solver:jenetics")
 include(":bellum-cli")
 
 kover {
