@@ -10,6 +10,7 @@ dependencies {
     implementation(project(":bellum-core"))
     implementation(project(":bellum-solver:choco"))
     implementation(project(":bellum-solver:jenetics"))
+    implementation(project(":bellum-solver:ortools"))
     implementation(libs.clikt)
 }
 
@@ -20,16 +21,25 @@ application {
 
 graalvmNative {
     toolchainDetection.set(true)
+
+    agent {
+        defaultMode.set("standard")
+    }
+
     binaries {
         named("main") {
             imageName.set(application.applicationName)
             buildArgs.add("-H:IncludeResources=application\\.properties")
+            buildArgs.add("-H:IncludeResources=.*\\.(so|dylib|dll)$")
             buildArgs.add("--enable-url-protocols=https")
             buildArgs.add("--rerun-class-initialization-at-runtime=kotlin.DeprecationLevel")
+            buildArgs.add("-H:+JNI")
         }
         named("test") {
             buildArgs.add("-H:IncludeResources=application\\.properties")
+            buildArgs.add("-H:IncludeResources=.*\\.(so|dylib|dll)$")
             buildArgs.add("--enable-url-protocols=https")
+            buildArgs.add("-H:+JNI")
         }
     }
 }
