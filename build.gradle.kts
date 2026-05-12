@@ -1,4 +1,5 @@
 import net.researchgate.release.ReleaseExtension
+import org.jreleaser.model.Active
 
 plugins {
     base
@@ -54,7 +55,10 @@ jreleaser {
     release {
         github {
             changelog {
-                enabled.set(false)
+                enabled.set(true)
+                formatted.set(Active.ALWAYS)
+                preset.set("conventional-commits")
+                skipMergeCommits.set(true)
             }
             branch.set("master")
             releaseName.set("v$version")

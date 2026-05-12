@@ -1,17 +1,36 @@
-package io.github.pintowar.bellum.parser.rts
+package io.github.pintowar.bellum.io.reader.rts
 
 import io.github.pintowar.bellum.core.domain.SkillPoint
 import io.github.pintowar.bellum.core.domain.Task
 import io.github.pintowar.bellum.core.domain.TaskPriority
 import io.github.pintowar.bellum.core.domain.UnassignedTask
-import io.github.pintowar.bellum.core.parser.ContentReader
-import io.github.pintowar.bellum.core.parser.InvalidFileFormat
+import io.github.pintowar.bellum.core.io.ContentReader
+import io.github.pintowar.bellum.core.io.InvalidFileFormat
+import io.github.pintowar.bellum.io.reader.TaskReader.adjustDependencies
 
-object RtsTaskReader : ContentReader<List<Task>> {
-    override fun readContent(
-        content: String,
-        sep: String,
-    ): Result<List<Task>> =
+/**
+ * Parser for task data in RTS (Resource Task Scheduling) format.
+ *
+ * Expects CSV-like content where:
+ * - First line is the header with column names
+ * - Remaining lines are task data
+ * - Columns starting with "skill" are treated as required skill levels
+ * - Supports both "priority" and "criticity" column names
+ * - "precedes" column defines task dependencies (-1 means no dependency)
+ *
+ * Example:
+ * ```
+ * id,description,priority,precedes,skill1,skill2
+ * 1,Task 1,minor,-1,3,2
+ * 2,Task 2,major,1,5,0
+ * ```
+ *
+ * @property sep The delimiter used to separate values in each line (default: ",")
+ */
+class RtsTaskReader(
+    private val sep: String = ",",
+) : ContentReader<List<Task>> {
+    override fun readContent(content: String): Result<List<Task>> =
         runCatching {
             if (content.isBlank()) throw InvalidFileFormat("Empty task content.")
             val lines = content.trim().lines()
@@ -44,23 +63,4 @@ object RtsTaskReader : ContentReader<List<Task>> {
             val (ids, precedes) = table.unzip()
             adjustDependencies(ids, precedes, tasks)
         }
-
-    fun adjustDependencies(
-        ids: List<String>,
-        precedes: List<String>,
-        tasks: List<Task>,
-    ): List<Task> {
-        val taskByKey = tasks.withIndex().associate { (idx, task) -> ids[idx] to task }
-        val tasksWithDepsById =
-            precedes
-                .withIndex()
-                .filter { (_, id) -> id != "-1" }
-                .map { (idx, id) ->
-                    val precedenceId =
-                        taskByKey[id] ?: throw InvalidFileFormat("Precedence ($id) of task (${ids[idx]}) not found.")
-                    taskByKey.getValue(ids[idx]).changeDependency(precedenceId)
-                }.associateBy { it.id }
-
-        return tasks.map { tasksWithDepsById.getOrDefault(it.id, it) }
-    }
 }

@@ -1,15 +1,31 @@
-package io.github.pintowar.bellum.parser.rts
+package io.github.pintowar.bellum.io.reader.rts
 
 import io.github.pintowar.bellum.core.domain.Employee
 import io.github.pintowar.bellum.core.domain.SkillPoint
-import io.github.pintowar.bellum.core.parser.ContentReader
-import io.github.pintowar.bellum.core.parser.InvalidFileFormat
+import io.github.pintowar.bellum.core.io.ContentReader
+import io.github.pintowar.bellum.core.io.InvalidFileFormat
 
-object RtsEmployeeReader : ContentReader<List<Employee>> {
-    override fun readContent(
-        content: String,
-        sep: String,
-    ): Result<List<Employee>> =
+/**
+ * Parser for employee data in RTS (Resource Task Scheduling) format.
+ *
+ * Expects CSV-like content where:
+ * - First line is the header with column names
+ * - Remaining lines are employee data
+ * - Columns starting with "skill" are treated as skill levels
+ *
+ * Example:
+ * ```
+ * id,name,skill1,skill2
+ * 1,Alice,5,3
+ * 2,Bob,2,4
+ * ```
+ *
+ * @property sep The delimiter used to separate values in each line (default: ",")
+ */
+class RtsEmployeeReader(
+    private val sep: String = ",",
+) : ContentReader<List<Employee>> {
+    override fun readContent(content: String): Result<List<Employee>> =
         runCatching {
             if (content.isBlank()) throw InvalidFileFormat("Empty employee content.")
             val lines = content.trim().lines()

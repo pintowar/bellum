@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           ref: develop
           fetch-depth: 0
@@ -32,11 +32,14 @@ jobs:
           cache: 'gradle'
 
       - name: Running gradle task
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v6
 
       - name: Running gradle task
         run: |
-          ./gradlew clean ktlintCheck
-          ./gradlew test sonar
+          ./gradlew clean ktlintCheck test sonar --scan \
+          -Dscan.tag.CI \
+          -Dscan.tag.${{ github.event_name }} \
+          -Dscan.value.Job-ID=${{ github.run_id }} \
+          -Dscan.link.GitHub-Action=https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

@@ -30,7 +30,7 @@ jobs:
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           ref: ${{ github.event.inputs.tag }}
           fetch-depth: 0
@@ -43,13 +43,13 @@ jobs:
           cache: 'gradle'
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v6
 
       - name: Build native executable
         run: ./gradlew clean nativeCompile
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.platform }}
           path: build/native/nativeCompile/${{ matrix.artifact_name }}
@@ -63,7 +63,7 @@ jobs:
       contents: write
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           ref: ${{ github.event.inputs.tag }}
           fetch-depth: 0
@@ -80,10 +80,10 @@ jobs:
           cache: 'gradle'
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v6
 
       - name: Download all artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           path: build/native/nativeCompile/
 
