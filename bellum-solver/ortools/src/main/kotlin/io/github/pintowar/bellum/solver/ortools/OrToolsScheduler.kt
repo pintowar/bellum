@@ -40,7 +40,8 @@ class OrToolsScheduler(
                 object : CpSolverSolutionCallback() {
                     override fun onSolutionCallback() {
                         val currentDuration = listOf(timeLimit, Clock.System.now() - initSolving).min()
-                        model.decode(this@OrToolsScheduler.asCpSolver(solver), currentDuration, false).onSuccess(callback)
+                        val wrapper = OrToolsWrapper.SolverCallback(this)
+                        model.decode(wrapper, currentDuration, false).onSuccess(callback)
                     }
                 }
 
@@ -48,12 +49,10 @@ class OrToolsScheduler(
             val currentDuration = listOf(timeLimit, Clock.System.now() - initSolving).min()
 
             if (status == CpSolverStatus.OPTIMAL || status == CpSolverStatus.FEASIBLE) {
-                model.decode(solver, currentDuration, status == CpSolverStatus.OPTIMAL).getOrThrow()
+                val wrapper = OrToolsWrapper.Solver(solver)
+                model.decode(wrapper, currentDuration, status == CpSolverStatus.OPTIMAL).getOrThrow()
             } else {
                 throw IllegalStateException("Solver did not find a valid solution (status: $status).")
             }
         }
-
-    // Workaround since CpSolverSolutionCallback extends CpSolver interface loosely or we just use solver instance directly
-    private fun asCpSolver(solver: CpSolver): CpSolver = solver
 }

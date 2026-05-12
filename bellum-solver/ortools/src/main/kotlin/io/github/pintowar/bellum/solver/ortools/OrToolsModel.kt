@@ -2,7 +2,6 @@ package io.github.pintowar.bellum.solver.ortools
 
 import com.google.ortools.sat.BoolVar
 import com.google.ortools.sat.CpModel
-import com.google.ortools.sat.CpSolver
 import com.google.ortools.sat.IntVar
 import com.google.ortools.sat.IntervalVar
 import com.google.ortools.sat.LinearExpr
@@ -36,17 +35,20 @@ internal class OrToolsModel(
 
     // --- Variables ---
     private val maxPossibleTime = taskDurationMatrix.minOf { it.sum() }.toLong()
-    private val minPossibleTime = IntArray(numTasks) { t -> (0 until numEmployees).minOf { e -> taskDurationMatrix[e][t] } }
+    private val minPossibleTime =
+        IntArray(numTasks) { t -> (0 until numEmployees).minOf { e -> taskDurationMatrix[e][t] } }
     private val earliestStartTimes = computeEarliestStartTimes()
 
     val taskAssignee = Array(numTasks) { t -> model.newIntVar(0, numEmployees.toLong() - 1, "taskAssignee_$t") }
-    val taskStartTime = Array(numTasks) { t -> model.newIntVar(earliestStartTimes[t].toLong(), maxPossibleTime, "startTime_$t") }
+    val taskStartTime =
+        Array(numTasks) { t -> model.newIntVar(earliestStartTimes[t].toLong(), maxPossibleTime, "startTime_$t") }
     val taskDuration =
         Array(numTasks) { t ->
             val maxDur = (0 until numEmployees).map { e -> taskDurationMatrix[e][t] }
             model.newIntVar(maxDur.minOrNull()!!.toLong(), maxDur.maxOrNull()!!.toLong(), "duration_$t")
         }
-    val taskEndTime = Array(numTasks) { t -> model.newIntVar(earliestStartTimes[t].toLong(), maxPossibleTime, "endTime_$t") }
+    val taskEndTime =
+        Array(numTasks) { t -> model.newIntVar(earliestStartTimes[t].toLong(), maxPossibleTime, "endTime_$t") }
     val employeeWorkload = Array(numEmployees) { e -> model.newIntVar(0, maxPossibleTime, "employeeWorkload_$e") }
 
     val taskAssignedTo =
@@ -93,7 +95,9 @@ internal class OrToolsModel(
     private fun addTaskDurationAndEndConstraint() {
         for (t in 0 until numTasks) {
             for (e in 0 until numEmployees) {
-                model.addEquality(taskDuration[t], taskDurationMatrix[e][t].toLong()).onlyEnforceIf(taskAssignedTo[t][e])
+                model
+                    .addEquality(taskDuration[t], taskDurationMatrix[e][t].toLong())
+                    .onlyEnforceIf(taskAssignedTo[t][e])
             }
             val sumExpr =
                 LinearExpr
@@ -300,24 +304,15 @@ internal class OrToolsModel(
 
     private fun unitDuration(duration: Long): Duration = duration.toInt().minutes
 
-    fun solverStatistics(solver: CpSolver): Map<String, Any> =
-        mapOf(
-            "solver" to "OR-Tools CP-SAT",
-            "objective" to solver.objectiveValue(),
-            "nodes" to solver.numBranches(),
-            "conflicts" to solver.numConflicts(),
-            "wallTime" to solver.wallTime(),
-        )
-
     fun decode(
-        solver: CpSolver,
+        wrapper: OrToolsWrapper,
         currentDuration: Duration,
         optimal: Boolean = false,
     ): Result<SchedulerSolution> =
         runCatching {
-            val emps = taskAssignee.map { employees[solver.value(it).toInt()] }
-            val inits = taskStartTime.map { project.kickOff + unitDuration(solver.value(it)) }
-            val durs = taskDuration.map { unitDuration(solver.value(it)) }
+            val emps = taskAssignee.map { employees[wrapper.getValue(it).toInt()] }
+            val inits = taskStartTime.map { project.kickOff + unitDuration(wrapper.getValue(it)) }
+            val durs = taskDuration.map { unitDuration(wrapper.getValue(it)) }
             val assigneds = tasks.mapIndexed { idx, tsk -> tsk.assign(emps[idx], inits[idx], durs[idx]) }
 
             return project
@@ -327,7 +322,7 @@ internal class OrToolsModel(
                         newProject,
                         optimal,
                         currentDuration,
-                        solverStatistics(solver),
+                        wrapper.solverStatistics(),
                     )
                 }
         }
