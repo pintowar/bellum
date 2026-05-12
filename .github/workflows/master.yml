@@ -19,7 +19,7 @@ jobs:
       actions: write
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           ref: master
           fetch-depth: 0
@@ -39,7 +39,7 @@ jobs:
           cache: 'gradle'
 
       - name: Running gradle task
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v6
 
       - name: Create and push release tag
         id: release
