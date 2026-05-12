@@ -97,13 +97,29 @@ If this section is omitted, the solver uses the default Pearson correlation esti
 ./bellum solvers
 ```
 
+### Convert Formats
+
+```bash
+./bellum convert [OPTIONS] PATH
+```
+
+#### Convert Examples
+
+```bash
+# Convert and write to a JSON file
+./bellum convert -o output.json project.rts
+
+# Convert with recalculated estimation matrix with JSON format
+./bellum convert -m -f json project.rts
+```
+
 ### Solve a Scheduling Problem
 
 ```bash
 ./bellum solve [OPTIONS] PATH
 ```
 
-### Examples
+#### Solve Examples
 
 ```bash
 # Basic solve with default settings
