@@ -31,14 +31,18 @@ graalvmNative {
             imageName.set(application.applicationName)
             buildArgs.add("--enable-url-protocols=https")
             buildArgs.add("--rerun-class-initialization-at-runtime=kotlin.DeprecationLevel")
+            buildArgs.add("-H:+JNI")
             resources {
                 includedPatterns.add("application[.]properties")
+//                includedPatterns.add(".*[.](so|dylib|dll)")
             }
         }
         named("test") {
             buildArgs.add("--enable-url-protocols=https")
+            buildArgs.add("-H:+JNI")
             resources {
                 includedPatterns.add("application[.]properties")
+//                includedPatterns.add(".*[.](so|dylib|dll)")
             }
         }
     }
