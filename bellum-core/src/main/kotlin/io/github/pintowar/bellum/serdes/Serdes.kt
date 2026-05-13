@@ -26,6 +26,7 @@ fun SolutionHistory.solutionAndStats(): JsonElement? {
                 when (sol.stats["solver"]) {
                     "Choco Solver" -> SolverStats.ChocoSolverStats(sol.stats)
                     "Jenetics" -> SolverStats.JeneticsStats(sol.stats)
+                    "OR-Tools" -> SolverStats.OrToolsStats(sol.stats)
                     else -> SolverStats.UnknownSolverStats
                 }
             SolutionStatsDto(

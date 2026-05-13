@@ -17,7 +17,7 @@ sealed interface OrToolsWrapper {
 
     fun solverStatistics(): Map<String, Any> =
         mapOf(
-            "solver" to "OR-Tools CP-SAT",
+            "solver" to "OR-Tools",
             "objective" to objectiveValue(),
             "nodes" to numBranches(),
             "conflicts" to numConflicts(),
