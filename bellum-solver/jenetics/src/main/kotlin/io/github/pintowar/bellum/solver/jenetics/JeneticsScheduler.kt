@@ -15,6 +15,7 @@ import io.jenetics.engine.EvolutionStatistics
 import io.jenetics.engine.Limits
 import io.jenetics.stat.DoubleMomentStatistics
 import io.jenetics.util.BatchExecutor
+import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import kotlin.time.Clock
 import kotlin.time.Duration
@@ -72,7 +73,7 @@ class JeneticsScheduler(
             }
 
             val decoder = ScheduleDecoder(project, estimator)
-            val engine = createEngine(project, decoder, realNumThreads(numThreads))
+            val (executors, engine) = createEngine(project, decoder, realNumThreads(numThreads))
             val statistics = EvolutionStatistics.ofNumber<Long>()
 
             var bestFitness = Long.MAX_VALUE
@@ -93,6 +94,7 @@ class JeneticsScheduler(
                         }
                     }.collect(EvolutionResult.toBestEvolutionResult())
 
+            executors.shutdown()
             val decoded = decoder.decode(extractPermutation(evolutionResult.bestPhenotype().genotype()))
             val currentDuration = listOf(timeLimit, Clock.System.now() - initSolving).min()
             val stats = buildStatsMap(decoded.fitness, evolutionResult.totalGenerations(), statistics)
@@ -110,27 +112,31 @@ class JeneticsScheduler(
      * @param project The project being optimized.
      * @param decoder The decoder used to convert permutations to schedules.
      * @param numThreads Number of threads for parallel evaluation.
-     * @return A configured [Engine] ready for evolution.
+     * @return A pair of an [ExecutorService] for parallel evaluation and a configured [Engine]
+     *         ready for evolution.
      */
     private fun createEngine(
         project: Project,
         decoder: ScheduleDecoder,
         numThreads: Int,
-    ): Engine<EnumGene<Int>, Long> {
+    ): Pair<ExecutorService, Engine<EnumGene<Int>, Long>> {
         val numTasks = project.allTasks().size
+        val executors = Executors.newFixedThreadPool(numThreads)
 
         val permutationCodec = Codecs.ofPermutation(numTasks)
         val codec = permutationCodec.map { arr -> decoder.decode(arr.toList()) }
 
-        return Engine
-            .builder({ decoded: ScheduleDecoder.DecodedSchedule -> decoded.fitness }, codec)
-            .fitnessExecutor(BatchExecutor.of(Executors.newFixedThreadPool(numThreads)))
-            .optimize(Optimize.MINIMUM)
-            .populationSize(100)
-            .alterers(
-                PartiallyMatchedCrossover(0.8),
-                MixMutator(0.1),
-            ).build()
+        return executors to
+            Engine
+                .builder({ decoded: ScheduleDecoder.DecodedSchedule -> decoded.fitness }, codec)
+                .executor(executors)
+                .fitnessExecutor(BatchExecutor.of(executors))
+                .optimize(Optimize.MINIMUM)
+                .populationSize(100)
+                .alterers(
+                    PartiallyMatchedCrossover(0.8),
+                    MixMutator(0.1),
+                ).build()
     }
 
     /**
