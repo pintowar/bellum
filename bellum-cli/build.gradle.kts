@@ -29,17 +29,19 @@ graalvmNative {
     binaries {
         named("main") {
             imageName.set(application.applicationName)
-            buildArgs.add("-H:IncludeResources=application\\.properties")
-            buildArgs.add("-H:IncludeResources=.*\\.(so|dylib|dll)$")
             buildArgs.add("--enable-url-protocols=https")
             buildArgs.add("--rerun-class-initialization-at-runtime=kotlin.DeprecationLevel")
-            buildArgs.add("-H:+JNI")
+//            buildArgs.add("--initialize-at-run-time=kotlin.DeprecationLevel")
+            buildArgs.add("-march=native")
+            resources {
+                includedPatterns.add("application[.]properties")
+            }
         }
         named("test") {
-            buildArgs.add("-H:IncludeResources=application\\.properties")
-            buildArgs.add("-H:IncludeResources=.*\\.(so|dylib|dll)$")
             buildArgs.add("--enable-url-protocols=https")
-            buildArgs.add("-H:+JNI")
+            resources {
+                includedPatterns.add("application[.]properties")
+            }
         }
     }
 }
