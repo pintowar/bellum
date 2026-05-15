@@ -50,8 +50,8 @@ class ProjectReader : ContentReader<ParsedProject> {
                 Result
                     .success(uri)
                     .mapCatching { content(it) }
-                    .recoverCatching { content("file://$base/$uri") }
-                    .recoverCatching { content("file://$uri") }
+                    .recoverCatching { content(File(base, uri).toURI().toString()) }
+                    .recoverCatching { content(File(uri).toURI().toString()) }
 
             return if (extension == "json") {
                 contentResult.mapCatching {
