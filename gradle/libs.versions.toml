@@ -8,6 +8,7 @@ release = "3.1.0"
 clikt = "5.1.0"
 konform = "0.11.1"
 choco-solver = "6.0.0"
+or-tools = "9.15.6755"
 jenetics = "9.0.0"
 uuid-generator = "5.1.1"
 jgrapht = "1.5.3"
@@ -22,6 +23,7 @@ sl4j = "2.0.17"
 clikt = { module = "com.github.ajalt.clikt:clikt", version.ref = "clikt" }
 konform-jvm = { module = "io.konform:konform-jvm", version.ref = "konform" }
 choco-solver = { module = "org.choco-solver:choco-solver", version.ref = "choco-solver" }
+or-tools = { module = "com.google.ortools:ortools-java", version.ref = "or-tools" }
 jenetics = { module = "io.jenetics:jenetics", version.ref = "jenetics" }
 uuid-generator = { module = "com.fasterxml.uuid:java-uuid-generator", version.ref = "uuid-generator" }
 jgrapht-core = { module = "org.jgrapht:jgrapht-core", version.ref = "jgrapht" }
