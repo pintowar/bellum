@@ -27,6 +27,8 @@ graalvmNative {
     }
 
     binaries {
+        val platformPrefix = "ortools-$osName-$osArch"
+
         named("main") {
             imageName.set(application.applicationName)
             buildArgs.add("--enable-url-protocols=https")
@@ -35,7 +37,7 @@ graalvmNative {
             buildArgs.add("-H:+JNI")
             resources {
                 includedPatterns.add("application[.]properties")
-                includedPatterns.add("ortools-$osName-$osArch/.*")
+                includedPatterns.add("$platformPrefix/.*")
             }
         }
         named("test") {
@@ -45,7 +47,7 @@ graalvmNative {
             buildArgs.add("-H:+JNI")
             resources {
                 includedPatterns.add("application[.]properties")
-                includedPatterns.add("ortools-$osName-$osArch/.*")
+                includedPatterns.add("$platformPrefix/.*")
             }
         }
     }
