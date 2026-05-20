@@ -27,6 +27,7 @@ It uses constraint programming solvers and genetic algorithm for optimal schedul
 - **bellum-core**: Core domain models, solver abstractions, estimators, and file parsers;
 - **bellum-solver**
   - **choco**: ChocoSolver implementation using constraint programming;
+  - **ortools**: OR Tools implementation using constraint programming;
   - **jenetics**: Jenetics implementation using genetic algorithms;
 - **bellum-cli**: Command-line interface for running the scheduler.
 
@@ -35,6 +36,7 @@ It uses constraint programming solvers and genetic algorithm for optimal schedul
 Currently supported:
 
 - **choco**: Choco Solver - Constraint programming solver (default)
+- **or-tools**: OR Tools - Constraint programming solver
 - **jenetics**: Jenetics - Genetic Algorithm Library
 
 Run `solvers` command to list all available solvers.

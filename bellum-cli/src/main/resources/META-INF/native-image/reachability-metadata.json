@@ -1,0 +1,186 @@
+{
+  "reflection": [
+    {
+      "type": "android.os.Build$VERSION"
+    },
+    {
+      "type": "com.github.ajalt.mordant.terminal.terminalinterface.ffm.TerminalInterfaceProviderFfm"
+    },
+    {
+      "type": "com.github.ajalt.mordant.terminal.terminalinterface.jna.TerminalInterfaceProviderJna"
+    },
+    {
+      "type": "com.github.ajalt.mordant.terminal.terminalinterface.nativeimage.TerminalInterfaceProviderNativeImage"
+    },
+    {
+      "type": "com.google.ortools.sat.SolutionCallback",
+      "jniAccessible": true,
+      "methods": [
+        {
+          "name": "onSolutionCallback",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "com.google.ortools.sat.mainJNI",
+      "jniAccessible": true,
+      "methods": [
+        {
+          "name": "SwigDirector_SolutionCallback_onSolutionCallback",
+          "parameterTypes": [
+            "com.google.ortools.sat.SolutionCallback"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "com.google.protobuf.ExtensionRegistry",
+      "methods": [
+        {
+          "name": "getEmptyRegistry",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "io.github.pintowar.bellum.solver.choco.ChocoSolverDescriptor"
+    },
+    {
+      "type": "io.github.pintowar.bellum.solver.jenetics.JeneticsSolverDescriptor"
+    },
+    {
+      "type": "io.github.pintowar.bellum.solver.ortools.OrToolsDescriptor"
+    },
+    {
+      "type": "io.github.pintowar.bellum.solver.ortools.OrToolsScheduler$solveOptimizationProblem$1$solutionCallback$1",
+      "jniAccessible": true,
+      "methods": [
+        {
+          "name": "onSolutionCallback",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "java.lang.Boolean",
+      "jniAccessible": true,
+      "methods": [
+        {
+          "name": "getBoolean",
+          "parameterTypes": [
+            "java.lang.String"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "java.nio.Buffer",
+      "fields": [
+        {
+          "name": "address"
+        }
+      ]
+    },
+    {
+      "type": "kotlin.SafePublicationLazyImpl"
+    },
+    {
+      "type": "kotlin.reflect.jvm.internal.ReflectionFactoryImpl"
+    },
+    {
+      "type": "libcore.io.Memory"
+    },
+    {
+      "type": "org.robolectric.Robolectric"
+    },
+    {
+      "type": "sun.management.VMManagementImpl",
+      "jniAccessible": true,
+      "fields": [
+        {
+          "name": "compTimeMonitoringSupport"
+        },
+        {
+          "name": "currentThreadCpuTimeSupport"
+        },
+        {
+          "name": "objectMonitorUsageSupport"
+        },
+        {
+          "name": "otherThreadCpuTimeSupport"
+        },
+        {
+          "name": "remoteDiagnosticCommandsSupport"
+        },
+        {
+          "name": "synchronizerUsageSupport"
+        },
+        {
+          "name": "threadAllocatedMemorySupport"
+        },
+        {
+          "name": "threadContentionMonitoringSupport"
+        }
+      ]
+    },
+    {
+      "type": "sun.misc.Unsafe",
+      "fields": [
+        {
+          "name": "theUnsafe"
+        }
+      ]
+    },
+    {
+      "type": "sun.security.provider.NativePRNG",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "java.security.SecureRandomParameters"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "sun.security.provider.SHA",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "sun.text.resources.cldr.FormatData"
+    },
+    {
+      "type": "sun.text.resources.cldr.FormatData_en"
+    },
+    {
+      "type": "sun.text.resources.cldr.FormatData_en_US"
+    }
+  ],
+  "resources": [
+    {
+      "glob": "META-INF/services/com.github.ajalt.mordant.terminal.TerminalInterfaceProvider"
+    },
+    {
+      "glob": "META-INF/services/io.github.pintowar.bellum.core.solver.SolverDescriptor"
+    },
+    {
+      "glob": "application.properties"
+    }
+  ],
+  "foreign": {
+    "downcalls": [
+      {
+        "returnType": "jint",
+        "parameterTypes": [
+          "jint"
+        ]
+      }
+    ]
+  }
+}

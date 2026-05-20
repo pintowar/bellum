@@ -109,6 +109,21 @@ sealed class SolverStats {
     }
 
     @Serializable
+    data class OrToolsStats(
+        val objective: Double,
+        val nodes: Long,
+        val conflicts: Long,
+        val bestBound: Double,
+    ) : SolverStats() {
+        constructor(stats: Map<String, Any>) : this(
+            stats.getValue("objective").toString().toDouble(),
+            stats.getValue("nodes").toString().toLong(),
+            stats.getValue("conflicts").toString().toLong(),
+            stats.getValue("bestBound").toString().toDouble(),
+        )
+    }
+
+    @Serializable
     data class JeneticsStats(
         val fitness: Long,
         val generations: Long,
