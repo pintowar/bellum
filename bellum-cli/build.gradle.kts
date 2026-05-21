@@ -10,6 +10,7 @@ dependencies {
     implementation(project(":bellum-core"))
     implementation(project(":bellum-solver:choco"))
     implementation(project(":bellum-solver:jenetics"))
+    implementation(project(":bellum-solver:ortools"))
     implementation(libs.clikt)
 }
 
@@ -20,16 +21,34 @@ application {
 
 graalvmNative {
     toolchainDetection.set(true)
+
+    agent {
+        defaultMode.set("standard")
+    }
+
     binaries {
+        val platformPrefix = "ortools-$osName-$osArch"
+
         named("main") {
             imageName.set(application.applicationName)
-            buildArgs.add("-H:IncludeResources=application\\.properties")
             buildArgs.add("--enable-url-protocols=https")
-            buildArgs.add("--rerun-class-initialization-at-runtime=kotlin.DeprecationLevel")
+            buildArgs.add("--initialize-at-run-time=kotlin.DeprecationLevel")
+            buildArgs.add("--enable-native-access=ALL-UNNAMED")
+            buildArgs.add("-H:+JNI")
+            resources {
+                includedPatterns.add("application[.]properties")
+                includedPatterns.add("$platformPrefix/.*")
+            }
         }
         named("test") {
-            buildArgs.add("-H:IncludeResources=application\\.properties")
             buildArgs.add("--enable-url-protocols=https")
+            buildArgs.add("--initialize-at-run-time=kotlin.DeprecationLevel")
+            buildArgs.add("--enable-native-access=ALL-UNNAMED")
+            buildArgs.add("-H:+JNI")
+            resources {
+                includedPatterns.add("application[.]properties")
+                includedPatterns.add("$platformPrefix/.*")
+            }
         }
     }
 }
