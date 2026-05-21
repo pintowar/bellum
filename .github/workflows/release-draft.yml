@@ -78,23 +78,30 @@ jobs:
         with:
           path: build/native/nativeCompile/
 
-      - name: Organize artifacts
+      - name: Package artifacts
         run: |
-          for platform in linux-x86_64 osx-aarch64 windows-x86_64; do
-            if [ -d "build/native/nativeCompile/$platform" ]; then
-              if [ "$platform" = "windows-x86_64" ]; then
-                mv "build/native/nativeCompile/$platform/bellum.exe" "build/native/nativeCompile/bellum-$platform.exe" 2>/dev/null || true
-              elif [ "$platform" = "osx-aarch64" ]; then
-                mv "build/native/nativeCompile/$platform/bellum" "build/native/nativeCompile/bellum-osx-aarch_64" 2>/dev/null || true
-              else
-                mv "build/native/nativeCompile/$platform/bellum" "build/native/nativeCompile/bellum-$platform" 2>/dev/null || true
-              fi
-            fi
-          done
+          mkdir -p build/native/archives
+
+          # Linux
+          if [ -d "build/native/nativeCompile/linux-x86_64" ]; then
+            tar -czf build/native/archives/bellum-linux-x86_64.tar.gz -C build/native/nativeCompile/linux-x86_64 bellum
+          fi
+
+          # macOS
+          if [ -d "build/native/nativeCompile/osx-aarch64" ]; then
+            tar -czf build/native/archives/bellum-osx-aarch_64.tar.gz -C build/native/nativeCompile/osx-aarch64 bellum
+          fi
+
+          # Windows
+          if [ -d "build/native/nativeCompile/windows-x86_64" ]; then
+            zip -j build/native/archives/bellum-windows-x86_64.zip build/native/nativeCompile/windows-x86_64/bellum.exe
+          fi
 
           rm -rf build/native/nativeCompile/linux-x86_64 \
                  build/native/nativeCompile/osx-aarch64 \
                  build/native/nativeCompile/windows-x86_64
+
+          cp build/native/archives/* build/native/nativeCompile/
 
       - name: Create Draft Release
         run: |
