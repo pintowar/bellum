@@ -24,7 +24,7 @@ graalvmNative {
         named("main") {
             imageName.set(application.applicationName)
             buildArgs.add("--enable-url-protocols=https")
-            buildArgs.add("--rerun-class-initialization-at-runtime=kotlin.DeprecationLevel")
+            buildArgs.add("--initialize-at-run-time=kotlin.DeprecationLevel")
             resources {
                 includedPatterns.add("application[.]properties")
             }
